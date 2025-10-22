@@ -201,6 +201,12 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('searchInput')?.addEventListener('input', filterTests);
     document.getElementById('subjectFilter')?.addEventListener('change', filterTests);
     document.getElementById('statusFilter')?.addEventListener('change', filterTests);
+    
+    // Auto-refresh tests when returning from edit page
+    if (window.performance && window.performance.navigation.type === 1) {
+        console.log('Page refreshed, reloading tests...');
+        loadTests();
+    }
 });
 
 async function loadTests() {
@@ -228,6 +234,7 @@ async function loadTests() {
 }
 
 function displayTests(tests, userRole = 'student') {
+    console.log('Displaying tests:', tests);
     const container = document.getElementById('testsList');
     const template = document.getElementById('testCardTemplate');
     
@@ -257,6 +264,7 @@ function displayTests(tests, userRole = 'student') {
         clone.querySelector('.test-title').textContent = test.title;
         clone.querySelector('.test-description').textContent = test.description || 'Test tavsifi mavjud emas';
         clone.querySelector('.questions-count').textContent = test.total_questions + ' savol';
+        console.log(`Test ${test.id} (${test.title}): ${test.total_questions} savol`);
         clone.querySelector('.time-limit').textContent = test.time_limit + ' daq';
         clone.querySelector('.teacher-name').textContent = test.created_by || 'Noma\'lum';
         clone.querySelector('.created-date').textContent = formatDate(test.created_at);
@@ -271,13 +279,13 @@ function displayTests(tests, userRole = 'student') {
         const completedBadge = clone.querySelector('.completed-badge');
         const progressBar = clone.querySelector('.test-progress');
         
-        if (userRole === 'teacher') {
-            // Teacher view - show manage buttons
+        if (userRole === 'teacher' || userRole === 'admin') {
+            // Teacher and Admin view - show manage buttons
             startBtn.classList.add('d-none');
             continueBtn.classList.add('d-none');
             completedBadge.classList.add('d-none');
             
-            // Always show results button for teachers
+            // Always show results button for teachers and admins
             resultsBtn.classList.remove('d-none');
             resultsBtn.innerHTML = '<i class="fas fa-chart-line me-2"></i>Natijalarni Ko\'rish';
             
@@ -301,6 +309,16 @@ function displayTests(tests, userRole = 'student') {
                 };
                 // Insert before results button
                 resultsBtn.parentNode.insertBefore(editBtn, resultsBtn);
+                
+                // Add Delete Test button
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'btn btn-outline-danger delete-test-btn mt-2';
+                deleteBtn.innerHTML = '<i class="fas fa-trash me-2"></i>Testni O\'chirish';
+                deleteBtn.onclick = function() {
+                    deleteTest(test.id, test.title);
+                };
+                // Insert after results button
+                resultsBtn.parentNode.appendChild(deleteBtn);
         } else {
             // Student view - original logic
             if (test.has_attempted) {
@@ -416,6 +434,53 @@ function formatDate(dateString) {
     if (!dateString) return '';
     const date = new Date(dateString);
     return date.toLocaleDateString('uz-UZ');
+}
+
+async function deleteTest(testId, testTitle) {
+    // Confirmation modal ko'rsatish
+    if (!confirm(`"${testTitle}" testini o'chirishni xohlaysizmi?\n\nDiqqat: Bu amal qaytarib bo'lmaydi va test bilan bog'liq barcha ma'lumotlar (natijalar, urinishlar) ham o'chiriladi!`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/tests/${testId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Success notification
+            alert(data.message);
+            // Reload tests
+            loadTests();
+        } else {
+            alert('Xatolik: ' + (data.error || 'Testni o\'chirib bo\'lmadi'));
+        }
+    } catch (error) {
+        console.error('Error deleting test:', error);
+        alert('Testni o\'chirishda xatolik yuz berdi. Iltimos qayta urinib ko\'ring.');
+    }
+}
+
+// Get CSRF token from cookies
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
 }
 </script>
 

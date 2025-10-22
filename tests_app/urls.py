@@ -7,6 +7,7 @@ urlpatterns = [
     path('', views.test_list_view, name='tests'),
     path('create/', views.create_test_view, name='create_test'),
     path('<int:test_id>/edit/', views.edit_test_view, name='edit_test'),
+    path('<int:test_id>/delete/', views.delete_test_view, name='delete_test'),
     path('<int:test_id>/take/', views.take_test_view, name='take_test'),
     path('attempt/<int:attempt_id>/submit-answer/', views.submit_answer, name='submit_answer'),
     path('attempt/<int:attempt_id>/finish/', views.finish_test, name='finish_test'),
@@ -20,4 +21,5 @@ urlpatterns = [
     path('retake-requests/<int:request_id>/handle/', views.handle_retake_request_view, name='handle_retake_request'),
     path('student-management/', views.student_test_management, name='student_test_management'),
     path('<int:test_id>/open-for-student/<int:student_id>/', views.open_test_for_student, name='open_test_for_student'),
+    path('admin/teacher-tests/', views.admin_teacher_tests, name='admin_teacher_tests'),
 ]

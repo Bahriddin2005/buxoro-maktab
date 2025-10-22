@@ -215,33 +215,28 @@
                         </div>
                         
                         {% elif user.role == 'admin' %}
-                        <div class="col-md-3">
-                            <a href="{% url 'accounts:verification_requests' %}" class="btn btn-primary w-100 btn-lg">
+                        <div class="col-md-4">
+                            <a href="{% url 'tests:admin_teacher_tests' %}" class="btn btn-primary w-100 btn-lg">
+                                <i class="fas fa-file-alt me-2"></i>
+                                O'qituvchilar Testlari
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="{% url 'accounts:verification_requests' %}" class="btn btn-warning w-100 btn-lg">
                                 <i class="fas fa-user-check me-2"></i>
                                 Foydalanuvchilarni Tasdiqlash
                             </a>
                         </div>
-                        <div class="col-md-3">
-                            <a href="{% url 'tests:all_results' %}" class="btn btn-outline-success w-100 btn-lg">
-                                <i class="fas fa-chart-bar me-2"></i>
-                                Barcha Natijalar
+                        <div class="col-md-4">
+                            <a href="{% url 'tests:student_test_management' %}" class="btn btn-success w-100 btn-lg">
+                                <i class="fas fa-users-cog me-2"></i>
+                                O'quvchilarni Boshqarish
                             </a>
                         </div>
-                        <div class="col-md-3">
-                            <a href="/admin/" class="btn btn-outline-light w-100 btn-lg">
-                                <i class="fas fa-cog me-2"></i>
-                                Admin Panel
-                            </a>
-                        </div>
-                        <div class="col-md-3">
-                            <a href="{% url 'tests:tests' %}" class="btn btn-outline-info w-100 btn-lg">
-                                <i class="fas fa-tasks me-2"></i>
-                                Testlar
-                            </a>
-                        </div>
-                            <a href="{% url 'tests:tests' %}" class="btn btn-outline-light w-100 btn-lg">
-                                <i class="fas fa-chart-bar me-2"></i>
-                                Barcha Testlar
+                        <div class="col-md-4">
+                            <a href="{% url 'tests:retake_requests' %}" class="btn btn-info w-100 btn-lg">
+                                <i class="fas fa-redo me-2"></i>
+                                Qayta Ishlash So'rovlari
                             </a>
                         </div>
                         {% endif %}
@@ -420,21 +415,20 @@
     });
 
     async function loadDashboardStats() {
-        if (!{{ user.is_verified|yesno:"true,false" }}) {
+        const isNotVerified = "{% if user.is_verified %}false{% else %}true{% endif %}" === "true";
+        if (isNotVerified) {
             return; // Don't load stats for unverified users
         }
 
         try {
-            {% if user.role == 'student' %}
-            // O'quvchi statistikalari
-            const totalTests = {{ total_tests|default:0 }};
-            const averageScore = {{ average_score|default:0|floatformat:1 }};
+            const userRole = "{{ user.role }}";
             
-            {% if best_result %}
-            const bestScore = {{ best_result.percentage|default:0|floatformat:1 }};
-            {% else %}
-            const bestScore = 0;
-            {% endif %}
+            if (userRole === 'student') {
+            // O'quvchi statistikalari
+            const totalTests = parseInt("{{ total_tests|default:0 }}");
+            const averageScore = parseFloat("{{ average_score|default:'0'|floatformat:1 }}");
+            
+            const bestScore = parseFloat("{% if best_result %}{{ best_result.percentage|default:'0'|floatformat:1 }}{% else %}0{% endif %}");
             
             // Mavjud testlarni olish
             const response = await fetch('{% url "tests:tests" %}');
@@ -453,9 +447,7 @@
             
             document.getElementById('completedTests').textContent = totalTests;
             document.getElementById('averageScore').textContent = averageScore + '%';
-            document.getElementById('bestScore').textContent = bestScore + '%';
-            
-            {% elif user.role == 'teacher' %}
+            } else if (userRole === 'teacher') {
             // Load teacher stats
             const response = await fetch('{% url "tests:tests" %}');
             if (response.ok) {
@@ -472,12 +464,15 @@
                 document.getElementById('createdTests').textContent = data.tests.length;
                 document.getElementById('totalAttempts').textContent = totalAttempts;
                 document.getElementById('totalQuestions').textContent = totalQuestions;
-                document.getElementById('avgStudentScore').textContent = '--';
             }
-            {% endif %}
-            
+            } else if (userRole === 'admin') {
+                // Admin stats
+                document.getElementById('totalStudents').textContent = '{{ students_count|default:0 }}';
+                document.getElementById('totalTeachers').textContent = '{{ teachers_count|default:0 }}';
+                document.getElementById('totalTests').textContent = '{{ tests_count|default:0 }}';
+            }
         } catch (error) {
-            console.error('Error loading dashboard stats:', error);
+            console.error('Error loading dashboard statistics:', error);
         }
     }
 
@@ -497,3 +492,79 @@
     });
 </script>
 {% endblock %}
+
+{# Insert teacher tests list - add below Quick Actions or wherever appropriate in the file #}
+{% if user.role == 'teacher' %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="glass-card p-4" data-aos="fade-up">
+            <h4 class="text-white mb-3">
+                <i class="fas fa-file-alt me-2"></i>
+                Siz Yaratgan Testlar
+            </h4>
+
+            {% if teacher_tests %}
+            <div class="table-responsive">
+                <table class="table table-dark table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Test Nomi</th>
+                            <th class="text-center">Savollar</th>
+                            <th class="text-center">Urinishlar</th>
+                            <th class="text-center">Holat</th>
+                            <th class="text-center">Yaratilgan</th>
+                            <th class="text-center">Amal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for t in teacher_tests %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'tests:preview_test' t.id %}" class="text-white text-decoration-none">
+                                    <i class="fas fa-file-alt me-2 text-primary"></i>
+                                    {{ t.title|default:"(Nomi yo'q)" }}
+                                </a>
+                                {% if t.description %}
+                                <div class="text-muted small mt-1">{{ t.description|truncatechars:80 }}</div>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">{{ t.total_questions|default:0 }}</td>
+                            <td class="text-center">{{ t.attempts_count|default:0 }}</td>
+                            <td class="text-center">
+                                <span class="badge {% if t.published %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                                    {% if t.published %}Nashr qilingan{% else %}Qoralama{% endif %}
+                                </span>
+                            </td>
+                            <td class="text-center text-white-50">{{ t.created_at|date:"d.m.Y" }}</td>
+                            <td class="text-center">
+                                <a href="{% url 'tests:edit_test' t.id %}" class="btn btn-sm btn-outline-light me-1" title="Tahrirlash">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'tests:preview_test' t.id %}" class="btn btn-sm btn-outline-primary me-1" title="Ko'rish">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{% url 'tests:test_results' t.id %}" class="btn btn-sm btn-outline-success" title="Natijalar">
+                                    <i class="fas fa-chart-bar"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-white-50">Siz hali hech qanday test yaratmagansiz.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center">
+                <p class="text-white-50 mb-3">Siz hali hech qanday test yaratmagansiz.</p>
+                <a href="{% url 'tests:create_test' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i> Yangi Test Yaratish
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}

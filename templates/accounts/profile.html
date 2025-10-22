@@ -221,11 +221,13 @@
             phone_number: document.getElementById('phone_number').value || null
         };
         
-        {% if user.role == 'student' %}
-        formData.class_name = document.getElementById('class_name').value;
-        {% elif user.role == 'teacher' %}
-        formData.subject = document.getElementById('subject').value;
-        {% endif %}
+        // Add role-specific fields to the form data
+        const userRole = "{{ user.role }}";
+        if (userRole === 'student') {
+            formData.class_name = document.getElementById('class_name').value;
+        } else if (userRole === 'teacher') {
+            formData.subject = document.getElementById('subject').value;
+        }
         
         try {
             const response = await fetch('{% url "accounts:profile" %}', {

@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.http import require_http_methods
 from django.utils import timezone
@@ -71,6 +71,32 @@ def test_list_view(request):
             return JsonResponse({
                 'tests': test_data,
                 'user_role': 'teacher'
+            })
+    
+        elif request.user.role == 'admin':
+            # Admin sees all tests from all teachers
+            tests = Test.objects.filter(created_by__role='teacher').select_related('created_by').order_by('-created_at')
+            test_data = []
+            for test in tests:
+                attempt_count = TestAttempt.objects.filter(test=test, is_completed=True).count()
+                test_data.append({
+                    'id': test.id,
+                    'title': test.title,
+                    'subject': test.subject,
+                    'description': test.description,
+                    'grade': test.grade,
+                    'total_questions': test.total_questions,
+                    'is_active': test.is_active,
+                    'created_at': test.created_at.isoformat(),
+                    'created_by': test.created_by.get_full_name() or test.created_by.username,
+                    'attempt_count': attempt_count,
+                    'max_attempts': test.max_attempts,
+                    'time_limit': test.time_limit,
+                })
+            
+            return JsonResponse({
+                'tests': test_data,
+                'user_role': 'admin'
             })
     
     return render(request, 'tests_app/test_list.html')
@@ -902,15 +928,47 @@ def student_test_management(request):
     return render(request, 'tests_app/student_test_management.html', context)
 
 @login_required
+@require_http_methods(["POST", "DELETE"])
+def delete_test_view(request, test_id):
+    """Delete a test - Teachers (only their own tests) and Admins (any test)"""
+    if request.user.role not in ['teacher', 'admin']:
+        return JsonResponse({'error': 'Ruxsat berilmagan'}, status=403)
+    
+    # Teachers can only delete their own tests, admins can delete any test
+    if request.user.role == 'teacher':
+        test = get_object_or_404(Test, id=test_id, created_by=request.user)
+    else:  # admin
+        test = get_object_or_404(Test, id=test_id)
+    
+    try:
+        test_title = test.title
+        test.delete()
+        return JsonResponse({
+            'success': True,
+            'message': f'"{test_title}" testi muvaffaqiyatli o\'chirildi!'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Testni o\'chirishda xatolik: {str(e)}'
+        }, status=500)
+
+@login_required
 def edit_test_view(request, test_id):
-    """Edit an existing test and its questions (teachers only)"""
-    test = get_object_or_404(Test, id=test_id, created_by=request.user)
-    if request.user.role != 'teacher':
+    """Edit an existing test and its questions (teachers and admins)"""
+    # Teachers can only edit their own tests, admins can edit any test
+    if request.user.role == 'teacher':
+        test = get_object_or_404(Test, id=test_id, created_by=request.user)
+    elif request.user.role == 'admin':
+        test = get_object_or_404(Test, id=test_id)
+    else:
         return JsonResponse({'error': 'Access denied'}, status=403)
 
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
+            print(f"Received data for test {test_id}: {data}")
+            
             # Update test fields
             test.title = data.get('title', test.title)
             test.description = data.get('description', test.description)
@@ -921,43 +979,73 @@ def edit_test_view(request, test_id):
             test.show_results = data.get('show_results', test.show_results)
             test.is_active = data.get('is_active', test.is_active)
             test.save()
+            print(f"Test {test_id} updated successfully")
 
             # Update questions
             questions_data = data.get('questions', [])
-            # Remove old questions not in new data
-            new_ids = [q.get('id') for q in questions_data if q.get('id')]
-            test.questions.exclude(id__in=new_ids).delete()
+            print(f"Processing {len(questions_data)} questions")
+            
+            # Get existing question IDs
+            existing_question_ids = set(test.questions.values_list('id', flat=True))
+            new_question_ids = set()
+            
             for i, q_data in enumerate(questions_data):
-                if q_data.get('id'):
+                question_id = q_data.get('id')
+                print(f"Processing question {i+1}: ID={question_id}, Text='{q_data.get('question_text', '')[:50]}...'")
+                
+                if question_id and question_id in existing_question_ids:
                     # Update existing question
-                    question = Question.objects.get(id=q_data['id'], test=test)
-                    question.question_text = q_data['question_text']
-                    question.question_type = q_data['question_type']
-                    question.points = float(q_data.get('points', 1.0))
-                    question.order = i + 1
-                    question.explanation = q_data.get('explanation', '')
-                    question.save()
-                    # Update choices
-                    if q_data['question_type'] in ['single_choice', 'multiple_choice']:
-                        choices_data = q_data.get('choices', [])
-                        new_choice_ids = [c.get('id') for c in choices_data if c.get('id')]
-                        question.choices.exclude(id__in=new_choice_ids).delete()
-                        for c_data in choices_data:
-                            if c_data.get('id'):
-                                choice = Choice.objects.get(id=c_data['id'], question=question)
-                                choice.choice_text = c_data['text']
-                                choice.is_correct = c_data.get('is_correct', False)
-                                choice.save()
-                            else:
-                                Choice.objects.create(
-                                    question=question,
-                                    choice_text=c_data['text'],
-                                    is_correct=c_data.get('is_correct', False)
-                                )
-                    else:
-                        question.choices.all().delete()
+                    try:
+                        question = Question.objects.get(id=question_id, test=test)
+                        question.question_text = q_data['question_text']
+                        question.question_type = q_data['question_type']
+                        question.points = float(q_data.get('points', 1.0))
+                        question.order = i + 1
+                        question.explanation = q_data.get('explanation', '')
+                        question.save()
+                        new_question_ids.add(question_id)
+                        print(f"Updated existing question {question_id}")
+                        
+                        # Update choices
+                        if q_data['question_type'] in ['single_choice', 'multiple_choice']:
+                            choices_data = q_data.get('choices', [])
+                            # Clear existing choices
+                            question.choices.all().delete()
+                            # Add new choices
+                            for c_data in choices_data:
+                                if c_data.get('text'):  # Only add if text is not empty
+                                    Choice.objects.create(
+                                        question=question,
+                                        choice_text=c_data['text'],
+                                        is_correct=c_data.get('is_correct', False)
+                                    )
+                        else:
+                            # For text answers, remove all choices
+                            question.choices.all().delete()
+                            
+                    except Question.DoesNotExist:
+                        # If question doesn't exist, create new one
+                        question = Question.objects.create(
+                            test=test,
+                            question_text=q_data['question_text'],
+                            question_type=q_data['question_type'],
+                            points=float(q_data.get('points', 1.0)),
+                            order=i + 1,
+                            explanation=q_data.get('explanation', '')
+                        )
+                        new_question_ids.add(question.id)
+                        
+                        if q_data['question_type'] in ['single_choice', 'multiple_choice']:
+                            for c_data in q_data.get('choices', []):
+                                if c_data.get('text'):
+                                    Choice.objects.create(
+                                        question=question,
+                                        choice_text=c_data['text'],
+                                        is_correct=c_data.get('is_correct', False)
+                                    )
                 else:
                     # Create new question
+                    print(f"Creating new question: {q_data['question_text'][:50]}...")
                     question = Question.objects.create(
                         test=test,
                         question_text=q_data['question_text'],
@@ -966,13 +1054,22 @@ def edit_test_view(request, test_id):
                         order=i + 1,
                         explanation=q_data.get('explanation', '')
                     )
+                    new_question_ids.add(question.id)
+                    print(f"Created new question with ID {question.id}")
+                    
                     if q_data['question_type'] in ['single_choice', 'multiple_choice']:
                         for c_data in q_data.get('choices', []):
-                            Choice.objects.create(
-                                question=question,
-                                choice_text=c_data['text'],
-                                is_correct=c_data.get('is_correct', False)
-                            )
+                            if c_data.get('text'):
+                                Choice.objects.create(
+                                    question=question,
+                                    choice_text=c_data['text'],
+                                    is_correct=c_data.get('is_correct', False)
+                                )
+            
+            # Remove questions that are no longer in the list
+            questions_to_delete = existing_question_ids - new_question_ids
+            if questions_to_delete:
+                test.questions.filter(id__in=questions_to_delete).delete()
             # Saqlangan savollarni JSON ko‘rinishda qaytarish:
             questions = test.questions.all().order_by('order')
             questions_data = []
@@ -993,6 +1090,46 @@ def edit_test_view(request, test_id):
             return JsonResponse({'success': False, 'error': str(e)}, status=400)
 
     # GET: Render edit page with test and questions
+    if request.headers.get('Accept') == 'application/json':
+        # Return JSON data for AJAX requests
+        questions = test.questions.all().order_by('order')
+        questions_data = []
+        for q in questions:
+            q_data = {
+                'id': q.id,
+                'question_text': q.question_text,
+                'question_type': q.question_type,
+                'points': q.points,
+                'explanation': q.explanation,
+                'choices': []
+            }
+            if q.question_type in ['single_choice', 'multiple_choice']:
+                q_data['choices'] = [
+                    {'id': c.id, 'text': c.choice_text, 'is_correct': c.is_correct}
+                    for c in q.choices.all()
+                ]
+            questions_data.append(q_data)
+        
+        print(f"Returning {len(questions_data)} questions for test {test.id}")
+        for i, q in enumerate(questions_data):
+            print(f"  Question {i+1}: {q['question_text'][:50]}... ({q['question_type']})")
+        
+        return JsonResponse({
+            'test': {
+                'id': test.id,
+                'title': test.title,
+                'subject': test.subject,
+                'grade': test.grade,
+                'time_limit': test.time_limit,
+                'max_attempts': test.max_attempts,
+                'description': test.description,
+                'show_results': test.show_results,
+                'is_active': test.is_active
+            },
+            'questions': questions_data
+        })
+    
+    # Regular HTML request
     questions = test.questions.all().order_by('order')
     questions_data = []
     for q in questions:
@@ -1028,3 +1165,25 @@ def start_test_view(request, test_id):
         'questions': questions,
     }
     return render(request, 'tests_app/start_test.html', context)
+
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.shortcuts import render
+from .models import Test
+
+@login_required
+@user_passes_test(lambda u: u.is_staff or u.is_superuser)
+def admin_teacher_tests(request):
+    """
+    Admin uchun: o'qituvchilar tomonidan yaratilgan testlar ro'yxatini ko'rsatadi.
+    URL: /tests/admin/teacher-tests/  (tests_app/urls.py da allaqachon mavjud)
+    """
+    tests = (
+        Test.objects
+        .filter(created_by__role='teacher')   # created_by field is correct
+        .select_related('created_by')
+        .order_by('-created_at')
+    )
+
+    return render(request, 'admin/tests_teacher_list.html', {
+        'teacher_tests': tests
+    })

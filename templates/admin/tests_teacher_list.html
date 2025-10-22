@@ -1,0 +1,300 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admin — O'qituvchilar Testlari{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="glass-card p-4 mb-4" data-aos="fade-up">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="text-white mb-0"><i class="fas fa-file-alt me-2"></i> O'qituvchilar Yaratgan Testlar</h4>
+        <div>
+          <span class="badge bg-info">Jami: {{ teacher_tests.count }} ta test</span>
+        </div>
+      </div>
+      
+      <!-- Filter controls -->
+      <div class="row mb-3">
+        <div class="col-md-3">
+          <input type="text" class="form-control bg-transparent border-secondary text-white" 
+                 id="searchInput" placeholder="Test qidirish...">
+        </div>
+        <div class="col-md-3">
+          <select class="form-select bg-transparent border-secondary text-white" id="teacherFilter">
+            <option value="">Barcha o'qituvchilar</option>
+            {% regroup teacher_tests by created_by as teachers_list %}
+            {% for teacher_group in teachers_list %}
+              <option value="{{ teacher_group.grouper.id }}">{{ teacher_group.grouper.get_full_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-2">
+          <select class="form-select bg-transparent border-secondary text-white" id="statusFilter">
+            <option value="">Barcha holatlar</option>
+            <option value="active">Faol</option>
+            <option value="inactive">Nofaol</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <select class="form-select bg-transparent border-secondary text-white" id="gradeFilter">
+            <option value="">Barcha sinflar</option>
+            <option value="9">9-sinf</option>
+            <option value="10">10-sinf</option>
+            <option value="11">11-sinf</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <button class="btn btn-outline-light w-100" onclick="clearFilters()">
+            <i class="fas fa-times me-1"></i>Tozalash
+          </button>
+        </div>
+      </div>
+
+      {% if teacher_tests %}
+      <div class="table-responsive">
+        <table class="table table-dark table-hover align-middle" id="testsTable">
+          <thead>
+            <tr>
+              <th style="width: 5%">#</th>
+              <th style="width: 25%">Test Nomi</th>
+              <th class="text-center" style="width: 12%">Fan</th>
+              <th class="text-center" style="width: 8%">Sinf</th>
+              <th class="text-center" style="width: 15%">O'qituvchi</th>
+              <th class="text-center" style="width: 8%">Savollar</th>
+              <th class="text-center" style="width: 8%">Urinishlar</th>
+              <th class="text-center" style="width: 8%">Holat</th>
+              <th class="text-center" style="width: 11%">Amallar</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for t in teacher_tests %}
+            <tr class="test-row" 
+                data-teacher-id="{{ t.created_by.id }}"
+                data-status="{% if t.is_active %}active{% else %}inactive{% endif %}"
+                data-grade="{{ t.grade }}">
+              <td class="text-white-50">{{ forloop.counter }}</td>
+              <td>
+                <div class="d-flex align-items-center">
+                  <div>
+                    <a href="{% url 'tests:test_info' t.id %}" class="text-white text-decoration-none fw-bold">
+                      {{ t.title|default:"(Nomi yo'q)" }}
+                    </a>
+                    {% if t.description %}
+                    <div class="text-muted small mt-1">{{ t.description|truncatechars:60 }}</div>
+                    {% endif %}
+                  </div>
+                </div>
+              </td>
+              <td class="text-center">
+                <span class="badge bg-primary">{{ t.subject }}</span>
+              </td>
+              <td class="text-center">
+                <span class="badge bg-secondary">{{ t.grade }}-sinf</span>
+              </td>
+              <td class="text-center text-white">
+                <i class="fas fa-user-tie me-1"></i>
+                {{ t.created_by.get_full_name|default:t.created_by.username }}
+              </td>
+              <td class="text-center">
+                <span class="badge bg-info">{{ t.total_questions|default:0 }}</span>
+              </td>
+              <td class="text-center">
+                <span class="badge bg-warning text-dark">{{ t.attempts.count }}</span>
+              </td>
+              <td class="text-center">
+                <span class="badge {% if t.is_active %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                  {% if t.is_active %}
+                    <i class="fas fa-check-circle me-1"></i>Faol
+                  {% else %}
+                    <i class="fas fa-times-circle me-1"></i>Nofaol
+                  {% endif %}
+                </span>
+              </td>
+              <td class="text-center">
+                <div class="btn-group" role="group">
+                  <a href="{% url 'tests:edit_test' t.id %}" 
+                     class="btn btn-sm btn-outline-warning" 
+                     title="Tahrirlash">
+                    <i class="fas fa-edit"></i>
+                  </a>
+                  <a href="{% url 'tests:test_results' t.id %}" 
+                     class="btn btn-sm btn-outline-info" 
+                     title="Natijalar">
+                    <i class="fas fa-chart-bar"></i>
+                  </a>
+                  <button onclick="deleteTest({{ t.id }}, '{{ t.title|escapejs }}')" 
+                          class="btn btn-sm btn-outline-danger" 
+                          title="O'chirish">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="text-center">
+        <p class="text-white-50">Hozircha hech qanday test topilmadi.</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+// Filter functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const teacherFilter = document.getElementById('teacherFilter');
+    const statusFilter = document.getElementById('statusFilter');
+    const gradeFilter = document.getElementById('gradeFilter');
+    
+    if (searchInput) searchInput.addEventListener('input', applyFilters);
+    if (teacherFilter) teacherFilter.addEventListener('change', applyFilters);
+    if (statusFilter) statusFilter.addEventListener('change', applyFilters);
+    if (gradeFilter) gradeFilter.addEventListener('change', applyFilters);
+});
+
+function applyFilters() {
+    const searchTerm = document.getElementById('searchInput')?.value.toLowerCase() || '';
+    const teacherId = document.getElementById('teacherFilter')?.value || '';
+    const status = document.getElementById('statusFilter')?.value || '';
+    const grade = document.getElementById('gradeFilter')?.value || '';
+    
+    const rows = document.querySelectorAll('.test-row');
+    let visibleCount = 0;
+    
+    rows.forEach(row => {
+        const testName = row.querySelector('a').textContent.toLowerCase();
+        const rowTeacherId = row.getAttribute('data-teacher-id');
+        const rowStatus = row.getAttribute('data-status');
+        const rowGrade = row.getAttribute('data-grade');
+        
+        let show = true;
+        
+        if (searchTerm && !testName.includes(searchTerm)) {
+            show = false;
+        }
+        
+        if (teacherId && rowTeacherId !== teacherId) {
+            show = false;
+        }
+        
+        if (status && rowStatus !== status) {
+            show = false;
+        }
+        
+        if (grade && rowGrade !== grade) {
+            show = false;
+        }
+        
+        row.style.display = show ? '' : 'none';
+        if (show) visibleCount++;
+    });
+    
+    // Update counter
+    const badge = document.querySelector('.badge.bg-info');
+    if (badge) {
+        badge.textContent = `Ko'rsatilmoqda: ${visibleCount} ta test`;
+    }
+}
+
+function clearFilters() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('teacherFilter').value = '';
+    document.getElementById('statusFilter').value = '';
+    document.getElementById('gradeFilter').value = '';
+    applyFilters();
+    
+    const badge = document.querySelector('.badge.bg-info');
+    if (badge) {
+        const totalRows = document.querySelectorAll('.test-row').length;
+        badge.textContent = `Jami: ${totalRows} ta test`;
+    }
+}
+
+async function deleteTest(testId, testTitle) {
+    // Confirmation modal ko'rsatish
+    if (!confirm(`"${testTitle}" testini o'chirishni xohlaysizmi?\n\nDiqqat: Bu amal qaytarib bo'lmaydi va test bilan bog'liq barcha ma'lumotlar (natijalar, urinishlar) ham o'chiriladi!`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/tests/${testId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Success notification with better styling
+            showNotification(data.message, 'success');
+            // Reload page after a short delay
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showNotification('Xatolik: ' + (data.error || 'Testni o\'chirib bo\'lmadi'), 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting test:', error);
+        showNotification('Testni o\'chirishda xatolik yuz berdi. Iltimos qayta urinib ko\'ring.', 'error');
+    }
+}
+
+function showNotification(message, type) {
+    // Simple alert for now, can be replaced with a better notification system
+    alert(message);
+}
+
+// Get CSRF token from cookies
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+
+<style>
+.table-hover tbody tr:hover {
+    background-color: rgba(102, 126, 234, 0.1);
+}
+
+.btn-group .btn {
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.btn-group .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.badge {
+    font-size: 0.85em;
+    padding: 0.4em 0.6em;
+}
+
+.test-row {
+    transition: all 0.3s ease;
+}
+
+.test-row:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+</style>
+
+{% endblock %}
