@@ -34,6 +34,7 @@
         cursor: pointer;
         padding: 15px;
         margin-bottom: 10px;
+        user-select: none;  /* Text selection'ni o'chirish */
     }
     
     .choice-option:hover {
@@ -436,12 +437,15 @@
                 
                 html += `
                     <div class="choice-option ${isSelected ? 'selected' : ''}" 
-                         onclick="selectChoice(${question.id}, ${choice.id}, '${question.question_type}')">
+                         onclick="selectChoice(${question.id}, ${choice.id}, '${question.question_type}')"
+                         style="cursor: pointer;">
                         <div class="d-flex align-items-center">
                             <input type="${inputType}" class="form-check-input me-3" 
                                    id="choice-${choice.id}" ${isSelected ? 'checked' : ''}
-                                   onchange="selectChoice(${question.id}, ${choice.id}, '${question.question_type}')">
-                            <label for="choice-${choice.id}" class="form-check-label flex-grow-1 mb-0">
+                                   onchange="selectChoice(${question.id}, ${choice.id}, '${question.question_type}')"
+                                   style="pointer-events: none;">
+                            <label for="choice-${choice.id}" class="form-check-label flex-grow-1 mb-0" 
+                                   style="cursor: pointer; pointer-events: none;">
                                 ${choice.text}
                             </label>
                         </div>
@@ -468,26 +472,38 @@
         }
         
         if (questionType === 'single_choice') {
+            // Single choice - bitta bosganda darhol qabul qilish
             answers[questionId].choice_ids = [choiceId];
+            
+            // Darhol saqlash
+            saveAnswer(questionId, answers[questionId]);
+            
+            // Darhol visual update
+            updateChoiceSelection(questionId, questionType);
+            
+            // Darhol navigation update
+            updateNavigationPills();
+            updateProgress();
+            
         } else {
-            // Multiple choice
+            // Multiple choice - toggle qilish
             const index = answers[questionId].choice_ids.indexOf(choiceId);
             if (index > -1) {
                 answers[questionId].choice_ids.splice(index, 1);
             } else {
                 answers[questionId].choice_ids.push(choiceId);
             }
+            
+            // Darhol saqlash
+            saveAnswer(questionId, answers[questionId]);
+            
+            // Darhol visual update
+            updateChoiceSelection(questionId, questionType);
+            
+            // Darhol navigation update
+            updateNavigationPills();
+            updateProgress();
         }
-        
-        // Save answer
-        saveAnswer(questionId, answers[questionId]);
-        
-        // Update visual selection
-        updateChoiceSelection(questionId, questionType);
-        
-        // Update pills and progress
-        updateNavigationPills();
-        updateProgress();
     }
 
     function saveTextAnswer(questionId) {
