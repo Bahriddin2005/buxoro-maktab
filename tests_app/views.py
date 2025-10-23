@@ -5,6 +5,7 @@ from django.views.decorators.http import require_http_methods
 from django.utils import timezone
 from django.db import transaction
 from django.core.paginator import Paginator
+from django.db.models import Count, Avg, Max, Min
 import json
 import random
 from .models import Test, Question, Choice, TestAttempt, Answer, TestResult, TestRetakeRequest
@@ -201,7 +202,8 @@ def take_test_view(request, test_id):
                 'id': question.id,
                 'question_text': question.question_text,
                 'question_type': question.question_type,
-                'points': question.points
+                'points': question.points,
+                'image': question.image.url if question.image else None
             }
             
             if question.question_type in ['single_choice', 'multiple_choice']:
@@ -348,10 +350,44 @@ def test_results_view(request, test_id):
             if not attempt or not attempt.is_completed:
                 return JsonResponse({'error': 'Test not completed'}, status=404)
             
-            results = attempt.calculate_score() if hasattr(attempt, 'calculate_score') else {}
+            # Get detailed results
             correct_answers = attempt.result.correct_answers if hasattr(attempt, 'result') else 0
             incorrect_answers = attempt.result.incorrect_answers if hasattr(attempt, 'result') else 0
             unanswered = attempt.result.unanswered if hasattr(attempt, 'result') else 0
+            
+            # Get incorrect questions details
+            incorrect_questions = []
+            unanswered_questions = []
+            if hasattr(attempt, 'result') and attempt.result:
+                # Get all answers for this attempt
+                answers = Answer.objects.filter(attempt=attempt).select_related('question')
+                answered_question_ids = set(answers.values_list('question_id', flat=True))
+                
+                # Get all questions for this test
+                all_questions = test.questions.all()
+                
+                for answer in answers:
+                    if not answer.is_correct():
+                        question = answer.question
+                        student_answer = answer.get_student_answer_text()
+                        correct_answer = question.get_correct_answer_text()
+                        
+                        incorrect_questions.append({
+                            'question_text': question.question_text,
+                            'student_answer': student_answer,
+                            'correct_answer': correct_answer,
+                            'explanation': question.explanation or ''
+                        })
+                
+                # Find unanswered questions
+                for question in all_questions:
+                    if question.id not in answered_question_ids:
+                        unanswered_questions.append({
+                            'question_text': question.question_text,
+                            'correct_answer': question.get_correct_answer_text(),
+                            'explanation': question.explanation or ''
+                        })
+            
             result_data = {
                 'student': request.user.username,
                 'score': attempt.score,
@@ -363,15 +399,30 @@ def test_results_view(request, test_id):
                 'correct_answers': correct_answers,
                 'incorrect_answers': incorrect_answers,
                 'unanswered': unanswered,
-                'all_answered': results.get('all_answered', False),
-                'answered_count': results.get('answered_count', 0),
-                'total_questions': results.get('total_questions', 0),
-                'incorrect_questions': results.get('incorrect_questions', [])
+                'all_answered': (unanswered == 0),
+                'answered_count': correct_answers + incorrect_answers,
+                'total_questions': correct_answers + incorrect_answers + unanswered,
+                'incorrect_questions': incorrect_questions,
+                'unanswered_questions': unanswered_questions
             }
             return JsonResponse({'result': result_data})
         
-        elif request.user.role == 'teacher' and test.created_by == request.user:
-            attempts = TestAttempt.objects.filter(test=test, is_completed=True).select_related('student', 'result').order_by('student__grade', 'student__class_name', 'student__first_name', 'student__last_name')
+        elif (request.user.role == 'teacher' and test.created_by == request.user) or request.user.role == 'admin':
+            # Faqat har bir o'quvchining oxirgi (eng so'nggi) natijasini olish
+            from django.db.models import Max
+            
+            # Har bir o'quvchi uchun eng so'nggi attempt ID'sini topish
+            latest_attempts = TestAttempt.objects.filter(
+                test=test, 
+                is_completed=True
+            ).values('student').annotate(
+                latest_attempt_id=Max('id')
+            ).values_list('latest_attempt_id', flat=True)
+            
+            # Faqat oxirgi attempt'larni olish
+            attempts = TestAttempt.objects.filter(
+                id__in=latest_attempts
+            ).select_related('student', 'result').order_by('student__grade', 'student__class_name', 'student__first_name', 'student__last_name')
             
             results_data = []
             for attempt in attempts:
@@ -968,8 +1019,86 @@ def edit_test_view(request, test_id):
 
     if request.method == 'POST':
         try:
-            data = json.loads(request.body)
-            print(f"Received data for test {test_id}: {data}")
+            # Check if it's FormData (for image upload) or JSON
+            print(f"Request content type: {request.content_type}")
+            print(f"Request method: {request.method}")
+            print(f"Request POST data: {request.POST}")
+            print(f"Request FILES: {request.FILES}")
+            
+            if request.content_type and 'multipart/form-data' in request.content_type:
+                # Handle FormData for image upload
+                question_text = request.POST.get('question_text')
+                question_type = request.POST.get('question_type')
+                points = request.POST.get('points', 1)
+                explanation = request.POST.get('explanation', '')
+                question_image = request.FILES.get('question_image')
+                
+                print(f"Question text: {question_text}")
+                print(f"Question type: {question_type}")
+                print(f"Points: {points}")
+                print(f"Explanation: {explanation}")
+                print(f"Question image: {question_image}")
+                
+                # Validation
+                if not question_text:
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'Savol matni kiritilishi shart!'
+                    })
+                
+                if not question_type:
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'Savol turi tanlanishi shart!'
+                    })
+                
+                # Create new question with image
+                try:
+                    question = Question.objects.create(
+                        test=test,
+                        question_text=question_text,
+                        question_type=question_type,
+                        points=float(points),
+                        order=test.questions.count() + 1,
+                        explanation=explanation,
+                        image=question_image
+                    )
+                    print(f"Question created successfully with ID: {question.id}")
+                except Exception as e:
+                    print(f"Error creating question: {e}")
+                    return JsonResponse({
+                        'success': False,
+                        'error': f'Question yaratishda xatolik: {str(e)}'
+                    })
+                
+                # Handle choices
+                try:
+                    if question_type in ['single_choice', 'multiple_choice']:
+                        choice_index = 0
+                        while f'choices[{choice_index}][text]' in request.POST:
+                            choice_text = request.POST.get(f'choices[{choice_index}][text]')
+                            is_correct = request.POST.get(f'choices[{choice_index}][is_correct]') == 'true'
+                            if choice_text:
+                                Choice.objects.create(
+                                    question=question,
+                                    choice_text=choice_text,
+                                    is_correct=is_correct
+                                )
+                                print(f"Choice {choice_index} created: {choice_text}")
+                            choice_index += 1
+                except Exception as e:
+                    print(f"Error creating choices: {e}")
+                    # Don't return error here, question is already created
+                
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Savol muvaffaqiyatli qo\'shildi!',
+                    'question_id': question.id
+                })
+            else:
+                # Handle JSON data (existing functionality)
+                data = json.loads(request.body)
+                print(f"Received data for test {test_id}: {data}")
             
             # Update test fields
             test.title = data.get('title', test.title)
@@ -1078,10 +1207,12 @@ def edit_test_view(request, test_id):
             questions_data = []
             for q in questions:
                 q_data = {
+                    "id": q.id,
                     "question_text": q.question_text,
                     "question_type": q.question_type,
                     "points": q.points,
                     "explanation": q.explanation,
+                    "image": q.image.url if q.image else None,
                     "choices": [
                         {"text": c.choice_text, "is_correct": c.is_correct}
                         for c in q.choices.all()
@@ -1190,3 +1321,381 @@ def admin_teacher_tests(request):
     return render(request, 'admin/tests_teacher_list.html', {
         'teacher_tests': tests
     })
+
+@login_required
+def grade_based_results_view(request):
+    """Sinf bo'yicha test natijalarini ko'rsatish"""
+    if request.user.role not in ['teacher', 'admin']:
+        return redirect('accounts:dashboard')
+    
+    # Barcha sinflarni olish (1-11)
+    grades = list(range(1, 12))
+    
+    # Har bir sinf uchun statistikalar
+    grade_stats = []
+    for grade in grades:
+        # Bu sinf uchun testlar
+        tests = Test.objects.filter(grade=grade, is_active=True)
+        
+        # Bu sinf o'quvchilari
+        students = User.objects.filter(role='student', grade=grade, is_verified=True)
+        
+        # Bu sinf uchun test urinishlari - faqat har bir o'quvchining oxirgi natijasi
+        from django.db.models import Max
+        
+        # Har bir o'quvchi uchun eng so'nggi attempt ID'sini topish
+        latest_attempts = TestAttempt.objects.filter(
+            test__grade=grade,
+            student__grade=grade,
+            is_completed=True
+        ).values('student').annotate(
+            latest_attempt_id=Max('id')
+        ).values_list('latest_attempt_id', flat=True)
+        
+        # Faqat oxirgi attempt'larni olish
+        attempts = TestAttempt.objects.filter(
+            id__in=latest_attempts
+        ).select_related('student', 'test', 'result')
+        
+        # Statistika hisoblash
+        total_students = students.count()
+        total_tests = tests.count()
+        total_attempts = attempts.count()
+        
+        if total_attempts > 0:
+            avg_percentage = attempts.aggregate(avg=Avg('percentage'))['avg'] or 0
+            highest_score = attempts.aggregate(max=Max('percentage'))['max'] or 0
+            lowest_score = attempts.aggregate(min=Min('percentage'))['min'] or 0
+        else:
+            avg_percentage = 0
+            highest_score = 0
+            lowest_score = 0
+        
+        # Eng yaxshi natijalar
+        top_performers = attempts.order_by('-percentage')[:5]
+        
+        grade_stats.append({
+            'grade': grade,
+            'total_students': total_students,
+            'total_tests': total_tests,
+            'total_attempts': total_attempts,
+            'avg_percentage': round(avg_percentage, 1),
+            'highest_score': round(highest_score, 1),
+            'lowest_score': round(lowest_score, 1),
+            'top_performers': [
+                {
+                    'student_name': f"{attempt.student.first_name} {attempt.student.last_name}",
+                    'student_username': attempt.student.username,
+                    'test_title': attempt.test.title,
+                    'percentage': round(attempt.percentage, 1),
+                    'score': attempt.score,
+                    'finished_at': attempt.finished_at
+                }
+                for attempt in top_performers
+            ]
+        })
+    
+    # Umumiy statistika
+    total_students = User.objects.filter(role='student', is_verified=True).count()
+    total_teachers = User.objects.filter(role='teacher', is_verified=True).count()
+    total_tests = Test.objects.filter(is_active=True).count()
+    total_attempts = TestAttempt.objects.filter(is_completed=True).count()
+    
+    context = {
+        'grade_stats': grade_stats,
+        'total_students': total_students,
+        'total_teachers': total_teachers,
+        'total_tests': total_tests,
+        'total_attempts': total_attempts,
+    }
+    
+    return render(request, 'tests_app/grade_based_results.html', context)
+
+@login_required
+def export_grade_results_view(request):
+    """Sinf bo'yicha natijalarni Excel faylga export qilish"""
+    if request.user.role not in ['teacher', 'admin']:
+        return redirect('accounts:dashboard')
+    
+    # Excel workbook yaratish
+    wb = Workbook()
+    
+    # Barcha sinflarni olish (1-11)
+    grades = list(range(1, 12))
+    
+    for grade in grades:
+        # Har bir sinf uchun alohida sheet yaratish
+        ws = wb.create_sheet(title=f"{grade}-sinf")
+        
+        # Header qo'shish
+        ws['A1'] = f"{grade}-sinf Test Natijalari"
+        ws['A1'].font = Font(bold=True, size=16)
+        ws['A1'].fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
+        
+        # Umumiy ma'lumotlar
+        ws['A3'] = "Umumiy Ma'lumotlar:"
+        ws['A3'].font = Font(bold=True)
+        
+        # Bu sinf uchun testlar
+        tests = Test.objects.filter(grade=grade, is_active=True)
+        
+        # Bu sinf o'quvchilari
+        students = User.objects.filter(role='student', grade=grade, is_verified=True)
+        
+        # Bu sinf uchun test urinishlari - faqat har bir o'quvchining oxirgi natijasi
+        from django.db.models import Max
+        
+        # Har bir o'quvchi uchun eng so'nggi attempt ID'sini topish
+        latest_attempts = TestAttempt.objects.filter(
+            test__grade=grade,
+            student__grade=grade,
+            is_completed=True
+        ).values('student').annotate(
+            latest_attempt_id=Max('id')
+        ).values_list('latest_attempt_id', flat=True)
+        
+        # Faqat oxirgi attempt'larni olish
+        attempts = TestAttempt.objects.filter(
+            id__in=latest_attempts
+        ).select_related('student', 'test', 'result')
+        
+        # Statistika hisoblash
+        total_students = students.count()
+        total_tests = tests.count()
+        total_attempts = attempts.count()
+        
+        if total_attempts > 0:
+            avg_percentage = attempts.aggregate(avg=Avg('percentage'))['avg'] or 0
+            highest_score = attempts.aggregate(max=Max('percentage'))['max'] or 0
+            lowest_score = attempts.aggregate(min=Min('percentage'))['min'] or 0
+        else:
+            avg_percentage = 0
+            highest_score = 0
+            lowest_score = 0
+        
+        # Ma'lumotlarni yozish
+        ws['A4'] = f"Jami O'quvchilar: {total_students}"
+        ws['A5'] = f"Jami Testlar: {total_tests}"
+        ws['A6'] = f"Jami Urinishlar: {total_attempts}"
+        ws['A7'] = f"O'rtacha Ball: {avg_percentage:.1f}%"
+        ws['A8'] = f"Eng Yuqori Ball: {highest_score:.1f}%"
+        ws['A9'] = f"Eng Past Ball: {lowest_score:.1f}%"
+        
+        # Bo'sh qator
+        ws['A11'] = "Barcha Natijalar:"
+        ws['A11'].font = Font(bold=True)
+        
+        # Header qator
+        headers = ['O\'quvchi', 'Test', 'Ball', 'Foiz', 'Vaqt', 'Sana']
+        for col, header in enumerate(headers, 1):
+            cell = ws.cell(row=12, column=col, value=header)
+            cell.font = Font(bold=True)
+            cell.fill = PatternFill(start_color="D9E2F3", end_color="D9E2F3", fill_type="solid")
+        
+        # Natijalarni yozish
+        row = 13
+        for attempt in attempts.order_by('-percentage'):
+            student_name = f"{attempt.student.first_name} {attempt.student.last_name}"
+            if not student_name.strip():
+                student_name = attempt.student.username
+            
+            ws.cell(row=row, column=1, value=student_name)
+            ws.cell(row=row, column=2, value=attempt.test.title)
+            ws.cell(row=row, column=3, value=attempt.score)
+            ws.cell(row=row, column=4, value=f"{attempt.percentage:.1f}%")
+            ws.cell(row=row, column=5, value=str(attempt.time_taken))
+            ws.cell(row=row, column=6, value=attempt.finished_at.strftime('%d.%m.%Y %H:%M'))
+            
+            # Ball bo'yicha rang berish
+            if attempt.percentage >= 81:
+                fill_color = "C6EFCE"  # Yashil
+            elif attempt.percentage >= 61:
+                fill_color = "FFEB9C"  # Sariq
+            elif attempt.percentage >= 31:
+                fill_color = "FFC7CE"  # Qizil
+            else:
+                fill_color = "FFC7CE"  # Qizil
+            
+            for col in range(1, 7):
+                ws.cell(row=row, column=col).fill = PatternFill(start_color=fill_color, end_color=fill_color, fill_type="solid")
+            
+            row += 1
+        
+        # Eng yaxshi natijalar
+        if total_attempts > 0:
+            ws[f'A{row+2}'] = "Eng Yaxshi Natijalar (Top 5):"
+            ws[f'A{row+2}'].font = Font(bold=True)
+            
+            top_attempts = attempts.order_by('-percentage')[:5]
+            for i, attempt in enumerate(top_attempts, 1):
+                student_name = f"{attempt.student.first_name} {attempt.student.last_name}"
+                if not student_name.strip():
+                    student_name = attempt.student.username
+                
+                ws.cell(row=row+3+i, column=1, value=f"{i}. {student_name}")
+                ws.cell(row=row+3+i, column=2, value=attempt.test.title)
+                ws.cell(row=row+3+i, column=3, value=f"{attempt.percentage:.1f}%")
+                ws.cell(row=row+3+i, column=4, value=attempt.score)
+        
+        # Ustun kengliklarini sozlash
+        ws.column_dimensions['A'].width = 25
+        ws.column_dimensions['B'].width = 30
+        ws.column_dimensions['C'].width = 10
+        ws.column_dimensions['D'].width = 10
+        ws.column_dimensions['E'].width = 15
+        ws.column_dimensions['F'].width = 20
+    
+    # Default sheet'ni o'chirish
+    if 'Sheet' in wb.sheetnames:
+        wb.remove(wb['Sheet'])
+    
+    # Response yaratish
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename="sinf_natijalari.xlsx"'
+    
+    # Excel faylni saqlash
+    wb.save(response)
+    
+    return response
+
+@login_required
+def export_single_grade_results_view(request, grade):
+    """Bitta sinf uchun Excel fayl yaratish"""
+    if request.user.role not in ['teacher', 'admin']:
+        return redirect('accounts:dashboard')
+    
+    # Excel workbook yaratish
+    wb = Workbook()
+    ws = wb.active
+    ws.title = f"{grade}-sinf"
+    
+    # Header qo'shish
+    ws['A1'] = f"{grade}-sinf Test Natijalari"
+    ws['A1'].font = Font(bold=True, size=16)
+    ws['A1'].fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
+    
+    # Umumiy ma'lumotlar
+    ws['A3'] = "Umumiy Ma'lumotlar:"
+    ws['A3'].font = Font(bold=True)
+    
+    # Bu sinf uchun testlar
+    tests = Test.objects.filter(grade=grade, is_active=True)
+    
+    # Bu sinf o'quvchilari
+    students = User.objects.filter(role='student', grade=grade, is_verified=True)
+    
+    # Bu sinf uchun test urinishlari - faqat har bir o'quvchining oxirgi natijasi
+    from django.db.models import Max
+    
+    # Har bir o'quvchi uchun eng so'nggi attempt ID'sini topish
+    latest_attempts = TestAttempt.objects.filter(
+        test__grade=grade,
+        student__grade=grade,
+        is_completed=True
+    ).values('student').annotate(
+        latest_attempt_id=Max('id')
+    ).values_list('latest_attempt_id', flat=True)
+    
+    # Faqat oxirgi attempt'larni olish
+    attempts = TestAttempt.objects.filter(
+        id__in=latest_attempts
+    ).select_related('student', 'test', 'result')
+    
+    # Statistika hisoblash
+    total_students = students.count()
+    total_tests = tests.count()
+    total_attempts = attempts.count()
+    
+    if total_attempts > 0:
+        avg_percentage = attempts.aggregate(avg=Avg('percentage'))['avg'] or 0
+        highest_score = attempts.aggregate(max=Max('percentage'))['max'] or 0
+        lowest_score = attempts.aggregate(min=Min('percentage'))['min'] or 0
+    else:
+        avg_percentage = 0
+        highest_score = 0
+        lowest_score = 0
+    
+    # Ma'lumotlarni yozish
+    ws['A4'] = f"Jami O'quvchilar: {total_students}"
+    ws['A5'] = f"Jami Testlar: {total_tests}"
+    ws['A6'] = f"Jami Urinishlar: {total_attempts}"
+    ws['A7'] = f"O'rtacha Ball: {avg_percentage:.1f}%"
+    ws['A8'] = f"Eng Yuqori Ball: {highest_score:.1f}%"
+    ws['A9'] = f"Eng Past Ball: {lowest_score:.1f}%"
+    
+    # Bo'sh qator
+    ws['A11'] = "Barcha Natijalar:"
+    ws['A11'].font = Font(bold=True)
+    
+    # Header qator
+    headers = ['O\'quvchi', 'Test', 'Ball', 'Foiz', 'Vaqt', 'Sana']
+    for col, header in enumerate(headers, 1):
+        cell = ws.cell(row=12, column=col, value=header)
+        cell.font = Font(bold=True)
+        cell.fill = PatternFill(start_color="D9E2F3", end_color="D9E2F3", fill_type="solid")
+    
+    # Natijalarni yozish
+    row = 13
+    for attempt in attempts.order_by('-percentage'):
+        student_name = f"{attempt.student.first_name} {attempt.student.last_name}"
+        if not student_name.strip():
+            student_name = attempt.student.username
+        
+        ws.cell(row=row, column=1, value=student_name)
+        ws.cell(row=row, column=2, value=attempt.test.title)
+        ws.cell(row=row, column=3, value=attempt.score)
+        ws.cell(row=row, column=4, value=f"{attempt.percentage:.1f}%")
+        ws.cell(row=row, column=5, value=str(attempt.time_taken))
+        ws.cell(row=row, column=6, value=attempt.finished_at.strftime('%d.%m.%Y %H:%M'))
+        
+        # Ball bo'yicha rang berish
+        if attempt.percentage >= 81:
+            fill_color = "C6EFCE"  # Yashil
+        elif attempt.percentage >= 61:
+            fill_color = "FFEB9C"  # Sariq
+        elif attempt.percentage >= 31:
+            fill_color = "FFC7CE"  # Qizil
+        else:
+            fill_color = "FFC7CE"  # Qizil
+        
+        for col in range(1, 7):
+            ws.cell(row=row, column=col).fill = PatternFill(start_color=fill_color, end_color=fill_color, fill_type="solid")
+        
+        row += 1
+    
+    # Eng yaxshi natijalar
+    if total_attempts > 0:
+        ws[f'A{row+2}'] = "Eng Yaxshi Natijalar (Top 5):"
+        ws[f'A{row+2}'].font = Font(bold=True)
+        
+        top_attempts = attempts.order_by('-percentage')[:5]
+        for i, attempt in enumerate(top_attempts, 1):
+            student_name = f"{attempt.student.first_name} {attempt.student.last_name}"
+            if not student_name.strip():
+                student_name = attempt.student.username
+            
+            ws.cell(row=row+3+i, column=1, value=f"{i}. {student_name}")
+            ws.cell(row=row+3+i, column=2, value=attempt.test.title)
+            ws.cell(row=row+3+i, column=3, value=f"{attempt.percentage:.1f}%")
+            ws.cell(row=row+3+i, column=4, value=attempt.score)
+    
+    # Ustun kengliklarini sozlash
+    ws.column_dimensions['A'].width = 25
+    ws.column_dimensions['B'].width = 30
+    ws.column_dimensions['C'].width = 10
+    ws.column_dimensions['D'].width = 10
+    ws.column_dimensions['E'].width = 15
+    ws.column_dimensions['F'].width = 20
+    
+    # Response yaratish
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="{grade}-sinf_natijalari.xlsx"'
+    
+    # Excel faylni saqlash
+    wb.save(response)
+    
+    return response

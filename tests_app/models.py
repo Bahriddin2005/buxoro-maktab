@@ -43,9 +43,24 @@ class Question(models.Model):
     points = models.FloatField(default=1.0)
     order = models.IntegerField(default=0)
     explanation = models.TextField(blank=True, help_text="Explanation for the correct answer")
+    image = models.ImageField(upload_to='question_images/', blank=True, null=True, help_text="Savol uchun rasm")
     
     class Meta:
         ordering = ['order']
+    
+    def get_correct_answer_text(self):
+        """Get correct answer(s) as text"""
+        if self.question_type == 'text_answer':
+            return "Matnli javob (qo'lda baholash kerak)"
+        
+        elif self.question_type in ['single_choice', 'multiple_choice']:
+            correct_choices = self.choices.filter(is_correct=True)
+            if correct_choices:
+                return ", ".join([choice.choice_text for choice in correct_choices])
+            else:
+                return "To'g'ri javob topilmadi"
+        
+        return "Javob topilmadi"
     
     def __str__(self):
         return f"{self.test.title} - Q{self.order}"
@@ -107,20 +122,41 @@ class TestAttempt(models.Model):
             if answer and answer.is_correct():
                 earned_points += question.points
             elif answer:
-                correct_choice = question.choices.filter(is_correct=True).first()
+                # Student's answer
+                if question.question_type == 'text_answer':
+                    student_answer = answer.text_answer
+                else:
+                    student_choices = answer.selected_choices.all()
+                    student_answer = ', '.join([choice.choice_text for choice in student_choices]) if student_choices else 'Javob berilmagan'
+                
+                # Correct answer
+                if question.question_type == 'text_answer':
+                    correct_answer = 'Matnli javob (o\'qituvchi tomonidan baholanadi)'
+                else:
+                    correct_choices = question.choices.filter(is_correct=True)
+                    correct_answer = ', '.join([choice.choice_text for choice in correct_choices]) if correct_choices else 'To\'g\'ri javob yo\'q'
+                
                 incorrect_questions.append({
                     'question_id': question.id,
                     'question_text': question.question_text,
-                    'answer': answer.selected_choices.first().choice_text if answer.selected_choices.exists() else answer.text_answer,
-                    'correct_answer': correct_choice.choice_text if correct_choice else None
+                    'student_answer': student_answer,
+                    'correct_answer': correct_answer,
+                    'explanation': question.explanation
                 })
             else:
-                correct_choice = question.choices.filter(is_correct=True).first()
+                # No answer given
+                if question.question_type == 'text_answer':
+                    correct_answer = 'Matnli javob (o\'qituvchi tomonidan baholanadi)'
+                else:
+                    correct_choices = question.choices.filter(is_correct=True)
+                    correct_answer = ', '.join([choice.choice_text for choice in correct_choices]) if correct_choices else 'To\'g\'ri javob yo\'q'
+                
                 incorrect_questions.append({
                     'question_id': question.id,
                     'question_text': question.question_text,
-                    'answer': None,
-                    'correct_answer': correct_choice.choice_text if correct_choice else None
+                    'student_answer': 'Javob berilmagan',
+                    'correct_answer': correct_answer,
+                    'explanation': question.explanation
                 })
         
         # Agar barcha savollarga javob berilgan bo'lsa, bonus ball qo'shish mumkin
@@ -174,6 +210,20 @@ class Answer(models.Model):
             return correct_choices == selected_choices
         
         return False
+    
+    def get_student_answer_text(self):
+        """Get student's answer as text"""
+        if self.question.question_type == 'text_answer':
+            return self.text_answer or "Javob berilmagan"
+        
+        elif self.question.question_type in ['single_choice', 'multiple_choice']:
+            selected = self.selected_choices.all()
+            if selected:
+                return ", ".join([choice.choice_text for choice in selected])
+            else:
+                return "Javob berilmagan"
+        
+        return "Javob berilmagan"
     
     def __str__(self):
         return f"{self.attempt.student.username} - {self.question}"

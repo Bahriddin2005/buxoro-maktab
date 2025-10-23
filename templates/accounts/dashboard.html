@@ -208,9 +208,9 @@
                             </a>
                         </div>
                         <div class="col-md-4">
-                            <a href="{% url 'tests:all_results' %}" class="btn btn-outline-success w-100 btn-lg">
+                            <a href="{% url 'tests:grade_based_results' %}" class="btn btn-outline-success w-100 btn-lg">
                                 <i class="fas fa-chart-bar me-2"></i>
-                                Natijalar
+                                Barcha Natijalar
                             </a>
                         </div>
                         
@@ -237,6 +237,12 @@
                             <a href="{% url 'tests:retake_requests' %}" class="btn btn-info w-100 btn-lg">
                                 <i class="fas fa-redo me-2"></i>
                                 Qayta Ishlash So'rovlari
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="{% url 'tests:grade_based_results' %}" class="btn btn-warning w-100 btn-lg">
+                                <i class="fas fa-graduation-cap me-2"></i>
+                                Barcha Natijalar
                             </a>
                         </div>
                         {% endif %}

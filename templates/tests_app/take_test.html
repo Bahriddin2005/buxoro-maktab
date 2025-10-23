@@ -190,6 +190,10 @@
                 <!-- Question text will be loaded here -->
             </div>
             
+            <div id="questionImageContainer" style="display: none;">
+                <!-- Question image will be loaded here -->
+            </div>
+            
             <div id="answerOptions">
                 <!-- Answer options will be loaded here -->
             </div>
@@ -392,6 +396,21 @@
         document.getElementById('currentQuestionNumber').textContent = index + 1;
         document.getElementById('questionText').innerHTML = question.question_text;
         document.getElementById('questionPoints').textContent = `${question.points} ball`;
+        
+        // Rasm ko'rsatish
+        const questionImageContainer = document.getElementById('questionImageContainer');
+        if (question.image) {
+            questionImageContainer.innerHTML = `
+                <div class="text-center mb-3">
+                    <img src="${question.image}" alt="Savol rasmi" class="img-fluid rounded" 
+                         style="max-width: 100%; max-height: 300px; object-fit: contain; border: 2px solid #e9ecef;">
+                </div>
+            `;
+            questionImageContainer.style.display = 'block';
+        } else {
+            questionImageContainer.innerHTML = '';
+            questionImageContainer.style.display = 'none';
+        }
         
         // Show answer options
         const optionsContainer = document.getElementById('answerOptions');

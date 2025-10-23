@@ -145,7 +145,7 @@ body {
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Yopish"></button>
       </div>
       <div class="modal-body">
-        <form id="addQuestionForm">
+        <form id="addQuestionForm" enctype="multipart/form-data">
           <div class="mb-3">
             <label class="form-label">Savol matni</label>
             <textarea class="form-control" name="question_text" rows="2" required></textarea>
@@ -181,6 +181,12 @@ body {
           <div class="mb-3">
             <label class="form-label">Tushuntirish (ixtiyoriy)</label>
             <textarea class="form-control" name="explanation" rows="1"></textarea>
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label">Savol uchun rasm (ixtiyoriy)</label>
+            <input type="file" class="form-control" name="question_image" accept="image/*">
+            <div class="form-text">JPG, PNG, GIF formatlari qo'llab-quvvatlanadi. Maksimal hajm: 5MB</div>
           </div>
           <div class="d-grid gap-2">
             <button type="submit" class="btn btn-primary btn-lg">SAVOLNI QO'SHISH</button>
@@ -240,6 +246,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const questionType = form.question_type.value;
         const points = form.points.value;
         const explanation = form.explanation.value.trim();
+        const questionImage = form.question_image.files[0];
         
         // Validation
         if (!questionText) {
@@ -270,13 +277,37 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Create question object
+        // FormData yaratish (rasm yuklash uchun)
+        const formData = new FormData();
+        formData.append('question_text', questionText);
+        formData.append('question_type', questionType);
+        formData.append('points', points);
+        formData.append('explanation', explanation);
+        
+        if (questionImage) {
+            formData.append('question_image', questionImage);
+        }
+        
+        // Choices qo'shish
+        choices.forEach((choice, index) => {
+            formData.append(`choices[${index}][text]`, choice.text);
+            formData.append(`choices[${index}][is_correct]`, choice.is_correct);
+        });
+        
+        // Debug: FormData contents
+        console.log('FormData entries:');
+        for (let [key, value] of formData.entries()) {
+            console.log(key, value);
+        }
+        
         const newQuestion = {
             id: '',  // New question, no ID yet
             question_text: questionText,
             question_type: questionType,
             points: parseFloat(points) || 1,
             explanation: explanation,
-            choices: choices
+            choices: choices,
+            image: questionImage ? questionImage.name : null
         };
         
         console.log('New question:', newQuestion);
@@ -301,6 +332,96 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             `;
         }
+        
+        // Rasm yuklash uchun FormData yuborish
+        if (questionImage) {
+            console.log('Uploading question with image...');
+            console.log('FormData contents:', formData);
+            console.log('Question image:', questionImage);
+            console.log('Question text:', questionText);
+            console.log('Question type:', questionType);
+            console.log('Points:', points);
+            console.log('Explanation:', explanation);
+            console.log('Choices:', choices);
+            
+            // Show loading state
+            const submitButton = form.querySelector('button[type="submit"]');
+            const originalText = submitButton.innerHTML;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Yuklanmoqda...';
+            submitButton.disabled = true;
+            
+            fetch(window.location.pathname, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: formData
+            })
+            .then(res => {
+                console.log('Response status:', res.status);
+                console.log('Response headers:', res.headers);
+                if (res.ok) {
+                    return res.json();
+                } else {
+                    throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+                }
+            })
+            .then(data => {
+                console.log('Response data:', data);
+                if (data.success) {
+                    console.log('Question with image uploaded successfully');
+                    // Reload questions to show the new question with image
+                    loadExistingQuestions();
+                    // Clear form
+                    form.reset();
+                    // Reset choices
+                    const choiceItems = form.querySelector('.choice-items');
+                    choiceItems.innerHTML = '';
+                    for (let i = 0; i < 2; i++) {
+                        const div = document.createElement('div');
+                        div.className = "choice-item d-flex align-items-center mb-2";
+                        div.innerHTML = `
+                            <input type="checkbox" class="form-check-input me-2" name="is_correct_${i}">
+                            <input type="text" class="form-control" name="choice_text_${i}" placeholder="Variant ${i + 1}">
+                        `;
+                        choiceItems.appendChild(div);
+                    }
+                    // Show success notification
+                    showSuccessNotification('✅ Rasmli savol muvaffaqiyatli qo\'shildi! Yana qo\'shishingiz mumkin.');
+                    // Focus on question text for next entry
+                    setTimeout(() => {
+                        form.question_text.focus();
+                    }, 500);
+                } else {
+                    alert('❌ Xatolik: ' + (data.error || 'Noma\'lum xatolik'));
+                }
+            })
+            .catch(error => {
+                console.error('Error uploading question with image:', error);
+                alert('❌ Rasm yuklashda xatolik yuz berdi: ' + error.message);
+            })
+            .finally(() => {
+                // Restore button state
+                submitButton.innerHTML = originalText;
+                submitButton.disabled = false;
+            });
+            return; // Stop execution here for image upload
+        }
+        
+        // Agar rasm yo'q bo'lsa, oddiy savol qo'shish
+        console.log('Adding question without image...');
+        
+        // Show loading state
+        const submitButton2 = form.querySelector('button[type="submit"]');
+        const originalText2 = submitButton2.innerHTML;
+        submitButton2.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saqlanmoqda...';
+        submitButton2.disabled = true;
+        
+        // Restore button state after a short delay
+        setTimeout(() => {
+            submitButton2.innerHTML = originalText2;
+            submitButton2.disabled = false;
+        }, 1000);
         
         // Create and add question HTML
         const currentQuestionCount = container.querySelectorAll('.question-item').length;
@@ -651,6 +772,19 @@ function createQuestionHtml(question, index) {
     html += `<div class='mb-2'><label class='form-label'>Savol matni</label>`;
     html += `<textarea class='form-control glass-input' name='question_text' rows='2' required>${question.question_text || ''}</textarea></div>`;
     
+    // Rasm ko'rsatish
+    if (question.image) {
+        html += `<div class='mb-2'>`;
+        html += `<label class='form-label'>Savol rasmi</label>`;
+        html += `<div class='question-image-container'>`;
+        html += `<img src='${question.image}' alt='Savol rasmi' class='img-fluid rounded' style='max-width: 300px; max-height: 200px; object-fit: contain;'>`;
+        html += `<div class='mt-2'>`;
+        html += `<button type='button' class='btn btn-sm btn-outline-danger remove-image'><i class='fas fa-trash'></i> Rasmini o'chirish</button>`;
+        html += `</div>`;
+        html += `</div>`;
+        html += `</div>`;
+    }
+    
     html += `<div class='mb-2'><label class='form-label'>Tur</label>`;
     html += `<select class='form-select glass-input' name='question_type' required>`;
     html += `<option value='single_choice'${question.question_type === 'single_choice' ? ' selected' : ''}>Bir javob</option>`;
@@ -854,6 +988,33 @@ function closeModalAndSave() {
             saveBtn.click();
         }
     }, 500);
+}
+
+// Show success notification
+function showSuccessNotification(message) {
+    // Remove existing notifications
+    const existingNotifications = document.querySelectorAll('.success-notification');
+    existingNotifications.forEach(notification => notification.remove());
+    
+    // Create new notification
+    const notification = document.createElement('div');
+    notification.className = 'alert alert-success alert-dismissible fade show position-fixed success-notification';
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 350px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);';
+    notification.innerHTML = `
+        <div class="d-flex align-items-center">
+            <i class="fas fa-check-circle me-2"></i>
+            <div>${message}</div>
+            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    document.body.appendChild(notification);
+    
+    // Auto remove after 4 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 4000);
 }
 </script>
 {% endblock %}

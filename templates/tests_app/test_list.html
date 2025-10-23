@@ -33,14 +33,68 @@
                 </div>
                 {% if user.role == 'teacher' %}
                 <div>
-                    <a href="{% url 'tests:create_test' %}" class="btn btn-primary">
+                    <a href="{% url 'tests:create_test' %}" class="btn btn-primary me-2">
                         <i class="fas fa-plus me-2"></i>
                         Yangi Test
+                    </a>
+                    <a href="{% url 'tests:grade_based_results' %}" class="btn btn-success">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Barcha Natijalar
+                    </a>
+                </div>
+                {% elif user.role == 'admin' %}
+                <div>
+                    <a href="{% url 'tests:grade_based_results' %}" class="btn btn-success">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Barcha Natijalar
                     </a>
                 </div>
                 {% endif %}
             </div>
         </div>
+
+        <!-- Grade Filter for Admin -->
+        {% if user.role == 'admin' %}
+        <div class="glass-card p-3 mb-4" data-aos="fade-in">
+            <div class="row align-items-center">
+                <div class="col-md-4">
+                    <label class="form-label text-white mb-2">
+                        <i class="fas fa-graduation-cap me-2"></i>
+                        Sinf bo'yicha filtrlash
+                    </label>
+                    <select class="form-select bg-dark text-white border-secondary" id="gradeFilter">
+                        <option value="">Barcha sinflar</option>
+                        {% for grade in "12345678901" %}
+                            <option value="{{ forloop.counter }}">{{ forloop.counter }}-sinf</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label text-white mb-2">
+                        <i class="fas fa-book me-2"></i>
+                        Fan bo'yicha filtrlash
+                    </label>
+                    <select class="form-select bg-dark text-white border-secondary" id="subjectFilter">
+                        <option value="">Barcha fanlar</option>
+                        <option value="Matematika">Matematika</option>
+                        <option value="Fizika">Fizika</option>
+                        <option value="Kimyo">Kimyo</option>
+                        <option value="Biologiya">Biologiya</option>
+                        <option value="Ona tili">Ona tili</option>
+                        <option value="Ingliz tili">Ingliz tili</option>
+                        <option value="Tarix">Tarix</option>
+                        <option value="Geografiya">Geografiya</option>
+                    </select>
+                </div>
+                <div class="col-md-4 text-end">
+                    <button class="btn btn-outline-light" onclick="clearFilters()">
+                        <i class="fas fa-times me-1"></i>
+                        Filtrlarni tozalash
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endif %}
 
         {% if not user.is_verified %}
         <div class="alert alert-warning mb-4" data-aos="fade-in">
@@ -201,6 +255,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('searchInput')?.addEventListener('input', filterTests);
     document.getElementById('subjectFilter')?.addEventListener('change', filterTests);
     document.getElementById('statusFilter')?.addEventListener('change', filterTests);
+    document.getElementById('gradeFilter')?.addEventListener('change', filterTests);
     
     // Auto-refresh tests when returning from edit page
     if (window.performance && window.performance.navigation.type === 1) {
@@ -269,8 +324,9 @@ function displayTests(tests, userRole = 'student') {
         clone.querySelector('.teacher-name').textContent = test.created_by || 'Noma\'lum';
         clone.querySelector('.created-date').textContent = formatDate(test.created_at);
         
-        // Set test ID
+        // Set test ID and grade
         clone.querySelector('.test-card').setAttribute('data-test-id', test.id);
+        clone.querySelector('.test-card').setAttribute('data-grade', test.grade);
         
         // Configure based on user role
         const startBtn = clone.querySelector('.start-test-btn');
@@ -391,12 +447,14 @@ function filterTests() {
     const searchTerm = document.getElementById('searchInput')?.value.toLowerCase() || '';
     const subjectFilter = document.getElementById('subjectFilter')?.value || '';
     const statusFilter = document.getElementById('statusFilter')?.value || '';
+    const gradeFilter = document.getElementById('gradeFilter')?.value || '';
     
     const testItems = document.querySelectorAll('.test-item');
     
     testItems.forEach(item => {
         const title = item.querySelector('.test-title').textContent.toLowerCase();
         const subject = item.querySelector('.subject-badge').textContent;
+        const grade = item.getAttribute('data-grade') || '';
         const isCompleted = !item.querySelector('.completed-badge').classList.contains('d-none');
         const isInProgress = !item.querySelector('.continue-test-btn').classList.contains('d-none');
         
@@ -419,6 +477,11 @@ function filterTests() {
             if (statusFilter === 'available' && (isCompleted || isInProgress)) showItem = false;
         }
         
+        // Grade filter
+        if (gradeFilter && grade !== gradeFilter) {
+            showItem = false;
+        }
+        
         item.style.display = showItem ? 'block' : 'none';
     });
 }
@@ -427,6 +490,7 @@ function clearFilters() {
     document.getElementById('searchInput').value = '';
     document.getElementById('subjectFilter').value = '';
     document.getElementById('statusFilter').value = '';
+    document.getElementById('gradeFilter').value = '';
     filterTests();
 }
 
