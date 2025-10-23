@@ -189,9 +189,11 @@ def take_test_view(request, test_id):
         else:
             attempt = existing_attempt
         
-        questions = test.questions.all().order_by('order')
-        if test.shuffle_questions:
-            questions = questions.order_by('?')
+        # Har bir o'quvchiga savollar random tartibda ko'rsatiladi
+        questions = list(test.questions.all().order_by('order'))
+        
+        # Shuffle questions for this student (har bir o'quvchi uchun boshqacha tartib)
+        random.shuffle(questions)
         
         questions_data = []
         for question in questions:
@@ -978,6 +980,7 @@ def edit_test_view(request, test_id):
             test.max_attempts = int(data.get('max_attempts', test.max_attempts))
             test.show_results = data.get('show_results', test.show_results)
             test.is_active = data.get('is_active', test.is_active)
+            test.shuffle_questions = data.get('shuffle_questions', test.shuffle_questions)
             test.save()
             print(f"Test {test_id} updated successfully")
 

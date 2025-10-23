@@ -106,9 +106,13 @@ body {
                 <input class="form-check-input" type="checkbox" name="show_results" {% if test.show_results %}checked{% endif %}>
                 <label class="form-check-label">O'quvchilarga natijalarni ko'rsatish</label>
             </div>
-            <div class="form-check mb-3">
+            <div class="form-check mt-3">
                 <input class="form-check-input" type="checkbox" name="is_active" {% if test.is_active %}checked{% endif %}>
                 <label class="form-check-label">Testni faollashtirish</label>
+            </div>
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" name="shuffle_questions" {% if test.shuffle_questions %}checked{% endif %}>
+                <label class="form-check-label"><i class="fas fa-random"></i> Savollarni random tartibda ko'rsatish</label>
             </div>
             <hr class="my-4">
             <h4 class="mb-3" style="color:#fff;"><i class="fas fa-question-circle"></i> Savollarni Tahrirlash</h4>
@@ -515,6 +519,7 @@ document.addEventListener('DOMContentLoaded', function() {
             description: testForm.description.value,
             show_results: testForm.show_results.checked,
             is_active: testForm.is_active.checked,
+            shuffle_questions: testForm.shuffle_questions.checked,
             questions: questions
         };
 

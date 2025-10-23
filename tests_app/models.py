@@ -15,7 +15,7 @@ class Test(models.Model):
     end_time = models.DateTimeField(null=True, blank=True)
     max_attempts = models.IntegerField(default=1)
     show_results = models.BooleanField(default=True)
-    shuffle_questions = models.BooleanField(default=False)
+    shuffle_questions = models.BooleanField(default=True, help_text="Savollarni random tartibda ko'rsatish")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
