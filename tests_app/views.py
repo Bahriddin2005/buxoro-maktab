@@ -10,8 +10,12 @@ import json
 import random
 from .models import Test, Question, Choice, TestAttempt, Answer, TestResult, TestRetakeRequest
 from accounts.models import User
-from openpyxl import Workbook
-from openpyxl.styles import Font, PatternFill
+try:
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill
+    OPENPYXL_AVAILABLE = True
+except ImportError:
+    OPENPYXL_AVAILABLE = False
 
 @login_required
 def test_list_view(request):
@@ -203,7 +207,7 @@ def take_test_view(request, test_id):
                 'question_text': question.question_text,
                 'question_type': question.question_type,
                 'points': question.points,
-                'image': question.image.url if question.image else None
+                'image': question.image.url if question.image and question.image.url else None
             }
             
             if question.question_type in ['single_choice', 'multiple_choice']:
@@ -1417,6 +1421,9 @@ def export_grade_results_view(request):
     if request.user.role not in ['teacher', 'admin']:
         return redirect('accounts:dashboard')
     
+    if not OPENPYXL_AVAILABLE:
+        return JsonResponse({'error': 'Excel export not available'}, status=500)
+    
     # Excel workbook yaratish
     wb = Workbook()
     
@@ -1565,6 +1572,9 @@ def export_single_grade_results_view(request, grade):
     """Bitta sinf uchun Excel fayl yaratish"""
     if request.user.role not in ['teacher', 'admin']:
         return redirect('accounts:dashboard')
+    
+    if not OPENPYXL_AVAILABLE:
+        return JsonResponse({'error': 'Excel export not available'}, status=500)
     
     # Excel workbook yaratish
     wb = Workbook()
