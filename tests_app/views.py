@@ -25,7 +25,7 @@ def test_list_view(request):
             tests = Test.objects.filter(
                 is_active=True,
                 grade=request.user.grade
-            ).select_related('created_by').order_by('-created_at')
+            ).select_related('created_by').prefetch_related('questions').order_by('-created_at')
             
             test_data = []
             for test in tests:
@@ -195,7 +195,8 @@ def take_test_view(request, test_id):
             attempt = existing_attempt
         
         # Har bir o'quvchiga savollar random tartibda ko'rsatiladi
-        questions = list(test.questions.all().order_by('order'))
+        # Query optimallashtirish - select_related va prefetch_related
+        questions = list(test.questions.select_related().prefetch_related('choices').order_by('order'))
         
         # Shuffle questions for this student (har bir o'quvchi uchun boshqacha tartib)
         random.shuffle(questions)
