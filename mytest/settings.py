@@ -4,10 +4,10 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Безопасное получение SECRET_KEY
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-your-default-key-change-in-production')
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-change-this-in-production-' + str(hash('buxoro-maktab')))
 
 # DEBUG из переменных окружения
-DEBUG = True #os.environ.get('DEBUG', 'True').lower() == 'true'
+DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 
 ALLOWED_HOSTS = [
     '176.96.241.174', 

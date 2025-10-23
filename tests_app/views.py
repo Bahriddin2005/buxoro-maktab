@@ -287,21 +287,13 @@ def finish_test(request, attempt_id):
         attempt.is_completed = True
         attempt.time_taken = attempt.finished_at - attempt.started_at
         
-        results = attempt.calculate_score()
+        # Calculate score using the method
+        attempt.calculate_score()
         
-        correct_answers = 0
-        incorrect_answers = 0
-        unanswered = 0
-        
-        for question in attempt.test.questions.all():
-            answer = Answer.objects.filter(attempt=attempt, question=question).first()
-            if answer:
-                if answer.is_correct():
-                    correct_answers += 1
-                else:
-                    incorrect_answers += 1
-            else:
-                unanswered += 1
+        # Get the calculated values from the attempt
+        correct_answers = attempt.correct_answers or 0
+        incorrect_answers = attempt.incorrect_answers or 0
+        unanswered = attempt.unanswered or 0
         
         test_result = TestResult.objects.create(
             attempt=attempt,

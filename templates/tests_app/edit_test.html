@@ -239,7 +239,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add question from modal to main list
     document.getElementById('addQuestionForm').addEventListener('submit', function(e) {
         e.preventDefault();
-        console.log('Adding new question...');
+        // Adding new question...
         
         const form = e.target;
         const questionText = form.question_text.value.trim();
@@ -295,10 +295,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         // Debug: FormData contents
-        console.log('FormData entries:');
-        for (let [key, value] of formData.entries()) {
-            console.log(key, value);
-        }
+        // FormData entries logged
         
         const newQuestion = {
             id: '',  // New question, no ID yet
@@ -310,18 +307,18 @@ document.addEventListener('DOMContentLoaded', function() {
             image: questionImage ? questionImage.name : null
         };
         
-        console.log('New question:', newQuestion);
+        // New question created
         
         // Get container
         const container = document.getElementById('questionsContainer');
-        console.log('Container before adding question:', container.innerHTML);
+        // Container before adding question
         
         // If container is empty or only has loading/empty message, clear it and add header
         const existingQuestions = container.querySelectorAll('.question-item');
-        console.log('Existing questions count:', existingQuestions.length);
+        // Existing questions count
         
         if (existingQuestions.length === 0) {
-            console.log('No existing questions, creating header...');
+            // No existing questions, creating header
             container.innerHTML = `
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h5 class="text-white mb-0">
@@ -335,14 +332,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Rasm yuklash uchun FormData yuborish
         if (questionImage) {
-            console.log('Uploading question with image...');
-            console.log('FormData contents:', formData);
-            console.log('Question image:', questionImage);
-            console.log('Question text:', questionText);
-            console.log('Question type:', questionType);
-            console.log('Points:', points);
-            console.log('Explanation:', explanation);
-            console.log('Choices:', choices);
+        // Uploading question with image
             
             // Show loading state
             const submitButton = form.querySelector('button[type="submit"]');

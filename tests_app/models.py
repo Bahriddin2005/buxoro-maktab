@@ -170,9 +170,27 @@ class TestAttempt(models.Model):
         
         final_score = earned_points + completion_bonus
         
+        # Calculate correct, incorrect, and unanswered counts
+        correct_count = 0
+        incorrect_count = 0
+        unanswered_count = 0
+        
+        for question in self.test.questions.all():
+            answer = self.answers.filter(question=question).first()
+            if answer:
+                if answer.is_correct():
+                    correct_count += 1
+                else:
+                    incorrect_count += 1
+            else:
+                unanswered_count += 1
+        
         self.score = final_score
         self.total_points = total_points
         self.percentage = (final_score / total_points * 100) if total_points > 0 else 0
+        self.correct_answers = correct_count
+        self.incorrect_answers = incorrect_count
+        self.unanswered = unanswered_count
         self.save()
         
         return {
