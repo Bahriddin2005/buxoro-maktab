@@ -29,10 +29,14 @@ def signup_view(request):
                 return JsonResponse({'error': 'Email already exists'}, status=400)
             
             # Validate email domain
-            email_domain = data['email'].split('@')[-1]
+            email = data['email']
+            if '@' not in email:
+                return JsonResponse({'error': 'Invalid email format'}, status=400)
+            
+            email_domain = email.split('@')[-1]
             allowed_domains = ['buxorobilimdonlar.uz', 'student.buxorobilimdonlar.uz']
             if email_domain not in allowed_domains:
-                return JsonResponse({'error': 'Email must be from school domain'}, status=400)
+                return JsonResponse({'error': 'Email must be from school domain (@buxorobilimdonlar.uz or @student.buxorobilimdonlar.uz)'}, status=400)
             
             # Create user
             user = User.objects.create_user(
@@ -40,17 +44,30 @@ def signup_view(request):
                 email=data['email'],
                 password=data['password'],
                 first_name=data.get('first_name', ''),
-                last_name=data.get('last_name', ''),
-                role=data['role']
+                last_name=data.get('last_name', '')
             )
+            
+            # Set role after creation
+            user.role = data['role']
             
             # Set additional fields based on role
             if data['role'] == 'student':
-                user.student_id = data.get('student_id')
+                student_id = data.get('student_id')
+                if not student_id:
+                    return JsonResponse({'error': 'Student ID is required for students'}, status=400)
+                
+                # Check if student_id already exists
+                if User.objects.filter(student_id=student_id).exists():
+                    return JsonResponse({'error': 'Student ID already exists'}, status=400)
+                
+                user.student_id = student_id
                 user.class_name = data.get('class_name')
                 user.grade = data.get('grade')
             elif data['role'] == 'teacher':
-                user.subject = data.get('subject')
+                subject = data.get('subject')
+                if not subject:
+                    return JsonResponse({'error': 'Subject is required for teachers'}, status=400)
+                user.subject = subject
             
             user.phone_number = data.get('phone_number')
             user.save()
@@ -68,7 +85,9 @@ def signup_view(request):
         except ValidationError as e:
             return JsonResponse({'error': str(e)}, status=400)
         except Exception as e:
-            return JsonResponse({'error': 'An error occurred during registration'}, status=500)
+            # Log the actual error for debugging
+            print(f"Registration error: {str(e)}")
+            return JsonResponse({'error': f'Registration failed: {str(e)}'}, status=500)
     
     return render(request, 'accounts/signup.html')
 
