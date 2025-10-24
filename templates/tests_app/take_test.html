@@ -467,43 +467,42 @@
     }
 
     function selectChoice(questionId, choiceId, questionType) {
+        // Javoblarni saqlash uchun object yaratish
         if (!answers[questionId]) {
             answers[questionId] = { choice_ids: [] };
         }
         
         if (questionType === 'single_choice') {
-            // Single choice - bitta bosganda darhol qabul qilish
+            // Single choice - faqat bitta tanlov
             answers[questionId].choice_ids = [choiceId];
             
-            // Darhol saqlash
-            saveAnswer(questionId, answers[questionId]);
+            // Debug: konsolga chiqarish
+            console.log('Single choice selected:', { questionId, choiceId, answer: answers[questionId] });
             
-            // Darhol visual update
-            updateChoiceSelection(questionId, questionType);
-            
-            // Darhol navigation update
-            updateNavigationPills();
-            updateProgress();
-            
-        } else {
+        } else if (questionType === 'multiple_choice') {
             // Multiple choice - toggle qilish
             const index = answers[questionId].choice_ids.indexOf(choiceId);
             if (index > -1) {
+                // Agar tanlangan bo'lsa, olib tashlash
                 answers[questionId].choice_ids.splice(index, 1);
             } else {
+                // Agar tanlanmagan bo'lsa, qo'shish
                 answers[questionId].choice_ids.push(choiceId);
             }
             
-            // Darhol saqlash
-            saveAnswer(questionId, answers[questionId]);
-            
-            // Darhol visual update
-            updateChoiceSelection(questionId, questionType);
-            
-            // Darhol navigation update
-            updateNavigationPills();
-            updateProgress();
+            // Debug: konsolga chiqarish
+            console.log('Multiple choice toggled:', { questionId, choiceId, answer: answers[questionId] });
         }
+        
+        // Darhol visual update
+        updateChoiceSelection(questionId, questionType);
+        
+        // Darhol saqlash
+        saveAnswer(questionId, answers[questionId]);
+        
+        // Darhol navigation update
+        updateNavigationPills();
+        updateProgress();
     }
 
     function saveTextAnswer(questionId) {
@@ -526,43 +525,79 @@
 
     async function saveAnswer(questionId, answerData) {
         try {
+            const payload = {
+                question_id: questionId,
+                choice_ids: answerData.choice_ids || [],
+                text_answer: answerData.text_answer || ''
+            };
+            
+            // Debug: konsolga chiqarish
+            console.log('Saving answer:', payload);
+            
             const response = await fetch(`{% url "tests:submit_answer" 0 %}`.replace('0', attemptId), {
                 method: 'POST',
                 headers: {
                     'X-CSRFToken': csrfToken,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    question_id: questionId,
-                    choice_ids: answerData.choice_ids || [],
-                    text_answer: answerData.text_answer || ''
-                })
+                body: JSON.stringify(payload)
             });
             
-            if (!response.ok) {
-                const error = await response.json();
-                console.error('Save answer error:', error);
+            const result = await response.json();
+            
+            if (response.ok) {
+                console.log('Answer saved successfully:', result);
+            } else {
+                console.error('Save answer error:', result);
+                // Xatolikni foydalanuvchiga ko'rsatish
+                showNotification('Javob saqlanmadi: ' + (result.error || 'Xatolik yuz berdi'), 'danger');
             }
         } catch (error) {
             console.error('Save answer error:', error);
+            showNotification('Server bilan bog\'lanishda xatolik', 'danger');
         }
+    }
+    
+    function showNotification(message, type = 'success') {
+        // Notification ko'rsatish
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type} position-fixed top-0 start-50 translate-middle-x mt-3`;
+        notification.style.zIndex = '9999';
+        notification.innerHTML = `
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
+            ${message}
+        `;
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
     }
 
     function updateChoiceSelection(questionId, questionType) {
         const savedChoices = answers[questionId]?.choice_ids || [];
         
+        // Barcha tanlovlarni tozalash
         document.querySelectorAll('.choice-option').forEach(option => {
             option.classList.remove('selected');
+            option.style.borderColor = '';
+            option.style.backgroundColor = '';
+            option.style.boxShadow = '';
         });
         
+        // Barcha input'larni tozalash
+        document.querySelectorAll('.choice-option input').forEach(input => {
+            input.checked = false;
+        });
+        
+        // Tanlangan javoblarni belgilash
         savedChoices.forEach(choiceId => {
-            const choiceOption = document.querySelector(`#choice-${choiceId}`).closest('.choice-option');
-            if (choiceOption) {
+            const input = document.querySelector(`#choice-${choiceId}`);
+            const choiceOption = input?.closest('.choice-option');
+            
+            if (input && choiceOption) {
+                input.checked = true;
                 choiceOption.classList.add('selected');
-                // Yashil rang qo'shish
-                choiceOption.style.borderColor = '#28a745';
-                choiceOption.style.backgroundColor = 'rgba(40, 167, 69, 0.2)';
-                choiceOption.style.boxShadow = '0 0 15px rgba(40, 167, 69, 0.3)';
             }
         });
     }

@@ -30,6 +30,24 @@ def test_list_view(request):
             test_data = []
             for test in tests:
                 attempt = TestAttempt.objects.filter(test=test, student=request.user).first()
+                
+                # Qayta ishlash ruxsati bormi tekshirish
+                has_retake_permission = False
+                if attempt and attempt.is_completed:
+                    has_retake_permission = TestRetakeRequest.objects.filter(
+                        student=request.user,
+                        test=test,
+                        status='approved',
+                        is_used=False
+                    ).exists()
+                
+                # O'quvchi testni yecha oladimi?
+                can_attempt = test.is_active and (
+                    attempt is None or  # Hali yechmagan
+                    not attempt.is_completed or  # Davom ettirmoqda
+                    has_retake_permission  # Qayta ishlash ruxsati bor
+                )
+                
                 test_data.append({
                     'id': test.id,
                     'title': test.title,
@@ -41,7 +59,8 @@ def test_list_view(request):
                     'total_questions': test.total_questions,
                     'has_attempted': attempt is not None,
                     'attempt_score': round(attempt.percentage, 1) if attempt and attempt.is_completed else None,
-                    'can_attempt': (attempt is None or not attempt.is_completed) and test.is_active,
+                    'can_attempt': can_attempt,
+                    'has_retake_permission': has_retake_permission,
                     'created_by': test.created_by.get_full_name() or test.created_by.username,
                     'created_at': test.created_at.isoformat(),
                     'start_time': test.start_time.isoformat() if test.start_time else None,
@@ -186,12 +205,31 @@ def take_test_view(request, test_id):
     
     if request.method == 'POST':
         existing_attempt = TestAttempt.objects.filter(test=test, student=request.user).first()
-        if existing_attempt and existing_attempt.is_completed:
-            return JsonResponse({'error': 'You have already completed this test'}, status=400)
         
-        if not existing_attempt:
+        # Agar test tugallangan bo'lsa, qayta ishlash ruxsati bormi tekshiramiz
+        if existing_attempt and existing_attempt.is_completed:
+            # Qayta ishlash ruxsati bormi?
+            approved_retake = TestRetakeRequest.objects.filter(
+                student=request.user,
+                test=test,
+                status='approved',
+                is_used=False
+            ).first()
+            
+            if not approved_retake:
+                return JsonResponse({'error': 'Siz allaqachon bu testni topshirgansiz. Qayta topshirish uchun admin ruxsati kerak.'}, status=400)
+            
+            # Qayta ishlash ruxsati bor, yangi attempt yaratamiz
+            attempt = TestAttempt.objects.create(test=test, student=request.user)
+            
+            # Ruxsatni ishlatilgan deb belgilaymiz
+            approved_retake.is_used = True
+            approved_retake.save()
+        elif not existing_attempt:
+            # Birinchi marta test yechmoqda
             attempt = TestAttempt.objects.create(test=test, student=request.user)
         else:
+            # Test tugallanmagan, davom ettirmoqda
             attempt = existing_attempt
         
         # Har bir o'quvchiga savollar random tartibda ko'rsatiladi
@@ -245,29 +283,50 @@ def submit_answer(request, attempt_id):
         question_id = data.get('question_id')
         question = get_object_or_404(Question, id=question_id, test=attempt.test)
         
+        # Debug logging
+        print(f"Submitting answer for question {question_id}, type: {question.question_type}")
+        print(f"Data received: {data}")
+        
         answer, created = Answer.objects.get_or_create(
             attempt=attempt,
             question=question
         )
         
+        # Clear previous answers
         answer.selected_choices.clear()
         answer.text_answer = ''
         
         if question.question_type == 'text_answer':
             answer.text_answer = data.get('text_answer', '')
+            print(f"Text answer saved: {answer.text_answer}")
         else:
             choice_ids = data.get('choice_ids', [])
             if choice_ids:
                 choices = Choice.objects.filter(id__in=choice_ids, question=question)
+                print(f"Choices found: {list(choices.values_list('id', flat=True))}")
                 answer.selected_choices.set(choices)
+            else:
+                print("No choice_ids provided")
         
         answer.save()
         
-        return JsonResponse({'message': 'Answer saved'})
+        # Verify answer was saved
+        saved_choices = list(answer.selected_choices.values_list('id', flat=True))
+        print(f"Answer saved successfully. Selected choices: {saved_choices}")
         
-    except json.JSONDecodeError:
+        return JsonResponse({
+            'message': 'Answer saved',
+            'saved_choices': saved_choices,
+            'text_answer': answer.text_answer
+        })
+        
+    except json.JSONDecodeError as e:
+        print(f"JSON decode error: {str(e)}")
         return JsonResponse({'error': 'Invalid JSON data'}, status=400)
     except Exception as e:
+        print(f"Error submitting answer: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return JsonResponse({'error': str(e)}, status=500)
 
 @login_required
@@ -287,8 +346,8 @@ def finish_test(request, attempt_id):
         attempt.is_completed = True
         attempt.time_taken = attempt.finished_at - attempt.started_at
         
-        # Calculate score using the method
-        attempt.calculate_score()
+        # Calculate score using the method and get results
+        results = attempt.calculate_score()
         
         # Get the calculated values from the attempt
         correct_answers = attempt.correct_answers or 0
@@ -306,27 +365,32 @@ def finish_test(request, attempt_id):
         
         attempt.save()
         
+        # Create completion message
+        total_questions = attempt.test.questions.count()
+        answered_count = attempt.answers.count()
+        all_answered = answered_count == total_questions
+        
         completion_message = "Test yakunlandi!"
-        if results.get('all_answered', False):  # pyright: ignore[reportUndefinedVariable]
-            completion_message = f"Ajoyib! Barcha {results['total_questions']} ta savolga javob berdingiz!"  # pyright: ignore[reportUndefinedVariable]
+        if all_answered:
+            completion_message = f"Ajoyib! Barcha {total_questions} ta savolga javob berdingiz!"
         else:
-            completion_message = f"Test yakunlandi. {results['answered_count']}/{results['total_questions']} ta savolga javob berildi."  # pyright: ignore[reportUndefinedVariable]
+            completion_message = f"Test yakunlandi. {answered_count}/{total_questions} ta savolga javob berildi."
         
         return JsonResponse({
             'message': completion_message,
             'results': {
-                'score': results['score'],  # pyright: ignore[reportUndefinedVariable]
-                'total_points': results['total_points'],  # pyright: ignore[reportUndefinedVariable]
-                'percentage': results['percentage'],  # pyright: ignore[reportUndefinedVariable]
+                'score': results['score'],
+                'total_points': results['total_points'],
+                'percentage': results['percentage'],
                 'grade': test_result.grade,
                 'correct_answers': correct_answers,
                 'incorrect_answers': incorrect_answers,
                 'unanswered': unanswered,
                 'time_taken': str(attempt.time_taken),
-                'all_answered': results.get('all_answered', False),  # pyright: ignore[reportUndefinedVariable]
-                'answered_count': results.get('answered_count', 0),  # pyright: ignore[reportUndefinedVariable]
-                'total_questions': results.get('total_questions', 0),  # pyright: ignore[reportUndefinedVariable]
-                'incorrect_questions': results.get('incorrect_questions', [])  # pyright: ignore[reportUndefinedVariable]
+                'all_answered': all_answered,
+                'answered_count': answered_count,
+                'total_questions': total_questions,
+                'incorrect_questions': results.get('incorrect_questions', [])
             }
         })
         
@@ -771,11 +835,19 @@ def request_retake_view(request, test_id):
         if not attempt.can_request_retake():
             return JsonResponse({'error': 'Allaqachon qayta ishlash so\'rovi yuborilgan yoki kutilmoqda'}, status=400)
         
-        data = json.loads(request.body)
-        reason = data.get('reason', '').strip()
+        # JSON ma'lumotni olish
+        try:
+            if request.body:
+                data = json.loads(request.body)
+                reason = data.get('reason', '').strip()
+            else:
+                reason = ''
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Noto\'g\'ri JSON ma\'lumot. Iltimos, to\'g\'ri format kiriting.'}, status=400)
         
-        if not reason:
-            return JsonResponse({'error': 'Qayta ishlash sababi kiritilishi shart'}, status=400)
+        # Agar sabab bo'sh bo'lsa, default sabab
+        if not reason or len(reason) < 10:
+            return JsonResponse({'error': 'Qayta ishlash sababi kamida 10 ta belgidan iborat bo\'lishi kerak'}, status=400)
         
         # Qayta ishlash so'rovini yaratamiz
         retake_request = TestRetakeRequest.objects.create(
@@ -790,10 +862,11 @@ def request_retake_view(request, test_id):
             'request_id': retake_request.id
         })
         
-    except json.JSONDecodeError:
-        return JsonResponse({'error': 'Noto\'g\'ri JSON ma\'lumot'}, status=400)
     except Exception as e:
-        return JsonResponse({'error': 'Xatolik yuz berdi'}, status=500)
+        print(f"Request retake error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'error': f'Xatolik yuz berdi: {str(e)}'}, status=500)
 
 @login_required  
 def retake_requests_view(request):

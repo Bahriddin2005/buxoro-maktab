@@ -7,7 +7,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-change-this-in-production-' + str(hash('buxoro-maktab')))
 
 # DEBUG из переменных окружения
-DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
+# Default True for development, use environment variable DEBUG=False for production
+DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 
 ALLOWED_HOSTS = [
     '176.96.241.174', 
@@ -19,7 +20,6 @@ ALLOWED_HOSTS = [
 
 # Приложения
 INSTALLED_APPS = [
-    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

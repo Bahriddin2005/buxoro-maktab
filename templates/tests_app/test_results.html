@@ -988,28 +988,54 @@ function toggleMistakes() {
 }
 
 function requestRetake() {
-    if (confirm('Qayta ishlash so\'rovi yuborishni xohlaysizmi?')) {
-        const testId = window.location.pathname.split('/')[2];
-        fetch(`/tests/${testId}/request-retake/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken')
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('✅ Qayta ishlash so\'rovi muvaffaqiyatli yuborildi!');
-        } else {
-                alert('❌ Xatolik: ' + (data.error || 'Noma\'lum xatolik'));
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('❌ Xatolik yuz berdi: ' + error.message);
-        });
+    // Sabab so'rash
+    const reason = prompt('Qayta ishlash sababini kiriting (masalan: Internet tezligi sekin edi, vaqt yetmadi, savollarni tushunmadim):');
+    
+    if (!reason || reason.trim() === '') {
+        alert('❌ Qayta ishlash sababi kiritilishi shart!');
+        return;
     }
+    
+    if (reason.trim().length < 10) {
+        alert('❌ Sabab kamida 10 ta belgidan iborat bo\'lishi kerak!');
+        return;
+    }
+    
+    const testId = window.location.pathname.split('/')[2];
+    
+    // Loading state
+    const originalHTML = document.body.innerHTML;
+    
+    fetch(`/tests/${testId}/request-retake/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+            reason: reason.trim()
+        })
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+    })
+    .then(data => {
+        console.log('Response data:', data);
+        if (data.message) {
+            alert('✅ ' + data.message + '\n\nAdmin sizning so\'rovingizni ko\'rib chiqadi va ruxsat bersa, qayta test topshirishingiz mumkin bo\'ladi.');
+            // Sahifani yangilash
+            location.reload();
+        } else if (data.error) {
+            alert('❌ Xatolik: ' + data.error);
+        } else {
+            alert('❌ Noma\'lum xatolik yuz berdi');
+        }
+    })
+    .catch(error => {
+        console.error('Fetch error:', error);
+        alert('❌ Server bilan bog\'lanishda xatolik: ' + error.message);
+    });
 }
 
 // Get CSRF token from cookies
