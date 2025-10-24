@@ -1647,13 +1647,19 @@ def export_single_grade_results_view(request, grade):
         return redirect('accounts:dashboard')
     
     if not OPENPYXL_AVAILABLE:
-        return JsonResponse({'error': 'Excel export funksiyasi mavjud emas. Iltimos openpyxl kutubxonasini o\'rnating.'}, status=500)
-    
-    try:
-        # Excel workbook yaratish
-        wb = Workbook()
-        ws = wb.active
-        ws.title = f"{grade}-sinf"
+        if not OPENPYXL_AVAILABLE:
+            return JsonResponse({'error': 'Excel export funksiyasi mavjud emas. Iltimos openpyxl kutubxonasini o\'rnating.'}, status=500)
+        
+        try:
+            # Excel workbook yaratish
+            wb = Workbook()
+            ws = wb.active
+            ws.title = f"{grade}-sinf"
+        except Exception as e:
+            print(f"Export error: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return JsonResponse({'error': f'Export xatolik yuz berdi: {str(e)}'}, status=500)
     
     # Header qo'shish
     ws['A1'] = f"{grade}-sinf Test Natijalari"
@@ -1783,9 +1789,4 @@ def export_single_grade_results_view(request, grade):
         wb.save(response)
         
         return response
-        
-    except Exception as e:
-        print(f"Export single grade error: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        return JsonResponse({'error': f'Export xatolik yuz berdi: {str(e)}'}, status=500)
+
