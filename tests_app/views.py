@@ -1661,86 +1661,86 @@ def export_single_grade_results_view(request, grade):
             traceback.print_exc()
             return JsonResponse({'error': f'Export xatolik yuz berdi: {str(e)}'}, status=500)
     
-    # Header qo'shish
-    ws['A1'] = f"{grade}-sinf Test Natijalari"
-    ws['A1'].font = Font(bold=True, size=16)
-    ws['A1'].fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
+        # Header qo'shish
+        ws['A1'] = f"{grade}-sinf Test Natijalari"
+        ws['A1'].font = Font(bold=True, size=16)
+        ws['A1'].fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
     
-    # Umumiy ma'lumotlar
-    ws['A3'] = "Umumiy Ma'lumotlar:"
-    ws['A3'].font = Font(bold=True)
+        # Umumiy ma'lumotlar
+        ws['A3'] = "Umumiy Ma'lumotlar:"
+        ws['A3'].font = Font(bold=True)
     
-    # Bu sinf uchun testlar
-    tests = Test.objects.filter(grade=grade, is_active=True)
+        # Bu sinf uchun testlar
+        tests = Test.objects.filter(grade=grade, is_active=True)
     
-    # Bu sinf o'quvchilari
-    students = User.objects.filter(role='student', grade=grade, is_verified=True)
+        # Bu sinf o'quvchilari
+        students = User.objects.filter(role='student', grade=grade, is_verified=True)
     
-    # Bu sinf uchun test urinishlari - faqat har bir o'quvchining oxirgi natijasi
-    from django.db.models import Max
+        # Bu sinf uchun test urinishlari - faqat har bir o'quvchining oxirgi natijasi
+        from django.db.models import Max
     
-    # Har bir o'quvchi uchun eng so'nggi attempt ID'sini topish
-    latest_attempts = TestAttempt.objects.filter(
+        # Har bir o'quvchi uchun eng so'nggi attempt ID'sini topish
+        latest_attempts = TestAttempt.objects.filter(
         test__grade=grade,
         student__grade=grade,
         is_completed=True
-    ).values('student').annotate(
+        ).values('student').annotate(
         latest_attempt_id=Max('id')
-    ).values_list('latest_attempt_id', flat=True)
+        ).values_list('latest_attempt_id', flat=True)
     
-    # Faqat oxirgi attempt'larni olish
-    attempts = TestAttempt.objects.filter(
+        # Faqat oxirgi attempt'larni olish
+        attempts = TestAttempt.objects.filter(
         id__in=latest_attempts
-    ).select_related('student', 'test', 'result')
+        ).select_related('student', 'test', 'result')
     
-    # Statistika hisoblash
-    total_students = students.count()
-    total_tests = tests.count()
-    total_attempts = attempts.count()
+        # Statistika hisoblash
+        total_students = students.count()
+        total_tests = tests.count()
+        total_attempts = attempts.count()
     
-    if total_attempts > 0:
-        avg_percentage = attempts.aggregate(avg=Avg('percentage'))['avg'] or 0
-        highest_score = attempts.aggregate(max=Max('percentage'))['max'] or 0
-        lowest_score = attempts.aggregate(min=Min('percentage'))['min'] or 0
-    else:
-        avg_percentage = 0
-        highest_score = 0
+        if total_attempts > 0:
+            avg_percentage = attempts.aggregate(avg=Avg('percentage'))['avg'] or 0
+            highest_score = attempts.aggregate(max=Max('percentage'))['max'] or 0
+            lowest_score = attempts.aggregate(min=Min('percentage'))['min'] or 0
+        else:
+            avg_percentage = 0
+            highest_score = 0
         lowest_score = 0
     
-    # Ma'lumotlarni yozish
-    ws['A4'] = f"Jami O'quvchilar: {total_students}"
-    ws['A5'] = f"Jami Testlar: {total_tests}"
-    ws['A6'] = f"Jami Urinishlar: {total_attempts}"
-    ws['A7'] = f"O'rtacha Ball: {avg_percentage:.1f}%"
-    ws['A8'] = f"Eng Yuqori Ball: {highest_score:.1f}%"
-    ws['A9'] = f"Eng Past Ball: {lowest_score:.1f}%"
+        # Ma'lumotlarni yozish
+        ws['A4'] = f"Jami O'quvchilar: {total_students}"
+        ws['A5'] = f"Jami Testlar: {total_tests}"
+        ws['A6'] = f"Jami Urinishlar: {total_attempts}"
+        ws['A7'] = f"O'rtacha Ball: {avg_percentage:.1f}%"
+        ws['A8'] = f"Eng Yuqori Ball: {highest_score:.1f}%"
+        ws['A9'] = f"Eng Past Ball: {lowest_score:.1f}%"
     
-    # Bo'sh qator
-    ws['A11'] = "Barcha Natijalar:"
-    ws['A11'].font = Font(bold=True)
+        # Bo'sh qator
+        ws['A11'] = "Barcha Natijalar:"
+        ws['A11'].font = Font(bold=True)
     
-    # Header qator
-    headers = ['O\'quvchi', 'Test', 'Ball', 'Foiz', 'Vaqt', 'Sana']
-    for col, header in enumerate(headers, 1):
-        cell = ws.cell(row=12, column=col, value=header)
-        cell.font = Font(bold=True)
-        cell.fill = PatternFill(start_color="D9E2F3", end_color="D9E2F3", fill_type="solid")
+        # Header qator
+        headers = ['O\'quvchi', 'Test', 'Ball', 'Foiz', 'Vaqt', 'Sana']
+        for col, header in enumerate(headers, 1):
+            cell = ws.cell(row=12, column=col, value=header)
+            cell.font = Font(bold=True)
+            cell.fill = PatternFill(start_color="D9E2F3", end_color="D9E2F3", fill_type="solid")
     
-    # Natijalarni yozish
-    row = 13
-    for attempt in attempts.order_by('-percentage'):
-        student_name = f"{attempt.student.first_name} {attempt.student.last_name}"
-        if not student_name.strip():
-            student_name = attempt.student.username
+        # Natijalarni yozish
+        row = 13
+        for attempt in attempts.order_by('-percentage'):
+            student_name = f"{attempt.student.first_name} {attempt.student.last_name}"
+            if not student_name.strip():
+                student_name = attempt.student.username
         
-        ws.cell(row=row, column=1, value=student_name)
-        ws.cell(row=row, column=2, value=attempt.test.title)
-        ws.cell(row=row, column=3, value=attempt.score)
-        ws.cell(row=row, column=4, value=f"{attempt.percentage:.1f}%")
-        ws.cell(row=row, column=5, value=str(attempt.time_taken))
-        ws.cell(row=row, column=6, value=attempt.finished_at.strftime('%d.%m.%Y %H:%M'))
+                ws.cell(row=row, column=1, value=student_name)
+                ws.cell(row=row, column=2, value=attempt.test.title)
+                ws.cell(row=row, column=3, value=attempt.score)
+                ws.cell(row=row, column=4, value=f"{attempt.percentage:.1f}%")
+                ws.cell(row=row, column=5, value=str(attempt.time_taken))
+                ws.cell(row=row, column=6, value=attempt.finished_at.strftime('%d.%m.%Y %H:%M'))
         
-        # Ball bo'yicha rang berish
+                # Ball bo'yicha rang berish
         if attempt.percentage >= 81:
             fill_color = "C6EFCE"  # Yashil
         elif attempt.percentage >= 61:
@@ -1755,25 +1755,25 @@ def export_single_grade_results_view(request, grade):
         
         row += 1
     
-    # Eng yaxshi natijalar
-    if total_attempts > 0:
-        ws[f'A{row+2}'] = "Eng Yaxshi Natijalar (Top 5):"
-        ws[f'A{row+2}'].font = Font(bold=True)
+        # Eng yaxshi natijalar
+        if total_attempts > 0:
+            ws[f'A{row+2}'] = "Eng Yaxshi Natijalar (Top 5):"
+            ws[f'A{row+2}'].font = Font(bold=True)
         
-        top_attempts = attempts.order_by('-percentage')[:5]
-        for i, attempt in enumerate(top_attempts, 1):
-            student_name = f"{attempt.student.first_name} {attempt.student.last_name}"
-            if not student_name.strip():
-                student_name = attempt.student.username
+            top_attempts = attempts.order_by('-percentage')[:5]
+            for i, attempt in enumerate(top_attempts, 1):
+                student_name = f"{attempt.student.first_name} {attempt.student.last_name}"
+                if not student_name.strip():
+                    student_name = attempt.student.username
             
-            ws.cell(row=row+3+i, column=1, value=f"{i}. {student_name}")
-            ws.cell(row=row+3+i, column=2, value=attempt.test.title)
-            ws.cell(row=row+3+i, column=3, value=f"{attempt.percentage:.1f}%")
-            ws.cell(row=row+3+i, column=4, value=attempt.score)
+                    ws.cell(row=row+3+i, column=1, value=f"{i}. {student_name}")
+                    ws.cell(row=row+3+i, column=2, value=attempt.test.title)
+                    ws.cell(row=row+3+i, column=3, value=f"{attempt.percentage:.1f}%")
+                    ws.cell(row=row+3+i, column=4, value=attempt.score)
     
-    # Ustun kengliklarini sozlash
-        ws.column_dimensions['A'].width = 25
-        ws.column_dimensions['B'].width = 30
+                    # Ustun kengliklarini sozlash
+                    ws.column_dimensions['A'].width = 25
+                    ws.column_dimensions['B'].width = 30
         ws.column_dimensions['C'].width = 10
         ws.column_dimensions['D'].width = 10
         ws.column_dimensions['E'].width = 15
