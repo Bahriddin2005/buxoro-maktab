@@ -1488,17 +1488,18 @@ def export_grade_results_view(request):
         return redirect('accounts:dashboard')
     
     if not OPENPYXL_AVAILABLE:
-        return JsonResponse({'error': 'Excel export not available'}, status=500)
+        return JsonResponse({'error': 'Excel export funksiyasi mavjud emas. Iltimos openpyxl kutubxonasini o\'rnating.'}, status=500)
     
-    # Excel workbook yaratish
-    wb = Workbook()
-    
-    # Barcha sinflarni olish (1-11)
-    grades = list(range(1, 12))
-    
-    for grade in grades:
-        # Har bir sinf uchun alohida sheet yaratish
-        ws = wb.create_sheet(title=f"{grade}-sinf")
+    try:
+        # Excel workbook yaratish
+        wb = Workbook()
+        
+        # Barcha sinflarni olish (1-11)
+        grades = list(range(1, 12))
+        
+        for grade in grades:
+            # Har bir sinf uchun alohida sheet yaratish
+            ws = wb.create_sheet(title=f"{grade}-sinf")
         
         # Header qo'shish
         ws['A1'] = f"{grade}-sinf Test Natijalari"
@@ -1618,20 +1619,26 @@ def export_grade_results_view(request):
         ws.column_dimensions['E'].width = 15
         ws.column_dimensions['F'].width = 20
     
-    # Default sheet'ni o'chirish
-    if 'Sheet' in wb.sheetnames:
-        wb.remove(wb['Sheet'])
-    
-    # Response yaratish
-    response = HttpResponse(
-        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    )
-    response['Content-Disposition'] = 'attachment; filename="sinf_natijalari.xlsx"'
-    
-    # Excel faylni saqlash
-    wb.save(response)
-    
-    return response
+        # Default sheet'ni o'chirish
+        if 'Sheet' in wb.sheetnames:
+            wb.remove(wb['Sheet'])
+        
+        # Response yaratish
+        response = HttpResponse(
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = 'attachment; filename="sinf_natijalari.xlsx"'
+        
+        # Excel faylni saqlash
+        wb.save(response)
+        
+        return response
+        
+    except Exception as e:
+        print(f"Export error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'error': f'Export xatolik yuz berdi: {str(e)}'}, status=500)
 
 @login_required
 def export_single_grade_results_view(request, grade):
@@ -1640,12 +1647,13 @@ def export_single_grade_results_view(request, grade):
         return redirect('accounts:dashboard')
     
     if not OPENPYXL_AVAILABLE:
-        return JsonResponse({'error': 'Excel export not available'}, status=500)
+        return JsonResponse({'error': 'Excel export funksiyasi mavjud emas. Iltimos openpyxl kutubxonasini o\'rnating.'}, status=500)
     
-    # Excel workbook yaratish
-    wb = Workbook()
-    ws = wb.active
-    ws.title = f"{grade}-sinf"
+    try:
+        # Excel workbook yaratish
+        wb = Workbook()
+        ws = wb.active
+        ws.title = f"{grade}-sinf"
     
     # Header qo'shish
     ws['A1'] = f"{grade}-sinf Test Natijalari"
@@ -1758,20 +1766,26 @@ def export_single_grade_results_view(request, grade):
             ws.cell(row=row+3+i, column=4, value=attempt.score)
     
     # Ustun kengliklarini sozlash
-    ws.column_dimensions['A'].width = 25
-    ws.column_dimensions['B'].width = 30
-    ws.column_dimensions['C'].width = 10
-    ws.column_dimensions['D'].width = 10
-    ws.column_dimensions['E'].width = 15
-    ws.column_dimensions['F'].width = 20
-    
-    # Response yaratish
-    response = HttpResponse(
-        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    )
-    response['Content-Disposition'] = f'attachment; filename="{grade}-sinf_natijalari.xlsx"'
-    
-    # Excel faylni saqlash
-    wb.save(response)
-    
-    return response
+        ws.column_dimensions['A'].width = 25
+        ws.column_dimensions['B'].width = 30
+        ws.column_dimensions['C'].width = 10
+        ws.column_dimensions['D'].width = 10
+        ws.column_dimensions['E'].width = 15
+        ws.column_dimensions['F'].width = 20
+        
+        # Response yaratish
+        response = HttpResponse(
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = f'attachment; filename="{grade}-sinf_natijalari.xlsx"'
+        
+        # Excel faylni saqlash
+        wb.save(response)
+        
+        return response
+        
+    except Exception as e:
+        print(f"Export single grade error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'error': f'Export xatolik yuz berdi: {str(e)}'}, status=500)
