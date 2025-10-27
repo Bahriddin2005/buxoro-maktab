@@ -106,9 +106,10 @@ class TestAttemptAdmin(admin.ModelAdmin):
     
     def percentage_badge(self, obj):
         color = '#28a745' if obj.percentage >= 70 else '#ffc107' if obj.percentage >= 50 else '#dc3545'
+        percentage_text = f"{obj.percentage:.1f}%"
         return format_html(
-            '<span style="background-color: {}; color: white; padding: 4px 10px; border-radius: 6px; font-weight: bold;">{:.1f}%</span>',
-            color, obj.percentage
+            '<span style="background-color: {}; color: white; padding: 4px 10px; border-radius: 6px; font-weight: bold;">{}</span>',
+            color, percentage_text
         )
     percentage_badge.short_description = 'Foiz'
     
