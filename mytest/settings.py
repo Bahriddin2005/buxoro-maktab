@@ -20,6 +20,7 @@ ALLOWED_HOSTS = [
 
 # Приложения
 INSTALLED_APPS = [
+    'jazzmin',  # Admin panel uchun zamonaviy dizayn
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -158,22 +159,35 @@ BASE_DIR = Path(__file__).resolve().parent.parent  # Должно указыва
 # Jazzmin Settings
 JAZZMIN_SETTINGS = {
     # title of the window
-    "site_title": "Buxoro Bilimdonlar Maktabi",
+    "site_title": "Buxoro Bilimdonlar Maktabi Admin",
 
     # Title on the brand, and the login screen
-    "site_header": "Buxoro Bilimdonlar",
+    "site_header": "🎓 Buxoro Bilimdonlar Maktabi",
 
     # Logo to use for your site, must be present in static files, used for brand on top left
     "site_logo": "books.ico",
+    
+    # Logo on login page
+    "login_logo": None,
+    
+    # Logo for your site on dark backgrounds
+    "site_logo_classes": "img-circle",
 
     # Welcome text on the login screen
-    "welcome_sign": "Buxoro Bilimdonlar Maktabi Admin Paneliga Xush Kelibsiz",
+    "welcome_sign": "Buxoro Bilimdonlar Maktabi Admin Paneliga Xush Kelibsiz 🎓",
 
     # Copyright on the footer
-    "copyright": "Buxoro Bilimdonlar Maktabi",
+    "copyright": "© 2025 Buxoro Bilimdonlar Maktabi",
 
     # Field name on user model that contains avatar image
     "user_avatar": None,
+    
+    ############
+    # Search bar #
+    ############
+    
+    # Search bar in the top navbar
+    "search_model": ["auth.User", "tests_app.Test"],
 
     ############
     # Top Menu #
@@ -223,15 +237,21 @@ JAZZMIN_SETTINGS = {
     # List of apps to base side menu ordering off of
     "order_with_respect_to": ["accounts", "tests_app"],
 
-    # Custom icons for side menu apps
+    # Custom icons for side menu apps (Font Awesome icons)
     "icons": {
         "auth": "fas fa-users-cog",
         "auth.user": "fas fa-user",
         "auth.Group": "fas fa-users",
-        "accounts.User": "fas fa-user",
-        "tests_app.Test": "fas fa-file-alt",
+        "accounts.User": "fas fa-user-graduate",
+        "accounts": "fas fa-user-shield",
+        "tests_app": "fas fa-clipboard-list",
+        "tests_app.Test": "fas fa-tasks",
         "tests_app.Question": "fas fa-question-circle",
         "tests_app.Answer": "fas fa-check-circle",
+        "tests_app.Choice": "fas fa-list-ul",
+        "tests_app.TestAttempt": "fas fa-clock",
+        "tests_app.TestResult": "fas fa-chart-line",
+        "tests_app.TestRetakeRequest": "fas fa-redo",
     },
 
     # Icons that are used when one is not manually specified
@@ -246,7 +266,7 @@ JAZZMIN_SETTINGS = {
     #############
     # UI Tweaks #
     #############
-    "custom_css": None,
+    "custom_css": "css/admin_custom.css",
     "custom_js": None,
     "show_ui_builder": True,
 
@@ -256,32 +276,32 @@ JAZZMIN_SETTINGS = {
     "changeform_format": "horizontal_tabs",
 }
 
-# Jazzmin UI Configuration
+# Jazzmin UI Configuration - Zamonaviy dizayn
 JAZZMIN_UI_TWEAKS = {
     "navbar_small_text": False,
     "footer_small_text": False,
     "body_small_text": False,
     "brand_small_text": False,
-    "brand_colour": "navbar-primary",
-    "accent": "accent-primary",
-    "navbar": "navbar-white navbar-light",
+    "brand_colour": "navbar-success",  # Yashil rang (maktab rangi)
+    "accent": "accent-success",  # Yashil accent
+    "navbar": "navbar-white navbar-light",  # Oq navbar
     "no_navbar_border": False,
-    "navbar_fixed": True,
-    "layout_boxed": False,
+    "navbar_fixed": True,  # Navbar doim yuqorida
+    "layout_boxed": False,  # To'liq kenglik
     "footer_fixed": False,
-    "sidebar_fixed": True,
-    "sidebar": "sidebar-dark-primary",
+    "sidebar_fixed": True,  # Sidebar doim chap tomonda
+    "sidebar": "sidebar-dark-success",  # Yashil qora sidebar
     "sidebar_nav_small_text": False,
     "sidebar_disable_expand": False,
-    "sidebar_nav_child_indent": False,
-    "sidebar_nav_compact_style": False,
+    "sidebar_nav_child_indent": True,  # Indent qilish
+    "sidebar_nav_compact_style": True,  # Compact style
     "sidebar_nav_legacy_style": False,
     "sidebar_nav_flat_style": False,
-    "theme": "default",
+    "theme": "flatly",  # Zamonaviy flatly theme
     "dark_mode_theme": None,
     "button_classes": {
-        "primary": "btn-outline-primary",
-        "secondary": "btn-outline-secondary",
+        "primary": "btn-primary",
+        "secondary": "btn-secondary",
         "info": "btn-info",
         "warning": "btn-warning",
         "danger": "btn-danger",
