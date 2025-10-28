@@ -71,6 +71,28 @@
         100% { transform: scale(1); }
     }
     
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translate(-50%, -100%);
+        }
+        to {
+            opacity: 1;
+            transform: translate(-50%, 0);
+        }
+    }
+    
+    @keyframes slideUp {
+        from {
+            opacity: 1;
+            transform: translate(-50%, 0);
+        }
+        to {
+            opacity: 0;
+            transform: translate(-50%, -100%);
+        }
+    }
+    
     .navigation-pills {
         background: rgba(255, 255, 255, 0.1);
         backdrop-filter: blur(10px);
@@ -561,17 +583,45 @@
     function showNotification(message, type = 'success') {
         // Notification ko'rsatish
         const notification = document.createElement('div');
-        notification.className = `alert alert-${type} position-fixed top-0 start-50 translate-middle-x mt-3`;
+        notification.className = `alert alert-${type} position-fixed start-50 translate-middle-x shadow-lg border-0`;
+        notification.style.top = '80px';
         notification.style.zIndex = '9999';
+        notification.style.minWidth = '300px';
+        notification.style.maxWidth = '600px';
+        notification.style.fontSize = '1.1rem';
+        notification.style.fontWeight = 'bold';
+        notification.style.animation = 'slideDown 0.3s ease-out';
+        
+        const iconMap = {
+            'success': 'check-circle',
+            'danger': 'exclamation-triangle',
+            'warning': 'exclamation-circle',
+            'info': 'info-circle'
+        };
+        
         notification.innerHTML = `
-            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
+            <i class="fas fa-${iconMap[type] || 'info-circle'} me-2"></i>
             ${message}
         `;
         document.body.appendChild(notification);
         
+        // Ovoz chiqarish (agar kerak bo'lsa)
+        if (type === 'danger' || type === 'warning') {
+            // Browser notification API (agar ruxsat berilgan bo'lsa)
+            if ("Notification" in window && Notification.permission === "granted") {
+                new Notification("Buxoro Bilimdonlar Maktabi", {
+                    body: message.replace(/[⚠️⏰]/g, '').trim(),
+                    icon: '/static/favicon.ico'
+                });
+            }
+        }
+        
         setTimeout(() => {
-            notification.remove();
-        }, 3000);
+            notification.style.animation = 'slideUp 0.3s ease-in';
+            setTimeout(() => {
+                notification.remove();
+            }, 300);
+        }, type === 'danger' || type === 'warning' ? 5000 : 3000);
     }
 
     function updateChoiceSelection(questionId, questionType) {
@@ -732,6 +782,126 @@
         modal.hide();
     }
 
+    async function autoSubmitTest() {
+        // Vaqt tugaganda avtomatik yakunlash
+        try {
+            // Barcha UI elementlarni bloklash
+            document.querySelectorAll('.choice-option, .btn, .nav-pill').forEach(el => {
+                el.style.pointerEvents = 'none';
+                el.style.opacity = '0.6';
+            });
+            
+            // Katta modal oyna ko'rsatish
+            const autoSubmitAlert = document.createElement('div');
+            autoSubmitAlert.id = 'autoSubmitAlert';
+            autoSubmitAlert.className = 'position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center';
+            autoSubmitAlert.style.backgroundColor = 'rgba(0, 0, 0, 0.85)';
+            autoSubmitAlert.style.zIndex = '9999';
+            autoSubmitAlert.innerHTML = `
+                <div class="text-center text-white p-5">
+                    <div class="mb-4">
+                        <i class="fas fa-clock fa-5x text-warning"></i>
+                    </div>
+                    <h1 class="mb-3">⏰ Vaqt Tugadi!</h1>
+                    <h4 class="mb-4">Test avtomatik yakunlanmoqda...</h4>
+                    <div class="spinner-border text-warning" style="width: 3rem; height: 3rem;" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-4 text-warning">Iltimos, kuting. Javoblaringiz saqlanmoqda...</p>
+                </div>
+            `;
+            document.body.appendChild(autoSubmitAlert);
+            
+            // Timerni to'xtatish
+            clearInterval(timerInterval);
+            
+            // Testni yakunlash
+            const response = await fetch(`{% url "tests:finish_test" 0 %}`.replace('0', attemptId), {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                
+                // Remove beforeunload listener
+                window.removeEventListener('beforeunload', function() {});
+                
+                // Muvaffaqiyatli xabar
+                autoSubmitAlert.innerHTML = `
+                    <div class="text-center text-white p-5">
+                        <div class="mb-4">
+                            <i class="fas fa-check-circle fa-5x text-success"></i>
+                        </div>
+                        <h1 class="mb-3">✅ Test Yakunlandi!</h1>
+                        <div class="card bg-dark border-success mx-auto" style="max-width: 500px;">
+                            <div class="card-body">
+                                <h4 class="text-success mb-3">Natijalar:</h4>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Javob berilgan:</span>
+                                    <strong class="text-info">${result.results.answered_count}/${result.results.total_questions}</strong>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Ball:</span>
+                                    <strong class="text-warning">${result.results.score}/${result.results.total_points}</strong>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Foiz:</span>
+                                    <strong class="text-success">${result.results.percentage.toFixed(1)}%</strong>
+                                </div>
+                                <hr class="border-secondary">
+                                <div class="d-flex justify-content-between">
+                                    <span class="fs-5">Baholash:</span>
+                                    <strong class="fs-4 text-warning">${result.results.grade}</strong>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="mt-4 text-info">Natijalar sahifasiga yo'naltirilmoqda...</p>
+                    </div>
+                `;
+                
+                setTimeout(() => {
+                    window.location.href = `{% url "tests:test_results" test.id %}`;
+                }, 3000);
+                
+            } else {
+                const error = await response.json();
+                autoSubmitAlert.innerHTML = `
+                    <div class="text-center text-white p-5">
+                        <div class="mb-4">
+                            <i class="fas fa-exclamation-circle fa-5x text-danger"></i>
+                        </div>
+                        <h1 class="mb-3">❌ Xatolik!</h1>
+                        <p class="text-danger">${error.error || 'Test yakunlashda xatolik yuz berdi'}</p>
+                        <button class="btn btn-warning btn-lg mt-3" onclick="location.reload()">
+                            <i class="fas fa-redo me-2"></i>Qayta urinish
+                        </button>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error('Auto-submit error:', error);
+            const alertDiv = document.getElementById('autoSubmitAlert');
+            if (alertDiv) {
+                alertDiv.innerHTML = `
+                    <div class="text-center text-white p-5">
+                        <div class="mb-4">
+                            <i class="fas fa-exclamation-circle fa-5x text-danger"></i>
+                        </div>
+                        <h1 class="mb-3">❌ Xatolik!</h1>
+                        <p class="text-danger">Server bilan bog'lanishda xatolik yuz berdi</p>
+                        <button class="btn btn-warning btn-lg mt-3" onclick="location.reload()">
+                            <i class="fas fa-redo me-2"></i>Qayta urinish
+                        </button>
+                    </div>
+                `;
+            }
+        }
+    }
+
     function startTimer() {
         const updateTimer = () => {
             const now = new Date();
@@ -756,12 +926,22 @@
                 timerCard.classList.add('timer-warning');
             }
             
+            // 60 soniya qolganda ogohlantirish (faqat bir marta)
+            if (remaining === 60 && !window.warningShown) {
+                window.warningShown = true;
+                showNotification('⚠️ Diqqat! Test tugashiga 1 daqiqa qoldi!', 'warning');
+            }
+            
+            // 30 soniya qolganda ogohlantirish (faqat bir marta)
+            if (remaining === 30 && !window.warning30Shown) {
+                window.warning30Shown = true;
+                showNotification('⏰ Diqqat! Test tugashiga 30 soniya qoldi!', 'danger');
+            }
+            
             if (remaining <= 0) {
                 clearInterval(timerInterval);
-                showAlert('Vaqt tugadi! Test avtomatik yakunlanmoqda...', 'warning');
-                setTimeout(() => {
-                    confirmSubmit();
-                }, 2000);
+                // Vaqt tugadi - darhol testni yakunlash
+                autoSubmitTest();
             }
         };
         

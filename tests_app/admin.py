@@ -105,6 +105,8 @@ class TestAttemptAdmin(admin.ModelAdmin):
     score_badge.short_description = 'Ball'
     
     def percentage_badge(self, obj):
+        if obj.percentage is None:
+            return format_html('<span style="color: #6c757d;">-</span>')
         color = '#28a745' if obj.percentage >= 70 else '#ffc107' if obj.percentage >= 50 else '#dc3545'
         percentage_text = f"{obj.percentage:.1f}%"
         return format_html(
