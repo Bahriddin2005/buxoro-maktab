@@ -181,13 +181,19 @@
                     
                     <div class="row g-3">
                         {% if user.role == 'student' %}
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <a href="{% url 'tests:tests' %}" class="btn btn-primary w-100 btn-lg">
                                 <i class="fas fa-play me-2"></i>
                                 Testlarni Ko'rish
                             </a>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
+                            <a href="{% url 'tests:overall_results' %}" class="btn btn-success w-100 btn-lg">
+                                <i class="fas fa-chart-line me-2"></i>
+                                Umumiy Natijalarim
+                            </a>
+                        </div>
+                        <div class="col-md-4">
                             <a href="{% url 'accounts:profile' %}" class="btn btn-outline-light w-100 btn-lg">
                                 <i class="fas fa-user-edit me-2"></i>
                                 Profilni Tahrirlash

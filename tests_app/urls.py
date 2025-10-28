@@ -25,4 +25,5 @@ urlpatterns = [
     path('grade-results/', views.grade_based_results_view, name='grade_based_results'),
     path('grade-results/export/', views.export_grade_results_view, name='export_grade_results'),
     path('grade-results/export/<int:grade>/', views.export_single_grade_results_view, name='export_single_grade_results'),
+    path('overall-results/', views.student_overall_results_view, name='overall_results'),
 ]

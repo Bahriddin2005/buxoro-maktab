@@ -48,6 +48,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'mytest.middleware.NoCacheMiddleware',  # Cache'ni tozalash uchun
 ]
 
 ROOT_URLCONF = 'mytest.urls'

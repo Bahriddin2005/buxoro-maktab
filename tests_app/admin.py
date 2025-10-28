@@ -66,8 +66,8 @@ class TestAdmin(admin.ModelAdmin):
         }
         return format_html(
             '<span style="background-color: {}; color: white; padding: 4px 12px; border-radius: 6px; font-weight: bold;">{}</span>',
-            colors.get(obj.subject, '#6c757d'),
-            obj.get_subject_display()
+            colors.get(obj.subject.lower() if obj.subject else '', '#6c757d'),
+            obj.subject
         )
     subject_badge.short_description = 'Fan'
     

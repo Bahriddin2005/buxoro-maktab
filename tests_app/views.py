@@ -10,6 +10,7 @@ import json
 import random
 from .models import Test, Question, Choice, TestAttempt, Answer, TestResult, TestRetakeRequest
 from accounts.models import User
+from .views_overall import student_overall_results_view
 try:
     from openpyxl import Workbook
     from openpyxl.styles import Font, PatternFill
@@ -264,6 +265,26 @@ def take_test_view(request, test_id):
             'started_at': attempt.started_at.isoformat()
         })
     
+    # GET so'rovi - sahifa yuklash
+    # Avval tugallangan testni tekshiramiz
+    existing_attempt = TestAttempt.objects.filter(test=test, student=request.user).first()
+    
+    if existing_attempt and existing_attempt.is_completed:
+        # Test allaqachon tugallangan
+        # Qayta ishlash ruxsati bormi tekshiramiz
+        approved_retake = TestRetakeRequest.objects.filter(
+            student=request.user,
+            test=test,
+            status='approved',
+            is_used=False
+        ).first()
+        
+        if not approved_retake:
+            # Ruxsat yo'q - natijalar sahifasiga yo'naltiramiz
+            from django.contrib import messages
+            messages.warning(request, 'Siz allaqachon bu testni topshirgansiz. Natijalarni ko\'ring yoki qayta topshirish uchun so\'rov yuboring.')
+            return redirect('tests:test_results', test_id=test.id)
+    
     return render(request, 'tests_app/take_test.html', {'test': test})
 
 @login_required
@@ -463,8 +484,9 @@ def test_results_view(request, test_id):
                 'all_answered': (unanswered == 0),
                 'answered_count': correct_answers + incorrect_answers,
                 'total_questions': correct_answers + incorrect_answers + unanswered,
-                'incorrect_questions': incorrect_questions,
-                'unanswered_questions': unanswered_questions
+                # O'quvchilarga xato qilgan savollarni ko'rsatmaslik
+                # 'incorrect_questions': incorrect_questions,
+                # 'unanswered_questions': unanswered_questions
             }
             return JsonResponse({'result': result_data})
         
@@ -487,6 +509,40 @@ def test_results_view(request, test_id):
             
             results_data = []
             for attempt in attempts:
+                # Admin va o'qituvchilar uchun xato qilgan savollarni ham qo'shamiz
+                incorrect_questions = []
+                unanswered_questions = []
+                
+                if hasattr(attempt, 'result') and attempt.result:
+                    # Get all answers for this attempt
+                    answers = Answer.objects.filter(attempt=attempt).select_related('question')
+                    answered_question_ids = set(answers.values_list('question_id', flat=True))
+                    
+                    # Get all questions for this test
+                    all_questions = test.questions.all()
+                    
+                    for answer in answers:
+                        if not answer.is_correct():
+                            question = answer.question
+                            student_answer = answer.get_student_answer_text()
+                            correct_answer = question.get_correct_answer_text()
+                            
+                            incorrect_questions.append({
+                                'question_text': question.question_text,
+                                'student_answer': student_answer,
+                                'correct_answer': correct_answer,
+                                'explanation': question.explanation or ''
+                            })
+                    
+                    # Find unanswered questions
+                    for question in all_questions:
+                        if question.id not in answered_question_ids:
+                            unanswered_questions.append({
+                                'question_text': question.question_text,
+                                'correct_answer': question.get_correct_answer_text(),
+                                'explanation': question.explanation or ''
+                            })
+                
                 results_data.append({
                     'student': {
                         'username': attempt.student.username,
@@ -503,7 +559,11 @@ def test_results_view(request, test_id):
                     'time_taken': str(attempt.time_taken),
                     'finished_at': attempt.finished_at.isoformat(),
                     'correct_answers': attempt.result.correct_answers if hasattr(attempt, 'result') else 0,
-                    'incorrect_answers': attempt.result.incorrect_answers if hasattr(attempt, 'result') else 0
+                    'incorrect_answers': attempt.result.incorrect_answers if hasattr(attempt, 'result') else 0,
+                    'unanswered': attempt.result.unanswered if hasattr(attempt, 'result') else 0,
+                    # Admin va o'qituvchilar uchun xato qilgan savollarni ko'rsatish
+                    'incorrect_questions': incorrect_questions,
+                    'unanswered_questions': unanswered_questions
                 })
             
             return JsonResponse({'results': results_data})

@@ -37,10 +37,30 @@
         user-select: none;  /* Text selection'ni o'chirish */
     }
     
-    .choice-option:hover {
+    .choice-option:hover:not(.locked) {
         border-color: #28a745;
         background: rgba(40, 167, 69, 0.1);
         transform: translateX(5px);
+    }
+    
+    .choice-option.locked {
+        border-color: #ffc107;
+        background: rgba(255, 193, 7, 0.1);
+        cursor: not-allowed !important;
+        opacity: 0.7;
+        position: relative;
+    }
+    
+    .choice-option.locked::after {
+        content: '\f023';
+        font-family: 'Font Awesome 5 Free';
+        font-weight: 900;
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #ffc107;
+        font-size: 18px;
     }
     
     .choice-option.selected {
@@ -334,12 +354,19 @@
     let startTime = null;
     let timerInterval = null;
     let attemptId = null;
+    let answeredQuestions = new Set(); // Javob berilgan savollar ro'yxati
 
     document.addEventListener('DOMContentLoaded', function() {
         startTest();
     });
 
     async function startTest() {
+        // Agar allaqachon boshlangan bo'lsa, takrorlamaslik
+        if (window.testStarted) {
+            return;
+        }
+        window.testStarted = true;
+        
         try {
             const response = await fetch('{% url "tests:take_test" test.id %}', {
                 method: 'POST',
@@ -362,16 +389,28 @@
                 showQuestion(0);
             } else {
                 const error = await response.json();
-                showAlert(error.error || 'Testni boshlashda xatolik yuz berdi', 'danger');
-                setTimeout(() => {
-                    window.location.href = '{% url "tests:tests" %}';
-                }, 2000);
+                console.error('Test start error:', error);
+                
+                // Xatolikni faqat bir marta ko'rsatish
+                if (!window.errorShown) {
+                    window.errorShown = true;
+                    showAlert(error.error || 'Testni boshlashda xatolik yuz berdi', 'danger');
+                    setTimeout(() => {
+                        window.location.href = '{% url "tests:tests" %}';
+                    }, 3000);
+                }
             }
         } catch (error) {
-            showAlert('Server bilan bog\'lanishda xatolik yuz berdi', 'danger');
-            setTimeout(() => {
-                window.location.href = '{% url "tests:tests" %}';
-            }, 2000);
+            console.error('Network error:', error);
+            
+            // Xatolikni faqat bir marta ko'rsatish
+            if (!window.errorShown) {
+                window.errorShown = true;
+                showAlert('Server bilan bog\'lanishda xatolik yuz berdi', 'danger');
+                setTimeout(() => {
+                    window.location.href = '{% url "tests:tests" %}';
+                }, 3000);
+            }
         }
     }
 
@@ -439,6 +478,9 @@
         const optionsContainer = document.getElementById('answerOptions');
         let html = '';
         
+        // Tekshirish: Bu savolga javob berilganmi?
+        const isAnswered = answeredQuestions.has(question.id);
+        
         if (question.question_type === 'text_answer') {
             const savedAnswer = answers[question.id]?.text_answer || '';
             html = `
@@ -446,7 +488,10 @@
                     <label class="form-label text-dark fw-bold">Javobingizni yozing:</label>
                     <textarea class="form-control" rows="4" id="textAnswer" 
                               placeholder="Javobingizni bu yerga yozing..."
-                              oninput="saveTextAnswer(${question.id})">${savedAnswer}</textarea>
+                              oninput="saveTextAnswer(${question.id})"
+                              ${isAnswered ? 'disabled readonly' : ''}
+                              style="${isAnswered ? 'background-color: #f8f9fa; cursor: not-allowed;' : ''}">${savedAnswer}</textarea>
+                    ${isAnswered ? '<small class="text-warning mt-2 d-block"><i class="fas fa-lock me-1"></i>Javob belgilangan. O\'zgartirish mumkin emas.</small>' : ''}
                 </div>
             `;
         } else {
@@ -458,22 +503,27 @@
                 const inputType = question.question_type === 'single_choice' ? 'radio' : 'checkbox';
                 
                 html += `
-                    <div class="choice-option ${isSelected ? 'selected' : ''}" 
-                         onclick="selectChoice(${question.id}, ${choice.id}, '${question.question_type}')"
-                         style="cursor: pointer;">
+                    <div class="choice-option ${isSelected ? 'selected' : ''} ${isAnswered ? 'locked' : ''}" 
+                         onclick="${isAnswered ? '' : `selectChoice(${question.id}, ${choice.id}, '${question.question_type}')`}"
+                         style="cursor: ${isAnswered ? 'not-allowed' : 'pointer'}; ${isAnswered ? 'opacity: 0.7;' : ''}">
                         <div class="d-flex align-items-center">
                             <input type="${inputType}" class="form-check-input me-3" 
                                    id="choice-${choice.id}" ${isSelected ? 'checked' : ''}
-                                   onchange="selectChoice(${question.id}, ${choice.id}, '${question.question_type}')"
+                                   ${isAnswered ? 'disabled' : ''}
+                                   onchange="${isAnswered ? '' : `selectChoice(${question.id}, ${choice.id}, '${question.question_type}')`}"
                                    style="pointer-events: none;">
                             <label for="choice-${choice.id}" class="form-check-label flex-grow-1 mb-0" 
-                                   style="cursor: pointer; pointer-events: none;">
+                                   style="cursor: ${isAnswered ? 'not-allowed' : 'pointer'}; pointer-events: none;">
                                 ${choice.text}
                             </label>
                         </div>
                     </div>
                 `;
             });
+            
+            if (isAnswered) {
+                html += '<small class="text-warning mt-3 d-block"><i class="fas fa-lock me-1"></i>Javob belgilangan. O\'zgartirish mumkin emas.</small>';
+            }
         }
         
         optionsContainer.innerHTML = html;
@@ -489,6 +539,12 @@
     }
 
     function selectChoice(questionId, choiceId, questionType) {
+        // Agar bu savolga javob berilgan bo'lsa, o'zgartirish mumkin emas
+        if (answeredQuestions.has(questionId)) {
+            showNotification('⚠️ Bu savolga javob allaqachon belgilangan. O\'zgartirish mumkin emas!', 'warning');
+            return;
+        }
+        
         // Javoblarni saqlash uchun object yaratish
         if (!answers[questionId]) {
             answers[questionId] = { choice_ids: [] };
@@ -500,6 +556,9 @@
             
             // Debug: konsolga chiqarish
             console.log('Single choice selected:', { questionId, choiceId, answer: answers[questionId] });
+            
+            // Single choice - javob darhol belgilangan
+            answeredQuestions.add(questionId);
             
         } else if (questionType === 'multiple_choice') {
             // Multiple choice - toggle qilish
@@ -514,6 +573,13 @@
             
             // Debug: konsolga chiqarish
             console.log('Multiple choice toggled:', { questionId, choiceId, answer: answers[questionId] });
+            
+            // Multiple choice - kamida 1 ta tanlov bor bo'lsa, belgilangan deb hisoblaymiz
+            if (answers[questionId].choice_ids.length > 0) {
+                answeredQuestions.add(questionId);
+            } else {
+                answeredQuestions.delete(questionId);
+            }
         }
         
         // Darhol visual update
@@ -528,6 +594,12 @@
     }
 
     function saveTextAnswer(questionId) {
+        // Agar bu savolga javob berilgan bo'lsa, o'zgartirish mumkin emas
+        if (answeredQuestions.has(questionId)) {
+            showNotification('⚠️ Bu savolga javob allaqachon belgilangan. O\'zgartirish mumkin emas!', 'warning');
+            return;
+        }
+        
         const textAnswer = document.getElementById('textAnswer').value;
         
         if (!answers[questionId]) {
@@ -535,6 +607,11 @@
         }
         
         answers[questionId].text_answer = textAnswer;
+        
+        // Agar text bor bo'lsa, belgilangan deb hisoblaymiz
+        if (textAnswer.trim() !== '') {
+            answeredQuestions.add(questionId);
+        }
         
         // Save answer with debounce
         clearTimeout(saveTextAnswer.timeout);
@@ -721,7 +798,15 @@
 
     function clearAnswer() {
         const questionId = questions[currentQuestion].id;
+        
+        // Agar bu savolga javob berilgan bo'lsa, tozalab bo'lmaydi
+        if (answeredQuestions.has(questionId)) {
+            showNotification('⚠️ Bu savolga javob allaqachon belgilangan. Tozalash mumkin emas!', 'warning');
+            return;
+        }
+        
         delete answers[questionId];
+        answeredQuestions.delete(questionId);
         showQuestion(currentQuestion);
     }
 
@@ -735,6 +820,12 @@
     }
 
     async function confirmSubmit() {
+        // Agar allaqachon yakunlangan bo'lsa, takrorlamaslik
+        if (window.isSubmitting) {
+            return;
+        }
+        window.isSubmitting = true;
+        
         try {
             const response = await fetch(`{% url "tests:finish_test" 0 %}`.replace('0', attemptId), {
                 method: 'POST',
@@ -771,18 +862,36 @@
                 
             } else {
                 const error = await response.json();
-                showAlert(error.error || 'Test yakunlashda xatolik yuz berdi', 'danger');
+                
+                // Agar test allaqachon yakunlangan bo'lsa, foydalanuvchini natijalar sahifasiga yo'naltirish
+                if (error.error && error.error.includes('already completed')) {
+                    console.log('Test already completed, redirecting to results...');
+                    window.location.href = `{% url "tests:test_results" test.id %}`;
+                } else {
+                    showAlert(error.error || 'Test yakunlashda xatolik yuz berdi', 'danger');
+                    window.isSubmitting = false; // Qayta urinish uchun
+                }
             }
         } catch (error) {
+            console.error('Submit error:', error);
             showAlert('Server bilan bog\'lanishda xatolik yuz berdi', 'danger');
+            window.isSubmitting = false; // Qayta urinish uchun
         }
         
         // Hide modal
         const modal = bootstrap.Modal.getInstance(document.getElementById('submitConfirmModal'));
-        modal.hide();
+        if (modal) {
+            modal.hide();
+        }
     }
 
     async function autoSubmitTest() {
+        // Agar allaqachon chaqirilgan bo'lsa, qaytish (takroriy chaqiruvni oldini olish)
+        if (window.isAutoSubmitting) {
+            return;
+        }
+        window.isAutoSubmitting = true;
+        
         // Vaqt tugaganda avtomatik yakunlash
         try {
             // Barcha UI elementlarni bloklash
