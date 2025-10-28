@@ -262,7 +262,8 @@ def take_test_view(request, test_id):
             'attempt_id': attempt.id,
             'questions': questions_data,
             'time_limit': test.time_limit,
-            'started_at': attempt.started_at.isoformat()
+            'started_at': attempt.started_at.isoformat(),
+            'server_time': timezone.now().isoformat()  # Hozirgi server vaqti
         })
     
     # GET so'rovi - sahifa yuklash

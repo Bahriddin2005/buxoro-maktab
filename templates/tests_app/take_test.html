@@ -355,6 +355,7 @@
     let timerInterval = null;
     let attemptId = null;
     let answeredQuestions = new Set(); // Javob berilgan savollar ro'yxati
+    let serverTimeOffset = 0; // Server va client vaqt farqi
 
     document.addEventListener('DOMContentLoaded', function() {
         startTest();
@@ -382,7 +383,21 @@
                 attemptId = data.attempt_id;
                 questions = data.questions;
                 timeLimit = data.time_limit * 60; // Convert to seconds
-                startTime = new Date(data.started_at);
+                
+                // Server vaqtini olish
+                const serverStartTime = new Date(data.started_at);
+                const serverCurrentTime = new Date(data.server_time);
+                startTime = serverStartTime;
+                
+                // Server va client vaqt farqini hisoblash
+                const clientTime = new Date();
+                serverTimeOffset = serverCurrentTime.getTime() - clientTime.getTime();
+                
+                console.log('Server current time:', serverCurrentTime.toISOString());
+                console.log('Server start time:', serverStartTime.toISOString());
+                console.log('Client time:', clientTime.toISOString());
+                console.log('Time offset (ms):', serverTimeOffset);
+                console.log('Test will auto-submit at:', new Date(serverStartTime.getTime() + (timeLimit * 1000)).toISOString());
                 
                 initializeTest();
                 startTimer();
@@ -1013,8 +1028,11 @@
 
     function startTimer() {
         const updateTimer = () => {
-            const now = new Date();
-            const elapsed = Math.floor((now - startTime) / 1000);
+            // Server vaqtini olish (client vaqt + offset)
+            const clientNow = new Date();
+            const serverNow = new Date(clientNow.getTime() + serverTimeOffset);
+            
+            const elapsed = Math.floor((serverNow - startTime) / 1000);
             const remaining = Math.max(0, timeLimit - elapsed);
             
             const minutes = Math.floor(remaining / 60);
