@@ -1850,3 +1850,156 @@ def export_single_grade_results_view(request, grade):
         import traceback
         traceback.print_exc()
         return JsonResponse({'error': f'Export xatolik yuz berdi: {str(e)}'}, status=500)
+
+@login_required
+def export_all_results_view(request):
+    """Barcha sinflar va fanlar bo'yicha natijalarni Excel formatida export qilish"""
+    if request.user.role not in ['admin', 'teacher']:
+        return JsonResponse({'error': 'Faqat admin va o\'qituvchilar kirishi mumkin'}, status=403)
+    
+    try:
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+        from openpyxl.utils import get_column_letter
+        from django.db.models import Avg, Count, Max, Min
+        
+        # Yangi workbook yaratish
+        wb = Workbook()
+        
+        # Barcha sinflar uchun umumiy statistikalar
+        ws_summary = wb.active
+        ws_summary.title = "Umumiy Statistika"
+        
+        # Header qo'shish
+        headers = ['Sinf', 'Fan', 'Testlar Soni', 'Jami Urinishlar', 'O\'rtacha Foiz', 'Eng Yaxshi Natija', 'Eng Past Natija']
+        for col, header in enumerate(headers, 1):
+            cell = ws_summary.cell(row=1, column=col, value=header)
+            cell.font = Font(bold=True, color="FFFFFF")
+            cell.fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+            cell.alignment = Alignment(horizontal="center")
+        
+        row = 2
+        
+        # Har bir sinf uchun
+        for grade in range(1, 12):  # 1-11 sinflar
+            # Har bir fan uchun
+            subjects = ['Matematika', 'Fizika', 'Kimyo', 'Biologiya', 'Ona tili', 'Ingliz tili', 'Tarix', 'Geografiya']
+            
+            for subject in subjects:
+                # Bu sinf va fan uchun testlar
+                tests = Test.objects.filter(grade=grade, subject=subject)
+                
+                if tests.exists():
+                    # Bu sinf va fan uchun barcha urinishlar
+                    attempts = TestAttempt.objects.filter(
+                        test__in=tests,
+                        completed_at__isnull=False
+                    ).select_related('student', 'test')
+                    
+                    if attempts.exists():
+                        # Statistikalarni hisoblash
+                        total_tests = tests.count()
+                        total_attempts = attempts.count()
+                        avg_percentage = attempts.aggregate(avg=Avg('percentage'))['avg'] or 0
+                        max_percentage = attempts.aggregate(max=Max('percentage'))['max'] or 0
+                        min_percentage = attempts.aggregate(min=Min('percentage'))['min'] or 0
+                        
+                        # Ma'lumotlarni qo'shish
+                        ws_summary.cell(row=row, column=1, value=f"{grade}-sinf")
+                        ws_summary.cell(row=row, column=2, value=subject)
+                        ws_summary.cell(row=row, column=3, value=total_tests)
+                        ws_summary.cell(row=row, column=4, value=total_attempts)
+                        ws_summary.cell(row=row, column=5, value=f"{avg_percentage:.1f}%")
+                        ws_summary.cell(row=row, column=6, value=f"{max_percentage:.1f}%")
+                        ws_summary.cell(row=row, column=7, value=f"{min_percentage:.1f}%")
+                        
+                        row += 1
+        
+        # Ustun kengliklarini sozlash
+        for col in range(1, 8):
+            ws_summary.column_dimensions[get_column_letter(col)].width = 15
+        
+        # Har bir sinf uchun alohida worksheet yaratish
+        for grade in range(1, 12):
+            ws = wb.create_sheet(title=f"{grade}-sinf")
+            
+            # Header qo'shish
+            headers = ['O\'quvchi', 'Fan', 'Test', 'Foiz', 'Ball', 'Urinishlar Soni', 'Oxirgi Urinish']
+            for col, header in enumerate(headers, 1):
+                cell = ws.cell(row=1, column=col, value=header)
+                cell.font = Font(bold=True, color="FFFFFF")
+                cell.fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+                cell.alignment = Alignment(horizontal="center")
+            
+            row = 2
+            
+            # Bu sinf uchun barcha testlar
+            tests = Test.objects.filter(grade=grade)
+            
+            for test in tests:
+                # Bu test uchun barcha urinishlar
+                attempts = TestAttempt.objects.filter(
+                    test=test,
+                    completed_at__isnull=False
+                ).select_related('student').order_by('-completed_at')
+                
+                for attempt in attempts:
+                    student_name = f"{attempt.student.first_name} {attempt.student.last_name}"
+                    if not student_name.strip():
+                        student_name = attempt.student.username
+                    
+                    # Eng oxirgi urinishni topish
+                    latest_attempt = TestAttempt.objects.filter(
+                        student=attempt.student,
+                        test=test,
+                        completed_at__isnull=False
+                    ).order_by('-completed_at').first()
+                    
+                    ws.cell(row=row, column=1, value=student_name)
+                    ws.cell(row=row, column=2, value=test.subject)
+                    ws.cell(row=row, column=3, value=test.title)
+                    ws.cell(row=row, column=4, value=f"{attempt.percentage:.1f}%")
+                    ws.cell(row=row, column=5, value=attempt.score)
+                    ws.cell(row=row, column=6, value=attempt.attempt_number)
+                    ws.cell(row=row, column=7, value=attempt.completed_at.strftime('%d.%m.%Y %H:%M') if attempt.completed_at else '')
+                    
+                    # Rang berish
+                    if attempt.percentage >= 81:
+                        fill_color = "C6EFCE"  # Yashil
+                    elif attempt.percentage >= 61:
+                        fill_color = "FFEB9C"  # Sariq
+                    elif attempt.percentage >= 31:
+                        fill_color = "FFC7CE"  # Qizil
+                    else:
+                        fill_color = "FFC7CE"  # Qizil
+                    
+                    for col in range(1, 8):
+                        ws.cell(row=row, column=col).fill = PatternFill(start_color=fill_color, end_color=fill_color, fill_type="solid")
+                    
+                    row += 1
+            
+            # Ustun kengliklarini sozlash
+            ws.column_dimensions['A'].width = 25
+            ws.column_dimensions['B'].width = 15
+            ws.column_dimensions['C'].width = 30
+            ws.column_dimensions['D'].width = 10
+            ws.column_dimensions['E'].width = 10
+            ws.column_dimensions['F'].width = 15
+            ws.column_dimensions['G'].width = 20
+        
+        # Response yaratish
+        response = HttpResponse(
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = 'attachment; filename="barcha_sinflar_natijalari.xlsx"'
+        
+        # Excel faylni saqlash
+        wb.save(response)
+        
+        return response
+        
+    except Exception as e:
+        print(f"Export all results error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'error': f'Export xatolik yuz berdi: {str(e)}'}, status=500)
