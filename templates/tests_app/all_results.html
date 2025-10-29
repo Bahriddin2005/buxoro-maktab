@@ -400,8 +400,11 @@
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h4><i class="fas fa-list me-2"></i>Test Natijalari</h4>
             <div class="export-actions">
-                <button class="export-btn" onclick="exportResults()">
-                    <i class="fas fa-download me-2"></i>Excel
+                <a href="{% url 'tests:export_all_students' %}" class="export-btn" style="text-decoration: none;">
+                    <i class="fas fa-file-excel me-2"></i>Barchani Excel'ga Yuklab Olish
+                </a>
+                <button class="export-btn" onclick="exportResults()" style="margin-left: 10px;">
+                    <i class="fas fa-download me-2"></i>CSV
                 </button>
             </div>
         </div>

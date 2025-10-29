@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test - Overall Results</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 15px;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        .section h2 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        pre {
+            background: #2c3e50;
+            color: #00ff00;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 5px;
+        }
+        .btn:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .status.success { background: #2ecc71; color: white; }
+        .status.error { background: #e74c3c; color: white; }
+        .status.warning { background: #f39c12; color: white; }
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .stat-box {
+            display: inline-block;
+            background: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            margin: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Overall Results API Test</h1>
+        
+        <div class="section">
+            <h2>1. Foydalanuvchi Ma'lumotlari</h2>
+            <p><strong>Username:</strong> {{ request.user.username }}</p>
+            <p><strong>Role:</strong> {{ request.user.role }}</p>
+            <p><strong>Login:</strong> <span class="status success">✅ Authenticated</span></p>
+        </div>
+
+        <div class="section">
+            <h2>2. API Test</h2>
+            <button class="btn" onclick="testAPI()">🔄 API'ni Test Qilish</button>
+            <button class="btn" onclick="location.href='/tests/overall-results/'">📊 Overall Results Sahifasiga O'tish</button>
+            <div id="apiStatus"></div>
+        </div>
+
+        <div class="section">
+            <h2>3. API Response</h2>
+            <div id="apiResponse">
+                <p style="color: #7f8c8d;"><em>API'ni test qilish uchun yuqoridagi tugmani bosing...</em></p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>4. Natijalar Summary</h2>
+            <div id="summary">
+                <p style="color: #7f8c8d;"><em>Ma'lumotlar yuklanmagan...</em></p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>5. Console Logs</h2>
+            <p><em>Browser console'ni oching (F12) va loglarni ko'ring</em></p>
+            <pre id="consoleLogs">Console loglar bu yerda ko'rinadi...</pre>
+        </div>
+    </div>
+
+    <script>
+        let logs = [];
+        
+        function addLog(message) {
+            const timestamp = new Date().toLocaleTimeString('uz-UZ');
+            logs.push(`[${timestamp}] ${message}`);
+            document.getElementById('consoleLogs').textContent = logs.join('\n');
+            console.log(message);
+        }
+
+        async function testAPI() {
+            addLog('=== API TEST BOSHLANDI ===');
+            document.getElementById('apiStatus').innerHTML = '<div class="spinner"></div> Yuklanmoqda...';
+            
+            try {
+                const url = '/tests/overall-results/';
+                addLog(`URL: ${url}`);
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin'
+                });
+
+                addLog(`Response Status: ${response.status} ${response.statusText}`);
+                addLog(`Content-Type: ${response.headers.get('content-type')}`);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    const text = await response.text();
+                    addLog(`ERROR: Response is not JSON!`);
+                    addLog(`Response: ${text.substring(0, 200)}...`);
+                    document.getElementById('apiStatus').innerHTML = '<span class="status error">❌ Response HTML emas JSON!</span>';
+                    document.getElementById('apiResponse').innerHTML = `<pre>${text.substring(0, 500)}</pre>`;
+                    return;
+                }
+
+                const data = await response.json();
+                addLog(`✅ JSON muvaffaqiyatli parse qilindi`);
+                addLog(`Total tests: ${data.total_tests}`);
+                addLog(`Average: ${data.average_percentage}%`);
+                addLog(`Grade: ${data.overall_grade}`);
+
+                // Display success
+                document.getElementById('apiStatus').innerHTML = '<span class="status success">✅ API Ishlayapti!</span>';
+                
+                // Display response
+                document.getElementById('apiResponse').innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+
+                // Display summary
+                if (data.total_tests > 0) {
+                    let summaryHTML = `
+                        <div class="stat-box">
+                            <div class="stat-value">${data.total_tests}</div>
+                            <div class="stat-label">Jami testlar</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value">${data.average_percentage}%</div>
+                            <div class="stat-label">O'rtacha</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value">${data.overall_grade}</div>
+                            <div class="stat-label">Baho</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value">${data.highest_score}%</div>
+                            <div class="stat-label">Eng yuqori</div>
+                        </div>
+                    `;
+                    document.getElementById('summary').innerHTML = summaryHTML;
+                } else {
+                    document.getElementById('summary').innerHTML = '<span class="status warning">⚠️ Test natijalari topilmadi</span>';
+                }
+
+                addLog('=== API TEST YAKUNLANDI ===');
+
+            } catch (error) {
+                addLog(`❌ ERROR: ${error.message}`);
+                addLog(`Stack: ${error.stack}`);
+                document.getElementById('apiStatus').innerHTML = '<span class="status error">❌ Xatolik yuz berdi</span>';
+                document.getElementById('apiResponse').innerHTML = `<pre style="background: #e74c3c;">ERROR: ${error.message}\n\n${error.stack}</pre>`;
+            }
+        }
+
+        // Auto-test on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            addLog('Sahifa yuklandi');
+            setTimeout(testAPI, 1000);
+        });
+    </script>
+</body>
+</html>
+

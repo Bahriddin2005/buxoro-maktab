@@ -379,14 +379,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
 async function loadOverallResults() {
     try {
-        console.log('Loading overall results...');
-        const response = await fetch(window.location.href, {
+        console.log('=== Loading overall results ===');
+        console.log('URL:', window.location.href);
+        
+        // Cache busting: add timestamp
+        const url = window.location.href + (window.location.href.includes('?') ? '&' : '?') + '_=' + Date.now();
+        console.log('Request URL:', url);
+        
+        const response = await fetch(url, {
+            method: 'GET',
             headers: {
-                'Accept': 'application/json'
-            }
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache',
+                'Expires': '0'
+            },
+            credentials: 'same-origin',
+            cache: 'no-store'
         });
 
         console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
 
         if (!response.ok) {
             const errorText = await response.text();
@@ -394,8 +408,22 @@ async function loadOverallResults() {
             throw new Error(`Failed to load data: ${response.status}`);
         }
 
+        const contentType = response.headers.get('content-type');
+        console.log('Content-Type:', contentType);
+        
+        if (!contentType || !contentType.includes('application/json')) {
+            console.error('Response is not JSON!');
+            const text = await response.text();
+            console.error('Response text:', text.substring(0, 500));
+            throw new Error('Response is not JSON');
+        }
+
         const data = await response.json();
-        console.log('Received data:', data);
+        console.log('=== Received data ===');
+        console.log('Total tests:', data.total_tests);
+        console.log('Average:', data.average_percentage);
+        console.log('Tests:', data.tests);
+        console.log('Full data:', data);
         
         document.getElementById('loading').classList.add('d-none');
 

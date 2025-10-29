@@ -85,6 +85,9 @@ class TestAttempt(models.Model):
     time_taken = models.DurationField(null=True, blank=True)
     attempt_number = models.IntegerField(default=1)  # Qayta ishlash raqami
     is_retake = models.BooleanField(default=False)  # Qayta ishlashmi
+    correct_answers = models.IntegerField(default=0)  # To'g'ri javoblar soni
+    incorrect_answers = models.IntegerField(default=0)  # Noto'g'ri javoblar soni
+    unanswered = models.IntegerField(default=0)  # Javob berilmagan savollar
     
     class Meta:
         ordering = ['-started_at']
