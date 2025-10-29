@@ -1,0 +1,498 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sinf Bo'yicha Test Natijalari - Buxoro Bilimdonlar Maktabi{% endblock %}
+
+{% block extra_css %}
+<style>
+    .grade-results-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .header-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 15px;
+        padding: 30px;
+        margin-bottom: 30px;
+        color: white;
+        text-align: center;
+    }
+    
+    .stats-overview {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .stat-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        padding: 25px;
+        text-align: center;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+    }
+    
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #2c3e50;
+        display: block;
+        margin-bottom: 10px;
+    }
+    
+    .stat-label {
+        font-size: 1rem;
+        color: #7f8c8d;
+        font-weight: 500;
+    }
+    
+    .grade-section {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 25px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .grade-section:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+    }
+    
+    .grade-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #ecf0f1;
+    }
+    
+    .grade-header .d-flex {
+        gap: 15px;
+    }
+    
+    .grade-header .btn {
+        transition: all 0.3s ease;
+    }
+    
+    .grade-header .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+    }
+    
+    .grade-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin: 0;
+    }
+    
+    .grade-badge {
+        background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+    
+    .grade-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .grade-stat {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 15px;
+        text-align: center;
+        border-left: 4px solid #3498db;
+    }
+    
+    .grade-stat-number {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #2c3e50;
+        display: block;
+    }
+    
+    .grade-stat-label {
+        font-size: 0.9rem;
+        color: #7f8c8d;
+        margin-top: 5px;
+    }
+    
+    .top-performers {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+    }
+    
+    .top-performers h6 {
+        color: #2c3e50;
+        font-weight: 600;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .top-performers h6 i {
+        margin-right: 8px;
+        color: #f39c12;
+    }
+    
+    .performer-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 15px;
+        background: white;
+        border-radius: 8px;
+        margin-bottom: 8px;
+        border-left: 4px solid #27ae60;
+        transition: all 0.3s ease;
+    }
+    
+    .performer-item:hover {
+        transform: translateX(5px);
+        box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    }
+    
+    .performer-info {
+        flex: 1;
+    }
+    
+    .performer-name {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 2px;
+    }
+    
+    .performer-test {
+        font-size: 0.9rem;
+        color: #7f8c8d;
+    }
+    
+    .performer-score {
+        text-align: right;
+    }
+    
+    .performer-percentage {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #27ae60;
+    }
+    
+    .performer-points {
+        font-size: 0.9rem;
+        color: #7f8c8d;
+    }
+    
+    .no-data {
+        text-align: center;
+        padding: 40px;
+        color: #7f8c8d;
+    }
+    
+    .no-data i {
+        font-size: 3rem;
+        margin-bottom: 15px;
+        opacity: 0.5;
+    }
+    
+    .grade-filter {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+    }
+    
+    .grade-filter-btn {
+        background: #ecf0f1;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 25px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 500;
+    }
+    
+    .grade-filter-btn:hover {
+        background: #3498db;
+        color: white;
+        transform: translateY(-2px);
+    }
+    
+    .grade-filter-btn.active {
+        background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    @media (max-width: 768px) {
+        .grade-header {
+            flex-direction: column;
+            gap: 15px;
+            text-align: center;
+        }
+        
+        .grade-stats {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .performer-item {
+            flex-direction: column;
+            text-align: center;
+            gap: 10px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="grade-results-container">
+    <!-- Header -->
+    <div class="header-section" data-aos="fade-down">
+        <h1 class="mb-3">
+            <i class="fas fa-graduation-cap me-3"></i>
+            Sinf Bo'yicha Test Natijalari
+        </h1>
+        <p class="mb-3">Barcha sinflar uchun test natijalari va statistikalar</p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="{% url 'tests:export_all_results' %}" class="btn btn-light btn-lg">
+                <i class="fas fa-file-excel me-2"></i>
+                Barcha Natijalarni Excel'ga Export
+            </a>
+        </div>
+    </div>
+    
+    <!-- Overview Stats -->
+    <div class="stats-overview" data-aos="fade-up">
+        <div class="stat-card">
+            <span class="stat-number">{{ total_students }}</span>
+            <div class="stat-label">Jami O'quvchilar</div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-number">{{ total_teachers }}</span>
+            <div class="stat-label">Jami O'qituvchilar</div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-number">{{ total_tests }}</span>
+            <div class="stat-label">Jami Testlar</div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-number">{{ total_attempts }}</span>
+            <div class="stat-label">Jami Urinishlar</div>
+        </div>
+    </div>
+    
+    <!-- Grade Filter -->
+    <div class="grade-filter" data-aos="fade-in">
+        <button class="grade-filter-btn active" onclick="filterByGrade('all')">Barcha Sinf</button>
+        {% for grade in "12345678901" %}
+            <button class="grade-filter-btn" onclick="filterByGrade('{{ forloop.counter }}')">{{ forloop.counter }}-sinf</button>
+        {% endfor %}
+    </div>
+    
+    <!-- Excel Export Button -->
+    <div class="text-center mb-4" data-aos="fade-in">
+        <div class="glass-card p-4" style="background: rgba(40, 167, 69, 0.1); border: 2px solid rgba(40, 167, 69, 0.3);">
+            <h5 class="text-white mb-3">
+                <i class="fas fa-file-excel me-2"></i>
+                Excel Formatida Yuklab Olish
+            </h5>
+            <p class="text-white-50 mb-3">1-sinfdan 11-sinfgacha barcha natijalarni Excel faylga saqlab oling</p>
+            <button class="btn btn-success btn-lg" onclick="exportToExcel()" style="background: linear-gradient(45deg, #28a745 0%, #20c997 100%); border: none; padding: 15px 30px; font-size: 1.1rem; font-weight: 600; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3); transition: all 0.3s ease;">
+                <i class="fas fa-download me-2"></i>
+                Excel Faylini Yuklab Olish
+            </button>
+        </div>
+    </div>
+    
+    <!-- Grade Results -->
+    <div id="gradeResults">
+        {% for grade_stat in grade_stats %}
+        <div class="grade-section" data-grade="{{ grade_stat.grade }}" data-aos="fade-up" data-aos-delay="{{ forloop.counter0|add:1 }}">
+            <div class="grade-header">
+                <h2 class="grade-title">{{ grade_stat.grade }}-sinf</h2>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="grade-badge">{{ grade_stat.grade }}-sinf</span>
+                    <button class="btn btn-sm btn-outline-success" onclick="exportSingleGrade('{{ grade_stat.grade }}')" title="{{ grade_stat.grade }}-sinf natijalarini Excel'ga saqlash">
+                        <i class="fas fa-file-excel me-1"></i>
+                        Excel
+                    </button>
+                </div>
+            </div>
+            
+            {% if grade_stat.total_students > 0 or grade_stat.total_tests > 0 %}
+            <div class="grade-stats">
+                <div class="grade-stat">
+                    <span class="grade-stat-number">{{ grade_stat.total_students }}</span>
+                    <div class="grade-stat-label">O'quvchilar</div>
+                </div>
+                <div class="grade-stat">
+                    <span class="grade-stat-number">{{ grade_stat.total_tests }}</span>
+                    <div class="grade-stat-label">Testlar</div>
+                </div>
+                <div class="grade-stat">
+                    <span class="grade-stat-number">{{ grade_stat.total_attempts }}</span>
+                    <div class="grade-stat-label">Urinishlar</div>
+                </div>
+                <div class="grade-stat">
+                    <span class="grade-stat-number">{{ grade_stat.avg_percentage }}%</span>
+                    <div class="grade-stat-label">O'rtacha</div>
+                </div>
+                <div class="grade-stat">
+                    <span class="grade-stat-number">{{ grade_stat.highest_score }}%</span>
+                    <div class="grade-stat-label">Eng Yuqori</div>
+                </div>
+                <div class="grade-stat">
+                    <span class="grade-stat-number">{{ grade_stat.lowest_score }}%</span>
+                    <div class="grade-stat-label">Eng Past</div>
+                </div>
+            </div>
+            
+            {% if grade_stat.top_performers %}
+            <div class="top-performers">
+                <h6>
+                    <i class="fas fa-trophy"></i>
+                    Eng Yaxshi Natijalar
+                </h6>
+                {% for performer in grade_stat.top_performers %}
+                <div class="performer-item">
+                    <div class="performer-info">
+                        <div class="performer-name">{{ performer.student_name }}</div>
+                        <div class="performer-test">{{ performer.test_title }}</div>
+                    </div>
+                    <div class="performer-score">
+                        <div class="performer-percentage">{{ performer.percentage }}%</div>
+                        <div class="performer-points">{{ performer.score }} ball</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            {% else %}
+            <div class="no-data">
+                <i class="fas fa-inbox"></i>
+                <h5>Hali ma'lumot yo'q</h5>
+                <p>Bu sinf uchun hali o'quvchilar yoki testlar mavjud emas.</p>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize AOS
+    if (typeof AOS !== 'undefined') {
+        AOS.init({
+            duration: 800,
+            easing: 'ease-in-out',
+            once: true
+        });
+    }
+});
+
+function filterByGrade(grade) {
+    // Update active button
+    document.querySelectorAll('.grade-filter-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+    
+    // Show/hide grade sections
+    const gradeSections = document.querySelectorAll('.grade-section');
+    
+    if (grade === 'all') {
+        gradeSections.forEach(section => {
+            section.style.display = 'block';
+            section.style.animation = 'fadeIn 0.5s ease';
+        });
+    } else {
+        gradeSections.forEach(section => {
+            const sectionGrade = section.getAttribute('data-grade');
+            if (sectionGrade === grade) {
+                section.style.display = 'block';
+                section.style.animation = 'fadeIn 0.5s ease';
+            } else {
+                section.style.display = 'none';
+            }
+        });
+    }
+}
+
+// Add fadeIn animation
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+`;
+document.head.appendChild(style);
+
+// Excel export funksiyasi
+function exportToExcel() {
+    // Loading ko'rsatish
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Excel fayl tayyorlanmoqda...';
+    button.disabled = true;
+    button.style.background = 'linear-gradient(45deg, #6c757d 0%, #495057 100%)';
+    
+    // Excel faylni yuklab olish
+    window.location.href = '{% url "tests:export_grade_results" %}';
+    
+    // 5 soniyadan keyin tugmani qayta tiklash
+    setTimeout(() => {
+        button.innerHTML = originalText;
+        button.disabled = false;
+        button.style.background = 'linear-gradient(45deg, #28a745 0%, #20c997 100%)';
+    }, 5000);
+}
+
+// Bitta sinf uchun Excel export funksiyasi
+function exportSingleGrade(grade) {
+    // Loading ko'rsatish
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>';
+    button.disabled = true;
+    button.classList.remove('btn-outline-success');
+    button.classList.add('btn-secondary');
+    
+    // Excel faylni yuklab olish
+    window.location.href = `/tests/grade-results/export/${grade}/`;
+    
+    // 3 soniyadan keyin tugmani qayta tiklash
+    setTimeout(() => {
+        button.innerHTML = originalText;
+        button.disabled = false;
+        button.classList.remove('btn-secondary');
+        button.classList.add('btn-outline-success');
+    }, 3000);
+}
+</script>
+{% endblock %}

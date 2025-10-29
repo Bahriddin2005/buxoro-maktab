@@ -1,0 +1,24 @@
+[Unit]
+Description=Buxoro Test Application
+After=network.target
+
+[Service]
+Type=notify
+User=baxadev
+Group=baxadev
+WorkingDirectory=/home/baxadev/my_test
+Environment=PATH=/home/baxadev/my_test/venv/bin
+ExecStart=/home/baxadev/my_test/venv/bin/gunicorn --config gunicorn.conf.py mytest.wsgi:application
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=always
+RestartSec=3
+
+# Resource limits for 100 concurrent users
+LimitNOFILE=65536
+LimitNPROC=32768
+
+# Memory limits
+MemoryLimit=2G
+
+[Install]
+WantedBy=multi-user.target

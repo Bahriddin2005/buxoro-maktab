@@ -1,0 +1,1010 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Testni Tahrirlash - {{ test.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+body {
+    background: linear-gradient(135deg, #6a8dff 0%, #a16ae8 100%);
+    min-height: 100vh;
+}
+.glass-card {
+    background: rgba(255,255,255,0.15);
+    border-radius: 18px;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.18);
+}
+.glass-input, .form-control, .form-select {
+    background: rgba(255,255,255,0.25) !important;
+    color: #222 !important;
+    border: none !important;
+    border-radius: 10px !important;
+}
+.form-label, .text-white {
+    color: #fff !important;
+}
+.btn-success, .btn-primary {
+    background: linear-gradient(90deg, #6a8dff 0%, #a16ae8 100%);
+    border: none;
+    color: #fff;
+}
+.btn-success:hover, .btn-primary:hover {
+    background: linear-gradient(90deg, #a16ae8 0%, #6a8dff 100%);
+    color: #fff;
+}
+.question-item {
+    border-left: 4px solid #6a8dff;
+    background: rgba(255,255,255,0.22);
+}
+.modal-content.glass-card {
+    background: rgba(255,255,255,0.25);
+    border-radius: 18px;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.18);
+}
+.add-choice-modal, .add-choice {
+    background: linear-gradient(90deg, #6a8dff 0%, #a16ae8 100%);
+    color: #fff;
+    border: none;
+}
+.add-choice-modal:hover, .add-choice:hover {
+    background: linear-gradient(90deg, #a16ae8 0%, #6a8dff 100%);
+    color: #fff;
+}
+.remove-choice, .remove-question {
+    background: #ff6a6a;
+    color: #fff;
+    border: none;
+}
+.remove-choice:hover, .remove-question:hover {
+    background: #e84141;
+    color: #fff;
+}
+::-webkit-input-placeholder { color: #888 !important; }
+::-moz-placeholder { color: #888 !important; }
+:-ms-input-placeholder { color: #888 !important; }
+::placeholder { color: #888 !important; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="glass-card p-4">
+        <h2 class="mb-4" style="color:#fff;"><i class="fas fa-edit me-2"></i>Testni Tahrirlash</h2>
+        <form id="editTestForm">
+            <input type="hidden" name="test_id" value="{{ test.id }}">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Test nomi</label>
+                    <input type="text" class="form-control glass-input" name="title" value="{{ test.title }}" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Fan</label>
+                    <input type="text" class="form-control glass-input" name="subject" value="{{ test.subject }}" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Sinf</label>
+                    <input type="number" class="form-control glass-input" name="grade" value="{{ test.grade }}" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Vaqt chegarasi (daqiqa)</label>
+                    <input type="number" class="form-control glass-input" name="time_limit" value="{{ test.time_limit }}" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Maksimal urinishlar</label>
+                    <input type="number" class="form-control glass-input" name="max_attempts" value="{{ test.max_attempts }}" required>
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Test tavsifi</label>
+                    <textarea class="form-control glass-input" name="description" rows="2">{{ test.description }}</textarea>
+                </div>
+            </div>
+            <div class="form-check mt-3">
+                <input class="form-check-input" type="checkbox" name="show_results" {% if test.show_results %}checked{% endif %}>
+                <label class="form-check-label">O'quvchilarga natijalarni ko'rsatish</label>
+            </div>
+            <div class="form-check mt-3">
+                <input class="form-check-input" type="checkbox" name="is_active" {% if test.is_active %}checked{% endif %}>
+                <label class="form-check-label">Testni faollashtirish</label>
+            </div>
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" name="shuffle_questions" {% if test.shuffle_questions %}checked{% endif %}>
+                <label class="form-check-label"><i class="fas fa-random"></i> Savollarni random tartibda ko'rsatish</label>
+            </div>
+            <hr class="my-4">
+            <h4 class="mb-3" style="color:#fff;"><i class="fas fa-question-circle"></i> Savollarni Tahrirlash</h4>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <button type="button" class="btn btn-success btn-sm" id="addQuestionBtn" data-bs-toggle="modal" data-bs-target="#addQuestionModal">
+                    <i class="fas fa-plus"></i> Savol qo'shish
+                </button>
+                <button type="button" class="btn btn-primary btn-lg" id="saveTestBtn">
+                    <i class="fas fa-save"></i> Testni Saqlash
+                </button>
+            </div>
+            <div id="questionsContainer">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Savollar yuklanmoqda...</span>
+                    </div>
+                    <p class="text-white-50 mt-3">Savollar yuklanmoqda...</p>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Savol qo'shish modal -->
+<div class="modal fade" id="addQuestionModal" tabindex="-1" aria-labelledby="addQuestionModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content glass-card">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addQuestionModalLabel"><i class="fas fa-question-circle"></i> Yangi Savol Qo'shish</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Yopish"></button>
+      </div>
+      <div class="modal-body">
+        <form id="addQuestionForm" enctype="multipart/form-data">
+          <div class="mb-3">
+            <label class="form-label">Savol matni</label>
+            <textarea class="form-control" name="question_text" rows="2" required></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Tur</label>
+            <select class="form-select" name="question_type" id="modalQuestionType" required>
+              <option value="single_choice">Bir javob</option>
+              <option value="multiple_choice">Ko'p javob</option>
+              <option value="text_answer">Matnli javob</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Ball</label>
+            <input type="number" class="form-control" name="points" min="0.5" max="10" step="0.5" value="1" required>
+          </div>
+          <div class="choices-container mb-3" id="modalChoicesContainer">
+            <label class="form-label">Javob variantlari</label>
+            <div class="choice-items">
+              <div class="choice-item d-flex align-items-center mb-2">
+                <input type="checkbox" class="form-check-input me-2" name="is_correct_0">
+                <input type="text" class="form-control" name="choice_text_0" placeholder="Variant 1">
+              </div>
+              <div class="choice-item d-flex align-items-center mb-2">
+                <input type="checkbox" class="form-check-input me-2" name="is_correct_1">
+                <input type="text" class="form-control" name="choice_text_1" placeholder="Variant 2">
+              </div>
+            </div>
+            <button type="button" class="btn add-choice-modal btn-sm mt-2">
+              <i class="fas fa-plus"></i> Variant qo'shish
+            </button>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Tushuntirish (ixtiyoriy)</label>
+            <textarea class="form-control" name="explanation" rows="1"></textarea>
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label">Savol uchun rasm (ixtiyoriy)</label>
+            <input type="file" class="form-control" name="question_image" accept="image/*">
+            <div class="form-text">JPG, PNG, GIF formatlari qo'llab-quvvatlanadi. Maksimal hajm: 5MB</div>
+          </div>
+          <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-primary btn-lg">SAVOLNI QO'SHISH</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Load existing questions
+    loadExistingQuestions();
+    
+    // Add choice in modal
+    document.querySelector('.add-choice-modal').addEventListener('click', function() {
+        const choiceItems = this.parentElement.querySelector('.choice-items');
+        const choiceCount = choiceItems.children.length;
+        const choiceHtml = `
+            <div class="choice-item d-flex align-items-center mb-2">
+                <input type="checkbox" class="form-check-input me-2" name="is_correct_${choiceCount}">
+                <input type="text" class="form-control" name="choice_text_${choiceCount}" placeholder="Variant ${choiceCount + 1}">
+                <button type="button" class="btn remove-choice btn-sm ms-2">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+        choiceItems.insertAdjacentHTML('beforeend', choiceHtml);
+        choiceItems.lastElementChild.querySelector('.remove-choice').addEventListener('click', function() {
+            if (choiceItems.children.length > 2) {
+                this.closest('.choice-item').remove();
+            } else {
+                alert('Kamida ikkita variant bo\'lishi kerak!');
+            }
+        });
+    });
+
+    // Hide/show choices in modal based on type
+    document.getElementById('modalQuestionType').addEventListener('change', function() {
+        const choicesContainer = document.getElementById('modalChoicesContainer');
+        if (this.value === 'text_answer') {
+            choicesContainer.style.display = 'none';
+        } else {
+            choicesContainer.style.display = 'block';
+        }
+    });
+
+    // Add question from modal to main list
+    document.getElementById('addQuestionForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        // Adding new question...
+        
+        const form = e.target;
+        const questionText = form.question_text.value.trim();
+        const questionType = form.question_type.value;
+        const points = form.points.value;
+        const explanation = form.explanation.value.trim();
+        const questionImage = form.question_image.files[0];
+        
+        // Validation
+        if (!questionText) {
+            alert('❌ Savol matni kiritilishi shart!');
+            return;
+        }
+        
+        let choices = [];
+        if (questionType !== 'text_answer') {
+            const choiceItems = form.querySelectorAll('.choice-item');
+            let hasValidChoice = false;
+            
+            choiceItems.forEach((item, idx) => {
+                const choiceText = item.querySelector('input[type="text"]').value.trim();
+                if (choiceText) {
+                    hasValidChoice = true;
+                choices.push({
+                        text: choiceText,
+                    is_correct: item.querySelector('input[type="checkbox"]').checked
+                });
+                }
+            });
+            
+            if (!hasValidChoice) {
+                alert('❌ Kamida bitta javob variantini kiritishingiz kerak!');
+                return;
+            }
+        }
+        
+        // Create question object
+        // FormData yaratish (rasm yuklash uchun)
+        const formData = new FormData();
+        formData.append('question_text', questionText);
+        formData.append('question_type', questionType);
+        formData.append('points', points);
+        formData.append('explanation', explanation);
+        
+        if (questionImage) {
+            formData.append('question_image', questionImage);
+        }
+        
+        // Choices qo'shish
+        choices.forEach((choice, index) => {
+            formData.append(`choices[${index}][text]`, choice.text);
+            formData.append(`choices[${index}][is_correct]`, choice.is_correct);
+        });
+        
+        // Debug: FormData contents
+        // FormData entries logged
+        
+        const newQuestion = {
+            id: '',  // New question, no ID yet
+            question_text: questionText,
+            question_type: questionType,
+            points: parseFloat(points) || 1,
+            explanation: explanation,
+            choices: choices,
+            image: questionImage ? questionImage.name : null
+        };
+        
+        // New question created
+        
+        // Get container
+        const container = document.getElementById('questionsContainer');
+        // Container before adding question
+        
+        // If container is empty or only has loading/empty message, clear it and add header
+        const existingQuestions = container.querySelectorAll('.question-item');
+        // Existing questions count
+        
+        if (existingQuestions.length === 0) {
+            // No existing questions, creating header
+            container.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="text-white mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        Savollar (0 ta)
+                    </h5>
+                    <span class="badge bg-primary">Jami: 0 ta savol</span>
+                </div>
+            `;
+        }
+        
+        // Rasm yuklash uchun FormData yuborish
+        if (questionImage) {
+        // Uploading question with image
+            
+            // Show loading state
+            const submitButton = form.querySelector('button[type="submit"]');
+            const originalText = submitButton.innerHTML;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Yuklanmoqda...';
+            submitButton.disabled = true;
+            
+            fetch(window.location.pathname, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: formData
+            })
+            .then(res => {
+                console.log('Response status:', res.status);
+                console.log('Response headers:', res.headers);
+                if (res.ok) {
+                    return res.json();
+                } else {
+                    throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+                }
+            })
+            .then(data => {
+                console.log('Response data:', data);
+                if (data.success) {
+                    console.log('Question with image uploaded successfully');
+                    // Reload questions to show the new question with image
+                    loadExistingQuestions();
+                    // Clear form
+                    form.reset();
+                    // Reset choices
+                    const choiceItems = form.querySelector('.choice-items');
+                    choiceItems.innerHTML = '';
+                    for (let i = 0; i < 2; i++) {
+                        const div = document.createElement('div');
+                        div.className = "choice-item d-flex align-items-center mb-2";
+                        div.innerHTML = `
+                            <input type="checkbox" class="form-check-input me-2" name="is_correct_${i}">
+                            <input type="text" class="form-control" name="choice_text_${i}" placeholder="Variant ${i + 1}">
+                        `;
+                        choiceItems.appendChild(div);
+                    }
+                    // Show success notification
+                    showSuccessNotification('✅ Rasmli savol muvaffaqiyatli qo\'shildi! Yana qo\'shishingiz mumkin.');
+                    // Focus on question text for next entry
+                    setTimeout(() => {
+                        form.question_text.focus();
+                    }, 500);
+                } else {
+                    alert('❌ Xatolik: ' + (data.error || 'Noma\'lum xatolik'));
+                }
+            })
+            .catch(error => {
+                console.error('Error uploading question with image:', error);
+                alert('❌ Rasm yuklashda xatolik yuz berdi: ' + error.message);
+            })
+            .finally(() => {
+                // Restore button state
+                submitButton.innerHTML = originalText;
+                submitButton.disabled = false;
+            });
+            return; // Stop execution here for image upload
+        }
+        
+        // Agar rasm yo'q bo'lsa, oddiy savol qo'shish
+        console.log('Adding question without image...');
+        
+        // Show loading state
+        const submitButton2 = form.querySelector('button[type="submit"]');
+        const originalText2 = submitButton2.innerHTML;
+        submitButton2.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saqlanmoqda...';
+        submitButton2.disabled = true;
+        
+        // Restore button state after a short delay
+        setTimeout(() => {
+            submitButton2.innerHTML = originalText2;
+            submitButton2.disabled = false;
+        }, 1000);
+        
+        // Create and add question HTML
+        const currentQuestionCount = container.querySelectorAll('.question-item').length;
+        console.log('Current question count before adding:', currentQuestionCount);
+        
+        const questionHtml = createQuestionHtml(newQuestion, currentQuestionCount);
+        console.log('Generated question HTML length:', questionHtml.length);
+        
+        // Check if we should insert after a specific question
+        let newQuestionElement;
+        if (window.insertAfterQuestion) {
+            // Insert after the specified question
+            window.insertAfterQuestion.insertAdjacentHTML('afterend', questionHtml);
+            newQuestionElement = window.insertAfterQuestion.nextElementSibling;
+            console.log('Question HTML inserted after specific question');
+            
+            // Clear the reference
+            window.insertAfterQuestion = null;
+        } else {
+            // Add to the end as usual
+            container.insertAdjacentHTML('beforeend', questionHtml);
+            newQuestionElement = container.lastElementChild;
+            console.log('Question HTML added to end of container');
+        }
+        
+        // Add event listeners for the new question
+        console.log('Question element found:', newQuestionElement);
+        
+        if (newQuestionElement) {
+            addQuestionEventListeners(newQuestionElement);
+            console.log('Event listeners added to question');
+        } else {
+            console.error('Question element not found!');
+        }
+        
+        // Update question count and renumber
+        updateQuestionCount();
+        renumberQuestions();
+        console.log('Question count updated and questions renumbered');
+        
+        // Scroll to the newly added question
+        if (newQuestionElement) {
+            newQuestionElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        
+        // Reset form for next question
+        form.reset();
+        form.points.value = 1;
+        
+        // Reset choices in modal
+        const choiceItems = form.querySelector('.choice-items');
+        choiceItems.innerHTML = '';
+        for (let i = 0; i < 2; i++) {
+            const div = document.createElement('div');
+            div.className = "choice-item d-flex align-items-center mb-2";
+            div.innerHTML = `
+                <input type="checkbox" class="form-check-input me-2" name="is_correct_${i}">
+                <input type="text" class="form-control" name="choice_text_${i}" placeholder="Variant ${i + 1}">
+            `;
+            choiceItems.appendChild(div);
+        }
+        
+        console.log('Question added successfully!');
+        console.log('Container after adding question:', container.innerHTML);
+        
+        // Show success message with option to add another or close
+        const successAlert = document.createElement('div');
+        successAlert.className = 'alert alert-success alert-dismissible fade show position-fixed';
+        successAlert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 350px;';
+        successAlert.innerHTML = `
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <i class="fas fa-check-circle me-2"></i>
+                    Savol muvaffaqiyatli qo'shildi!
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <div class="mt-2 d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-light" onclick="document.querySelector('[data-bs-dismiss=alert]').click()">
+                    <i class="fas fa-plus me-1"></i>Yana qo'shish
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-light" onclick="closeModalAndSave();">
+                    <i class="fas fa-check me-1"></i>Yopish va Saqlash
+                </button>
+            </div>
+        `;
+        document.body.appendChild(successAlert);
+        
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            if (successAlert.parentNode) {
+                successAlert.remove();
+            }
+        }, 5000);
+        
+        // Focus on question text input for next question
+        setTimeout(() => {
+            form.question_text.focus();
+        }, 100);
+    });
+
+    // Modal ochilganda tozalash va default variantlar
+    document.getElementById('addQuestionModal').addEventListener('show.bs.modal', function () {
+        console.log('Modal opened, resetting form...');
+        const form = document.getElementById('addQuestionForm');
+        form.reset();
+        
+        // Reset points to 1
+        form.points.value = 1;
+        
+        // Reset choices
+        const choiceItems = form.querySelector('.choice-items');
+        choiceItems.innerHTML = '';
+        for (let i = 0; i < 2; i++) {
+            const div = document.createElement('div');
+            div.className = "choice-item d-flex align-items-center mb-2";
+            div.innerHTML = `
+                <input type="checkbox" class="form-check-input me-2" name="is_correct_${i}">
+                <input type="text" class="form-control" name="choice_text_${i}" placeholder="Variant ${i + 1}">
+            `;
+            choiceItems.appendChild(div);
+        }
+        
+        // Show choices container by default
+        const choicesContainer = form.querySelector('.choices-container');
+        choicesContainer.style.display = 'block';
+    });
+    
+    // Modal yopilganda insertAfterQuestion ni tozalash
+    document.getElementById('addQuestionModal').addEventListener('hidden.bs.modal', function () {
+        console.log('Modal closed, clearing insertAfterQuestion reference...');
+        window.insertAfterQuestion = null;
+    });
+
+    // Variant qo‘shish tugmasi
+    document.querySelector('.add-choice-modal').onclick = function() {
+        const choiceItems = this.parentElement.querySelector('.choice-items');
+        const idx = choiceItems.children.length;
+        const div = document.createElement('div');
+        div.className = "choice-item d-flex align-items-center mb-2";
+        div.innerHTML = `
+            <input type="checkbox" class="form-check-input me-2" name="is_correct_${idx}">
+            <input type="text" class="form-control" name="choice_text_${idx}" placeholder="Variant ${idx + 1}">
+            <button type="button" class="btn remove-choice btn-sm ms-2">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        div.querySelector('.remove-choice').onclick = function() {
+            if (choiceItems.children.length > 2) {
+                div.remove();
+            } else {
+                alert('Kamida ikkita variant bo\'lishi kerak!');
+            }
+        };
+        choiceItems.appendChild(div);
+    };
+
+    // Save test changes
+    document.getElementById('saveTestBtn').onclick = function() {
+        const saveBtn = this;
+        const originalText = saveBtn.innerHTML;
+        
+        // Show loading state
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saqlanmoqda...';
+        
+        // Barcha savollarni yig'ish
+        const questions = [];
+        const questionElements = document.querySelectorAll('#questionsContainer .question-item');
+        console.log('Found question elements:', questionElements.length);
+        
+        questionElements.forEach(function(q, index) {
+            const question_id = q.querySelector('[name="question_id"]')?.value || '';
+            const question_text = q.querySelector('[name="question_text"]').value;
+            const question_type = q.querySelector('[name="question_type"]').value;
+            const points = q.querySelector('[name="points"]').value;
+            const explanation = q.querySelector('[name="explanation"]').value;
+            let choices = [];
+            
+            if (question_type !== 'text_answer') {
+                q.querySelectorAll('.choice-item').forEach(function(c) {
+                    const choiceText = c.querySelector('input[type="text"]').value;
+                    if (choiceText.trim()) {  // Only add non-empty choices
+                    choices.push({
+                            text: choiceText,
+                        is_correct: c.querySelector('input[type="checkbox"]').checked
+                    });
+                    }
+                });
+            }
+            
+            const questionData = {
+                id: question_id,
+                question_text,
+                question_type,
+                points,
+                explanation,
+                choices
+            };
+            
+            console.log(`Question ${index + 1}:`, questionData);
+            questions.push(questionData);
+        });
+
+        console.log('Total questions to save:', questions.length);
+
+        // Test ma'lumotlarini yig'ish
+        const testForm = document.getElementById('editTestForm');
+        const testData = {
+            test_id: testForm.test_id.value,
+            title: testForm.title.value,
+            subject: testForm.subject.value,
+            grade: testForm.grade.value,
+            time_limit: testForm.time_limit.value,
+            max_attempts: testForm.max_attempts.value,
+            description: testForm.description.value,
+            show_results: testForm.show_results.checked,
+            is_active: testForm.is_active.checked,
+            shuffle_questions: testForm.shuffle_questions.checked,
+            questions: questions
+        };
+
+        console.log('Sending test data:', testData);
+
+        // AJAX orqali backendga yuborish
+        fetch(window.location.pathname, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(testData)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                // Success notification
+                alert('✅ Test va savollar muvaffaqiyatli saqlandi!');
+                
+                // Reload questions to show updated data
+                loadExistingQuestions();
+                
+                // Show option to go back to test list
+                if (confirm('Test saqlandi! Test ro\'yxatiga qaytishni xohlaysizmi?')) {
+                    window.location.href = '/tests/';
+                }
+            } else {
+                alert('❌ Xatolik: ' + (data.error || 'Saqlashda muammo!'));
+            }
+        })
+        .catch(error => {
+            console.error('Save error:', error);
+            alert('❌ Server bilan bog\'lanishda xatolik!');
+        })
+        .finally(() => {
+            // Restore button state
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = originalText;
+        });
+    };
+});
+
+// Load existing questions function
+function loadExistingQuestions() {
+    console.log('Loading existing questions...');
+    fetch(window.location.pathname, {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+    })
+    .then(data => {
+        console.log('Loaded data:', data);
+        if (data.questions && data.questions.length > 0) {
+            console.log('Found questions:', data.questions.length);
+            displayQuestions(data.questions);
+        } else {
+            console.log('No questions found');
+            document.getElementById('questionsContainer').innerHTML = '<p class="text-white-50 text-center">Hozircha savollar yo\'q. Yangi savol qo\'shing.</p>';
+        }
+    })
+    .catch(error => {
+        console.error('Error loading questions:', error);
+        document.getElementById('questionsContainer').innerHTML = '<p class="text-danger text-center">Savollarni yuklashda xatolik yuz berdi.</p>';
+    });
+}
+
+// Display questions function
+function displayQuestions(questions) {
+    console.log('Displaying questions:', questions);
+    const container = document.getElementById('questionsContainer');
+    container.innerHTML = '';
+    
+    if (questions.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-4">
+                <i class="fas fa-question-circle fa-3x text-white-50 mb-3"></i>
+                <h5 class="text-white">Hozircha savollar yo'q</h5>
+                <p class="text-white-50">Yangi savol qo'shish uchun yuqoridagi tugmani bosing</p>
+            </div>
+        `;
+        return;
+    }
+    
+    // Add header with question count
+    const headerHtml = `
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="text-white mb-0">
+                <i class="fas fa-list me-2"></i>
+                Savollar (${questions.length} ta)
+            </h5>
+            <span class="badge bg-primary">Jami: ${questions.length} ta savol</span>
+        </div>
+    `;
+    container.insertAdjacentHTML('beforeend', headerHtml);
+    
+    questions.forEach((question, index) => {
+        console.log(`Creating question ${index + 1}:`, question);
+        const questionHtml = createQuestionHtml(question, index);
+        container.insertAdjacentHTML('beforeend', questionHtml);
+        
+        // Add event listeners for the new question
+        const questionElement = container.lastElementChild;
+        addQuestionEventListeners(questionElement);
+    });
+    
+    console.log(`Total questions displayed: ${questions.length}`);
+}
+
+// Create question HTML
+function createQuestionHtml(question, index) {
+    console.log(`Creating HTML for question ${index + 1}`, question);
+    
+    let html = `<div class='question-item glass-card p-3 mb-3' style='border-left: 4px solid #6a8dff;'>`;
+    html += `<input type='hidden' name='question_id' value='${question.id || ''}'>`;
+    html += `<div class='d-flex justify-content-between align-items-center mb-3'>`;
+    html += `<div class='d-flex align-items-center'>`;
+    html += `<span class='badge bg-primary me-2'>${index + 1}</span>`;
+    html += `<h6 class='text-white mb-0'>Savol ${index + 1}</h6>`;
+    html += `</div>`;
+    html += `<button type='button' class='btn remove-question btn-sm btn-outline-danger'><i class='fas fa-trash'></i> O'chirish</button>`;
+    html += `</div>`;
+    
+    html += `<div class='mb-2'><label class='form-label'>Savol matni</label>`;
+    html += `<textarea class='form-control glass-input' name='question_text' rows='2' required>${question.question_text || ''}</textarea></div>`;
+    
+    // Rasm ko'rsatish
+    if (question.image) {
+        html += `<div class='mb-2'>`;
+        html += `<label class='form-label'>Savol rasmi</label>`;
+        html += `<div class='question-image-container'>`;
+        html += `<img src='${question.image}' alt='Savol rasmi' class='img-fluid rounded' style='max-width: 300px; max-height: 200px; object-fit: contain;'>`;
+        html += `<div class='mt-2'>`;
+        html += `<button type='button' class='btn btn-sm btn-outline-danger remove-image'><i class='fas fa-trash'></i> Rasmini o'chirish</button>`;
+        html += `</div>`;
+        html += `</div>`;
+        html += `</div>`;
+    }
+    
+    html += `<div class='mb-2'><label class='form-label'>Tur</label>`;
+    html += `<select class='form-select glass-input' name='question_type' required>`;
+    html += `<option value='single_choice'${question.question_type === 'single_choice' ? ' selected' : ''}>Bir javob</option>`;
+    html += `<option value='multiple_choice'${question.question_type === 'multiple_choice' ? ' selected' : ''}>Ko'p javob</option>`;
+    html += `<option value='text_answer'${question.question_type === 'text_answer' ? ' selected' : ''}>Matnli javob</option>`;
+    html += `</select></div>`;
+    
+    html += `<div class='mb-2'><label class='form-label'>Ball</label>`;
+    html += `<input type='number' class='form-control glass-input' name='points' min='0.5' max='10' step='0.5' value='${question.points || 1}' required></div>`;
+    
+    if (question.question_type !== 'text_answer') {
+        html += `<div class='choices-container mb-2'><label class='form-label'>Javob variantlari</label><div class='choice-items'>`;
+        if (question.choices && question.choices.length > 0) {
+            question.choices.forEach((choice, idx) => {
+                html += `<div class='choice-item d-flex align-items-center mb-2'>`;
+                html += `<input type='checkbox' class='form-check-input me-2' name='is_correct_${idx}'${choice.is_correct ? ' checked' : ''}>`;
+                html += `<input type='text' class='form-control glass-input' name='choice_text_${idx}' value='${choice.text || ''}' placeholder='Variant ${idx + 1}'>`;
+                html += `<button type='button' class='btn remove-choice btn-sm ms-2'><i class='fas fa-times'></i></button>`;
+                html += `</div>`;
+            });
+        } else {
+            // Default 2 choices
+            for (let i = 0; i < 2; i++) {
+                html += `<div class='choice-item d-flex align-items-center mb-2'>`;
+                html += `<input type='checkbox' class='form-check-input me-2' name='is_correct_${i}'>`;
+                html += `<input type='text' class='form-control glass-input' name='choice_text_${i}' placeholder='Variant ${i + 1}'>`;
+                html += `<button type='button' class='btn remove-choice btn-sm ms-2'><i class='fas fa-times'></i></button>`;
+                html += `</div>`;
+            }
+        }
+        html += `</div>`;
+        html += `<button type='button' class='btn add-choice btn-sm mt-2'><i class='fas fa-plus'></i> Variant qo'shish</button>`;
+        html += `</div>`;
+    }
+    
+    html += `<div class='mb-2'><label class='form-label'>Tushuntirish (ixtiyoriy)</label>`;
+    html += `<textarea class='form-control glass-input' name='explanation' rows='1'>${question.explanation || ''}</textarea></div>`;
+    
+    // Add "Insert Question Below" button
+    html += `<div class='mt-3 pt-3 border-top border-secondary'>`;
+    html += `<button type='button' class='btn btn-sm btn-outline-primary insert-question-btn w-100'>`;
+    html += `<i class='fas fa-plus-circle me-2'></i>Bu savoldan keyin yangi savol qo'shish`;
+    html += `</button>`;
+    html += `</div>`;
+    
+    html += `</div>`;
+    
+    console.log(`Generated HTML length: ${html.length} characters`);
+    return html;
+}
+
+// Add event listeners to question elements
+function addQuestionEventListeners(questionElement) {
+    console.log('Adding event listeners to question element');
+    
+    // Remove question button
+    questionElement.querySelector('.remove-question').addEventListener('click', function() {
+        if (confirm('Bu savolni o\'chirishni xohlaysizmi?')) {
+            this.closest('.question-item').remove();
+            // Update question count and renumber questions
+            updateQuestionCount();
+            renumberQuestions();
+            console.log('Question removed');
+        }
+    });
+    
+    // Question type change
+    const typeSelect = questionElement.querySelector('[name="question_type"]');
+    const choicesContainer = questionElement.querySelector('.choices-container');
+    
+    if (typeSelect && choicesContainer) {
+        typeSelect.addEventListener('change', function() {
+            if (this.value === 'text_answer') {
+                choicesContainer.style.display = 'none';
+            } else {
+                choicesContainer.style.display = 'block';
+            }
+        });
+    }
+    
+    // Add choice button
+    const addChoiceBtn = questionElement.querySelector('.add-choice');
+    if (addChoiceBtn) {
+        addChoiceBtn.addEventListener('click', function() {
+            const choiceItems = this.parentElement.querySelector('.choice-items');
+            const idx = choiceItems.children.length;
+            const div = document.createElement('div');
+            div.className = "choice-item d-flex align-items-center mb-2";
+            div.innerHTML = `
+                <input type="checkbox" class="form-check-input me-2" name="is_correct_${idx}">
+                <input type="text" class="form-control glass-input" name="choice_text_${idx}" placeholder="Variant ${idx + 1}">
+                <button type="button" class="btn remove-choice btn-sm ms-2">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            div.querySelector('.remove-choice').addEventListener('click', function() {
+                if (choiceItems.children.length > 2) {
+                    div.remove();
+                } else {
+                    alert('Kamida ikkita variant bo\'lishi kerak!');
+                }
+            });
+            choiceItems.appendChild(div);
+        });
+    }
+    
+    // Remove choice buttons
+    questionElement.querySelectorAll('.remove-choice').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const choiceItems = this.closest('.choice-items');
+            if (choiceItems.children.length > 2) {
+                this.closest('.choice-item').remove();
+            } else {
+                alert('Kamida ikkita variant bo\'lishi kerak!');
+            }
+        });
+    });
+    
+    // Insert question below button
+    const insertBtn = questionElement.querySelector('.insert-question-btn');
+    if (insertBtn) {
+        insertBtn.addEventListener('click', function() {
+            // Open modal to add a new question
+            const modal = new bootstrap.Modal(document.getElementById('addQuestionModal'));
+            modal.show();
+            
+            // Store the current question element to insert after it
+            window.insertAfterQuestion = this.closest('.question-item');
+        });
+    }
+}
+
+// Update question count in header
+function updateQuestionCount() {
+    const questionCount = document.querySelectorAll('#questionsContainer .question-item').length;
+    const headerElement = document.querySelector('#questionsContainer h5');
+    const badgeElement = document.querySelector('#questionsContainer .badge');
+    
+    if (headerElement) {
+        headerElement.innerHTML = `<i class="fas fa-list me-2"></i>Savollar (${questionCount} ta)`;
+    }
+    
+    if (badgeElement) {
+        badgeElement.textContent = `Jami: ${questionCount} ta savol`;
+    }
+}
+
+// Renumber questions after deletion
+function renumberQuestions() {
+    const questions = document.querySelectorAll('#questionsContainer .question-item');
+    questions.forEach((question, index) => {
+        const badge = question.querySelector('.badge');
+        const title = question.querySelector('h6');
+        
+        if (badge) {
+            badge.textContent = index + 1;
+        }
+        if (title) {
+            title.textContent = `Savol ${index + 1}`;
+        }
+    });
+}
+
+// Get CSRF token from cookies
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Close modal and save test automatically
+function closeModalAndSave() {
+    console.log('Closing modal and saving test...');
+    
+    // Close modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('addQuestionModal'));
+    if (modal) {
+        modal.hide();
+    }
+    
+    // Close success alert
+    const alert = document.querySelector('.alert-success');
+    if (alert) {
+        alert.remove();
+    }
+    
+    // Auto-save test after a short delay
+    setTimeout(() => {
+        console.log('Auto-saving test...');
+        const saveBtn = document.getElementById('saveTestBtn');
+        if (saveBtn) {
+            saveBtn.click();
+        }
+    }, 500);
+}
+
+// Show success notification
+function showSuccessNotification(message) {
+    // Remove existing notifications
+    const existingNotifications = document.querySelectorAll('.success-notification');
+    existingNotifications.forEach(notification => notification.remove());
+    
+    // Create new notification
+    const notification = document.createElement('div');
+    notification.className = 'alert alert-success alert-dismissible fade show position-fixed success-notification';
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 350px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);';
+    notification.innerHTML = `
+        <div class="d-flex align-items-center">
+            <i class="fas fa-check-circle me-2"></i>
+            <div>${message}</div>
+            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    document.body.appendChild(notification);
+    
+    // Auto remove after 4 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 4000);
+}
+</script>
+{% endblock %}
