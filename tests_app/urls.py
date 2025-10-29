@@ -28,9 +28,6 @@ urlpatterns = [
     path('overall-results/', views.student_overall_results_view, name='overall_results'),
     path('export-all-results/', views.export_all_results_view, name='export_all_results'),
     path('student-export-results/', views.student_export_results_view, name='student_export_results'),
-<<<<<<< HEAD
     path('test-api/', views.test_api_view, name='test_api'),
     path('export-all-students/', views.export_all_students_results, name='export_all_students'),
-=======
->>>>>>> dc47283a5fa4512d951a483435452cdab1c82dca
 ]

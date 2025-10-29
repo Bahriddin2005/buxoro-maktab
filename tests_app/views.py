@@ -10,12 +10,8 @@ import json
 import random
 from .models import Test, Question, Choice, TestAttempt, Answer, TestResult, TestRetakeRequest
 from accounts.models import User
-<<<<<<< HEAD
 from .views_overall import student_overall_results_view, student_export_results_view, test_api_view
 from .export_all_students import export_all_students_results
-=======
-from .views_overall import student_overall_results_view, student_export_results_view
->>>>>>> dc47283a5fa4512d951a483435452cdab1c82dca
 try:
     from openpyxl import Workbook
     from openpyxl.styles import Font, PatternFill
@@ -1792,7 +1788,6 @@ def export_single_grade_results_view(request, grade):
             student_name = f"{attempt.student.first_name} {attempt.student.last_name}"
             if not student_name.strip():
                 student_name = attempt.student.username
-<<<<<<< HEAD
             
             ws.cell(row=row, column=1, value=student_name)
             ws.cell(row=row, column=2, value=attempt.test.title)
@@ -1815,30 +1810,6 @@ def export_single_grade_results_view(request, grade):
                 ws.cell(row=row, column=col).fill = PatternFill(start_color=fill_color, end_color=fill_color, fill_type="solid")
             
             row += 1
-=======
-        
-                ws.cell(row=row, column=1, value=student_name)
-                ws.cell(row=row, column=2, value=attempt.test.title)
-                ws.cell(row=row, column=3, value=attempt.score)
-                ws.cell(row=row, column=4, value=f"{attempt.percentage:.1f}%")
-                ws.cell(row=row, column=5, value=str(attempt.time_taken))
-                ws.cell(row=row, column=6, value=attempt.finished_at.strftime('%d.%m.%Y %H:%M'))
-        
-                # Ball bo'yicha rang berish
-        if attempt.percentage >= 81:
-            fill_color = "C6EFCE"  # Yashil
-        elif attempt.percentage >= 61:
-            fill_color = "FFEB9C"  # Sariq
-        elif attempt.percentage >= 31:
-            fill_color = "FFC7CE"  # Qizil
-        else:
-            fill_color = "FFC7CE"  # Qizil
-        
-        for col in range(1, 7):
-            ws.cell(row=row, column=col).fill = PatternFill(start_color=fill_color, end_color=fill_color, fill_type="solid")
-        
-        row += 1
->>>>>>> dc47283a5fa4512d951a483435452cdab1c82dca
     
         # Eng yaxshi natijalar
         if total_attempts > 0:
