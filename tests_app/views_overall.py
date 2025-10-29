@@ -24,12 +24,12 @@ def student_overall_results_view(request):
             latest_attempt_id=Max('id')
         ).values_list('latest_attempt_id', flat=True)
         
-        attempts = TestAttempt.objects.filter(
+        attempts = list(TestAttempt.objects.filter(
             id__in=latest_attempts
-        ).select_related('test').order_by('-completed_at')
+        ).select_related('test').order_by('-completed_at'))
         
         # Umumiy statistika
-        total_tests = attempts.count()
+        total_tests = len(attempts)
         if total_tests == 0:
             return JsonResponse({
                 'total_tests': 0,
@@ -44,7 +44,10 @@ def student_overall_results_view(request):
                     'good': 0,
                     'average': 0,
                     'poor': 0
-                }
+                },
+                'subject_stats': {},
+                'highest_score': 0,
+                'lowest_score': 0
             })
         
         # Hisoblashlar
@@ -54,10 +57,10 @@ def student_overall_results_view(request):
         
         # Baholar bo'yicha taqsimlash
         grade_distribution = {
-            'excellent': attempts.filter(percentage__gte=81).count(),
-            'good': attempts.filter(percentage__gte=61, percentage__lt=81).count(),
-            'average': attempts.filter(percentage__gte=31, percentage__lt=61).count(),
-            'poor': attempts.filter(percentage__lt=31).count()
+            'excellent': len([a for a in attempts if (a.percentage or 0) >= 81]),
+            'good': len([a for a in attempts if 61 <= (a.percentage or 0) < 81]),
+            'average': len([a for a in attempts if 31 <= (a.percentage or 0) < 61]),
+            'poor': len([a for a in attempts if (a.percentage or 0) < 31])
         }
         
         # Fanlar bo'yicha statistika
@@ -73,8 +76,8 @@ def student_overall_results_view(request):
                 }
             
             subject_stats[subject]['test_count'] += 1
-            subject_stats[subject]['total_score'] += attempt.score
-            subject_stats[subject]['total_possible'] += attempt.total_points
+            subject_stats[subject]['total_score'] += attempt.score or 0
+            subject_stats[subject]['total_possible'] += attempt.total_points or 0
             subject_stats[subject]['tests'].append(attempt.percentage or 0)
         
         # Har bir fan uchun o'rtacha foiz va baho'ni hisoblash
@@ -145,8 +148,8 @@ def student_overall_results_view(request):
             'tests': tests_data,
             'grade_distribution': grade_distribution,
             'subject_stats': subject_stats,
-            'highest_score': round(max(attempt.percentage for attempt in attempts), 1) if attempts else 0,
-            'lowest_score': round(min(attempt.percentage for attempt in attempts), 1) if attempts else 0
+            'highest_score': round(max((attempt.percentage or 0) for attempt in attempts), 1) if attempts else 0,
+            'lowest_score': round(min((attempt.percentage or 0) for attempt in attempts), 1) if attempts else 0
         })
     
     return render(request, 'tests_app/overall_results.html')
