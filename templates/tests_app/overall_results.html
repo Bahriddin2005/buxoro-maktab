@@ -376,10 +376,7 @@ function displayTests(tests) {
         });
 
         html += '<div class="test-row">';
-        html += `<div>
-            <div class="test-title">${test.test_title}</div>
-            <div class="subject">${test.subject}</div>
-        </div>`;
+        html += `<div class="test-title">${test.test_title}</div>`;
         html += `<div>${test.subject}</div>`;
         html += `<div><strong>${test.score}</strong>/${test.total_points}</div>`;
         html += `<div><strong>${test.percentage}%</strong></div>`;

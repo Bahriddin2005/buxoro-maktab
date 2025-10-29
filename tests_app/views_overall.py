@@ -19,14 +19,14 @@ def student_overall_results_view(request):
         # Har bir test uchun eng so'nggi attempt'ni olish
         latest_attempts = TestAttempt.objects.filter(
             student=request.user,
-            is_completed=True
+            completed_at__isnull=False
         ).values('test').annotate(
             latest_attempt_id=Max('id')
         ).values_list('latest_attempt_id', flat=True)
         
         attempts = TestAttempt.objects.filter(
             id__in=latest_attempts
-        ).select_related('test', 'result').order_by('-finished_at')
+        ).select_related('test').order_by('-completed_at')
         
         # Umumiy statistika
         total_tests = attempts.count()
@@ -73,6 +73,17 @@ def student_overall_results_view(request):
         # Har bir testning ma'lumotlari
         tests_data = []
         for attempt in attempts:
+            # Baho'ni hisoblash
+            percentage = attempt.percentage or 0
+            if percentage >= 81:
+                result_grade = "A'lo"
+            elif percentage >= 61:
+                result_grade = "Yaxshi"
+            elif percentage >= 31:
+                result_grade = "Qoniqarli"
+            else:
+                result_grade = "Qoniqarsiz"
+            
             tests_data.append({
                 'test_id': attempt.test.id,
                 'test_title': attempt.test.title,
@@ -80,13 +91,13 @@ def student_overall_results_view(request):
                 'grade': attempt.test.grade,
                 'score': attempt.score,
                 'total_points': attempt.total_points,
-                'percentage': round(attempt.percentage, 1),
-                'result_grade': attempt.result.grade if hasattr(attempt, 'result') else '',
+                'percentage': round(percentage, 1),
+                'result_grade': result_grade,
                 'correct_answers': attempt.correct_answers or 0,
                 'incorrect_answers': attempt.incorrect_answers or 0,
                 'unanswered': attempt.unanswered or 0,
-                'time_taken': str(attempt.time_taken),
-                'finished_at': attempt.finished_at.isoformat()
+                'time_taken': str(attempt.time_taken) if attempt.time_taken else '0:00:00',
+                'finished_at': attempt.completed_at.isoformat() if attempt.completed_at else ''
             })
         
         return JsonResponse({
