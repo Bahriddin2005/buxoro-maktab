@@ -154,6 +154,65 @@
     .grade-item.average .count { color: #3498db; }
     .grade-item.poor .count { color: #e74c3c; }
 
+    .subject-stat-item {
+        background: rgba(102, 126, 234, 0.05);
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 15px;
+        border-left: 4px solid #667eea;
+        transition: all 0.3s ease;
+    }
+
+    .subject-stat-item:hover {
+        background: rgba(102, 126, 234, 0.1);
+        transform: translateX(5px);
+    }
+
+    .subject-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .subject-name {
+        font-size: 18px;
+        font-weight: bold;
+        color: #2c3e50;
+    }
+
+    .subject-percentage {
+        font-size: 24px;
+        font-weight: bold;
+        color: #667eea;
+    }
+
+    .subject-details {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .subject-detail {
+        text-align: center;
+        padding: 10px;
+        background: white;
+        border-radius: 8px;
+    }
+
+    .subject-detail .value {
+        font-size: 20px;
+        font-weight: bold;
+        color: #2c3e50;
+    }
+
+    .subject-detail .label {
+        font-size: 12px;
+        color: #7f8c8d;
+        margin-top: 5px;
+    }
+
     @media (max-width: 768px) {
         .test-row {
             grid-template-columns: 1fr;
@@ -194,9 +253,14 @@
                 </h2>
                 <p class="text-white-50 mb-0">Barcha testlar bo'yicha umumiy ko'rsatkichlar</p>
             </div>
-            <a href="{% url 'tests:tests' %}" class="btn btn-outline-light">
-                <i class="fas fa-arrow-left me-2"></i>Orqaga
-            </a>
+            <div class="d-flex gap-2">
+                <a href="{% url 'tests:student_export_results' %}" class="btn btn-success">
+                    <i class="fas fa-file-excel me-2"></i>Excel'ga Yuklab olish
+                </a>
+                <a href="{% url 'tests:tests' %}" class="btn btn-outline-light">
+                    <i class="fas fa-arrow-left me-2"></i>Orqaga
+                </a>
+            </div>
         </div>
     </div>
 
@@ -243,6 +307,17 @@
                     <span id="lowestScore">0</span>% - <span id="highestScore">0</span>%
                 </div>
                 <div class="label">Eng past - Eng yuqori</div>
+            </div>
+        </div>
+
+        <!-- Subject Stats -->
+        <div class="chart-container" data-aos="fade-up">
+            <h4 class="mb-4">
+                <i class="fas fa-book me-2"></i>
+                Fanlar bo'yicha natijalar
+            </h4>
+            <div id="subjectStats">
+                <!-- Subject stats will be loaded here -->
             </div>
         </div>
 
@@ -319,6 +394,7 @@ async function loadOverallResults() {
 
         document.getElementById('content').classList.remove('d-none');
         displaySummary(data);
+        displaySubjectStats(data.subject_stats);
         displayGradeDistribution(data.grade_distribution);
         displayTests(data.tests);
 
@@ -340,6 +416,54 @@ function displaySummary(data) {
     document.getElementById('overallGrade').textContent = data.overall_grade;
     document.getElementById('lowestScore').textContent = data.lowest_score;
     document.getElementById('highestScore').textContent = data.highest_score;
+}
+
+function displaySubjectStats(subjectStats) {
+    const container = document.getElementById('subjectStats');
+    
+    if (!subjectStats || Object.keys(subjectStats).length === 0) {
+        container.innerHTML = '<p class="text-center text-muted">Fan bo\'yicha statistika topilmadi</p>';
+        return;
+    }
+
+    let html = '';
+    
+    // Har bir fan uchun
+    for (const [subject, stats] of Object.entries(subjectStats)) {
+        const gradeClass = getGradeClass(stats.average_percentage);
+        const gradeColor = getGradeColor(stats.average_percentage);
+        
+        html += `
+            <div class="subject-stat-item" style="border-left-color: ${gradeColor};">
+                <div class="subject-header">
+                    <div class="subject-name">
+                        <i class="fas fa-book-open me-2"></i>${subject}
+                    </div>
+                    <div class="subject-percentage" style="color: ${gradeColor};">
+                        ${stats.average_percentage}%
+                    </div>
+                </div>
+                <div class="subject-details">
+                    <div class="subject-detail">
+                        <div class="value">${stats.test_count}</div>
+                        <div class="label">Testlar soni</div>
+                    </div>
+                    <div class="subject-detail">
+                        <div class="value">${stats.total_score}/${stats.total_possible}</div>
+                        <div class="label">Jami ball</div>
+                    </div>
+                    <div class="subject-detail">
+                        <div class="value">
+                            <span class="score-badge ${gradeClass}">${stats.grade}</span>
+                        </div>
+                        <div class="label">Baho</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    container.innerHTML = html;
 }
 
 function displayGradeDistribution(distribution) {
@@ -393,6 +517,13 @@ function getGradeClass(percentage) {
     if (percentage >= 61) return 'good';
     if (percentage >= 31) return 'average';
     return 'poor';
+}
+
+function getGradeColor(percentage) {
+    if (percentage >= 81) return '#2ecc71';
+    if (percentage >= 61) return '#f39c12';
+    if (percentage >= 31) return '#3498db';
+    return '#e74c3c';
 }
 </script>
 {% endblock %}

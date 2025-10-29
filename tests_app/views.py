@@ -10,7 +10,7 @@ import json
 import random
 from .models import Test, Question, Choice, TestAttempt, Answer, TestResult, TestRetakeRequest
 from accounts.models import User
-from .views_overall import student_overall_results_view
+from .views_overall import student_overall_results_view, student_export_results_view
 try:
     from openpyxl import Workbook
     from openpyxl.styles import Font, PatternFill
