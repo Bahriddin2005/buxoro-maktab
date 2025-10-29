@@ -11,22 +11,46 @@ from .models import TestAttempt
 @login_required
 def student_overall_results_view(request):
     """O'quvchining barcha testlar bo'yicha umumiy natijalari"""
-    if request.user.role != 'student':
+    # Admin va teacher ham o'z natijalarini ko'rishi mumkin
+    if request.user.role not in ['student', 'admin', 'teacher']:
         return JsonResponse({'error': 'Access denied'}, status=403)
     
     if request.headers.get('Accept') == 'application/json':
-        # O'quvchining barcha tugallangan testlari
-        # Har bir test uchun eng so'nggi attempt'ni olish
-        latest_attempts = TestAttempt.objects.filter(
-            student=request.user,
-            completed_at__isnull=False
-        ).values('test').annotate(
-            latest_attempt_id=Max('id')
-        ).values_list('latest_attempt_id', flat=True)
-        
-        attempts = list(TestAttempt.objects.filter(
-            id__in=latest_attempts
-        ).select_related('test').order_by('-completed_at'))
+        try:
+            # O'quvchining barcha tugallangan testlari
+            # Har bir test uchun eng so'nggi attempt'ni olish
+            latest_attempts = TestAttempt.objects.filter(
+                student=request.user,
+                completed_at__isnull=False
+            ).values('test').annotate(
+                latest_attempt_id=Max('id')
+            ).values_list('latest_attempt_id', flat=True)
+            
+            attempts = list(TestAttempt.objects.filter(
+                id__in=latest_attempts
+            ).select_related('test').order_by('-completed_at'))
+        except Exception as e:
+            print(f"Error fetching attempts: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return JsonResponse({
+                'total_tests': 0,
+                'average_score': 0,
+                'average_percentage': 0,
+                'total_points_earned': 0,
+                'total_points_possible': 0,
+                'overall_grade': 'N/A',
+                'tests': [],
+                'grade_distribution': {
+                    'excellent': 0,
+                    'good': 0,
+                    'average': 0,
+                    'poor': 0
+                },
+                'subject_stats': {},
+                'highest_score': 0,
+                'lowest_score': 0
+            })
         
         # Umumiy statistika
         total_tests = len(attempts)
@@ -51,9 +75,15 @@ def student_overall_results_view(request):
             })
         
         # Hisoblashlar
-        total_score = sum(attempt.score for attempt in attempts)
-        total_points = sum(attempt.total_points for attempt in attempts)
-        average_percentage = (total_score / total_points * 100) if total_points > 0 else 0
+        try:
+            total_score = sum((attempt.score or 0) for attempt in attempts)
+            total_points = sum((attempt.total_points or 0) for attempt in attempts)
+            average_percentage = (total_score / total_points * 100) if total_points > 0 else 0
+        except Exception as e:
+            print(f"Error calculating totals: {str(e)}")
+            total_score = 0
+            total_points = 0
+            average_percentage = 0
         
         # Baholar bo'yicha taqsimlash
         grade_distribution = {
