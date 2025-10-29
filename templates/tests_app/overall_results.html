@@ -379,6 +379,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 async function loadOverallResults() {
     try {
+<<<<<<< HEAD
         console.log('=== Loading overall results ===');
         console.log('URL:', window.location.href);
         
@@ -401,6 +402,16 @@ async function loadOverallResults() {
 
         console.log('Response status:', response.status);
         console.log('Response headers:', response.headers);
+=======
+        console.log('Loading overall results...');
+        const response = await fetch(window.location.href, {
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+
+        console.log('Response status:', response.status);
+>>>>>>> dc47283a5fa4512d951a483435452cdab1c82dca
 
         if (!response.ok) {
             const errorText = await response.text();
@@ -408,6 +419,7 @@ async function loadOverallResults() {
             throw new Error(`Failed to load data: ${response.status}`);
         }
 
+<<<<<<< HEAD
         const contentType = response.headers.get('content-type');
         console.log('Content-Type:', contentType);
         
@@ -424,6 +436,10 @@ async function loadOverallResults() {
         console.log('Average:', data.average_percentage);
         console.log('Tests:', data.tests);
         console.log('Full data:', data);
+=======
+        const data = await response.json();
+        console.log('Received data:', data);
+>>>>>>> dc47283a5fa4512d951a483435452cdab1c82dca
         
         document.getElementById('loading').classList.add('d-none');
 

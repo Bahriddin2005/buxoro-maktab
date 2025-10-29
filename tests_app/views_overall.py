@@ -9,12 +9,15 @@ from .models import TestAttempt
 
 
 @login_required
+<<<<<<< HEAD
 def test_api_view(request):
     """API test sahifasi"""
     return render(request, 'tests_app/test_api.html')
 
 
 @login_required
+=======
+>>>>>>> dc47283a5fa4512d951a483435452cdab1c82dca
 def student_overall_results_view(request):
     """O'quvchining barcha testlar bo'yicha umumiy natijalari"""
     # Admin va teacher ham o'z natijalarini ko'rishi mumkin
@@ -27,14 +30,22 @@ def student_overall_results_view(request):
             # Har bir test uchun eng so'nggi attempt'ni olish
             latest_attempts = TestAttempt.objects.filter(
                 student=request.user,
+<<<<<<< HEAD
                 is_completed=True
+=======
+                completed_at__isnull=False
+>>>>>>> dc47283a5fa4512d951a483435452cdab1c82dca
             ).values('test').annotate(
                 latest_attempt_id=Max('id')
             ).values_list('latest_attempt_id', flat=True)
             
             attempts = list(TestAttempt.objects.filter(
                 id__in=latest_attempts
+<<<<<<< HEAD
             ).select_related('test').order_by('-finished_at'))
+=======
+            ).select_related('test').order_by('-completed_at'))
+>>>>>>> dc47283a5fa4512d951a483435452cdab1c82dca
         except Exception as e:
             print(f"Error fetching attempts: {str(e)}")
             import traceback
@@ -171,7 +182,11 @@ def student_overall_results_view(request):
                 'incorrect_answers': attempt.incorrect_answers or 0,
                 'unanswered': attempt.unanswered or 0,
                 'time_taken': str(attempt.time_taken) if attempt.time_taken else '0:00:00',
+<<<<<<< HEAD
                 'finished_at': attempt.finished_at.isoformat() if attempt.finished_at else ''
+=======
+                'finished_at': attempt.completed_at.isoformat() if attempt.completed_at else ''
+>>>>>>> dc47283a5fa4512d951a483435452cdab1c82dca
             })
         
         return JsonResponse({
@@ -207,14 +222,22 @@ def student_export_results_view(request):
         # O'quvchining barcha tugallangan testlari
         latest_attempts = TestAttempt.objects.filter(
             student=request.user,
+<<<<<<< HEAD
             is_completed=True
+=======
+            completed_at__isnull=False
+>>>>>>> dc47283a5fa4512d951a483435452cdab1c82dca
         ).values('test').annotate(
             latest_attempt_id=Max('id')
         ).values_list('latest_attempt_id', flat=True)
         
         attempts = TestAttempt.objects.filter(
             id__in=latest_attempts
+<<<<<<< HEAD
         ).select_related('test').order_by('-finished_at')
+=======
+        ).select_related('test').order_by('-completed_at')
+>>>>>>> dc47283a5fa4512d951a483435452cdab1c82dca
         
         if attempts.count() == 0:
             return JsonResponse({'error': 'Test natijalari topilmadi'}, status=404)
@@ -306,7 +329,11 @@ def student_export_results_view(request):
             ws.cell(row=row, column=4, value=f"{attempt.score}/{attempt.total_points}")
             ws.cell(row=row, column=5, value=f"{percentage:.1f}%")
             ws.cell(row=row, column=6, value=result_grade)
+<<<<<<< HEAD
             ws.cell(row=row, column=7, value=attempt.finished_at.strftime('%d.%m.%Y') if attempt.finished_at else '')
+=======
+            ws.cell(row=row, column=7, value=attempt.completed_at.strftime('%d.%m.%Y') if attempt.completed_at else '')
+>>>>>>> dc47283a5fa4512d951a483435452cdab1c82dca
             
             # Rang berish va border
             for col in range(1, 8):
