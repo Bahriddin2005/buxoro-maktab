@@ -1,0 +1,41 @@
+═══════════════════════════════════════════════════════════
+🔧 GITHUB PUSH XATOSINI TUZATISH - COPY PASTE QILING
+═══════════════════════════════════════════════════════════
+
+Terminal'da quyidagi comandalarni KETMA-KET bajaring:
+
+──────────────────────────────────────────────────────────
+
+COMANDO 1: Directory'ga kirish
+──────────────────────────────────────────────────────────
+cd /Users/macbookpro/Downloads/buxoro-maktab-main
+
+──────────────────────────────────────────────────────────
+
+COMANDO 2: Merge strategiyasini sozlash
+──────────────────────────────────────────────────────────
+git config pull.rebase false
+
+──────────────────────────────────────────────────────────
+
+COMANDO 3: GitHub'dan pull qilish
+──────────────────────────────────────────────────────────
+git pull origin main --allow-unrelated-histories
+
+(Username: Bahriddin2005)
+(Password: Personal Access Token)
+
+──────────────────────────────────────────────────────────
+
+COMANDO 4: Push qilish
+──────────────────────────────────────────────────────────
+git push origin main
+
+──────────────────────────────────────────────────────────
+
+✅ TAYYOR! GitHub'da kodlaringiz bo'ladi!
+
+GitHub: https://github.com/Bahriddin2005/buxoro-maktab
+
+═══════════════════════════════════════════════════════════
+
