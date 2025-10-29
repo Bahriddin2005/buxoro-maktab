@@ -2,6 +2,12 @@
 
 {% block title %}Umumiy Natijalarim - Buxoro Bilimdonlar Maktabi{% endblock %}
 
+{% block extra_head %}
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+{% endblock %}
+
 {% block extra_css %}
 <style>
     body {
@@ -373,36 +379,70 @@ document.addEventListener('DOMContentLoaded', function() {
 
 async function loadOverallResults() {
     try {
+        console.log('Loading overall results...');
         const response = await fetch(window.location.href, {
             headers: {
                 'Accept': 'application/json'
             }
         });
 
+        console.log('Response status:', response.status);
+
         if (!response.ok) {
-            throw new Error('Failed to load data');
+            const errorText = await response.text();
+            console.error('Response error:', errorText);
+            throw new Error(`Failed to load data: ${response.status}`);
         }
 
         const data = await response.json();
+        console.log('Received data:', data);
         
         document.getElementById('loading').classList.add('d-none');
 
         if (data.total_tests === 0) {
+            console.log('No tests found');
             document.getElementById('noData').classList.remove('d-none');
             return;
         }
 
+        console.log('Displaying content...');
         document.getElementById('content').classList.remove('d-none');
-        displaySummary(data);
-        displaySubjectStats(data.subject_stats);
-        displayGradeDistribution(data.grade_distribution);
-        displayTests(data.tests);
+        
+        try {
+            displaySummary(data);
+            console.log('Summary displayed');
+        } catch (e) {
+            console.error('Error in displaySummary:', e);
+        }
+        
+        try {
+            displaySubjectStats(data.subject_stats || {});
+            console.log('Subject stats displayed');
+        } catch (e) {
+            console.error('Error in displaySubjectStats:', e);
+        }
+        
+        try {
+            displayGradeDistribution(data.grade_distribution);
+            console.log('Grade distribution displayed');
+        } catch (e) {
+            console.error('Error in displayGradeDistribution:', e);
+        }
+        
+        try {
+            displayTests(data.tests);
+            console.log('Tests displayed');
+        } catch (e) {
+            console.error('Error in displayTests:', e);
+        }
 
     } catch (error) {
         console.error('Error loading results:', error);
+        console.error('Error stack:', error.stack);
         document.getElementById('loading').innerHTML = `
             <i class="fas fa-exclamation-circle text-danger fa-3x mb-3"></i>
             <p class="text-white">Ma'lumotlarni yuklashda xatolik yuz berdi</p>
+            <p class="text-white-50 small">${error.message}</p>
             <button class="btn btn-primary mt-3" onclick="location.reload()">
                 <i class="fas fa-redo me-2"></i>Qayta urinish
             </button>
