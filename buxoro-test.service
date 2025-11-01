@@ -8,7 +8,8 @@ User=baxadev
 Group=baxadev
 WorkingDirectory=/home/baxadev/my_test
 Environment=PATH=/home/baxadev/my_test/venv/bin
-ExecStart=/home/baxadev/my_test/venv/bin/gunicorn --config gunicorn.conf.py mytest.wsgi:application
+ExecStart=/home/baxadev/my_test/venv/bin/gunicorn --workers 3 --threads 2 --timeout 120 mytest.wsgi:application
+
 ExecReload=/bin/kill -s HUP $MAINPID
 Restart=always
 RestartSec=3
