@@ -11,9 +11,9 @@ from .models import DailyStats, UserActivity, PageView
 
 @login_required
 def analytics_dashboard_view(request):
-    """Analytics Dashboard - faqat admin va teacher uchun"""
-    if request.user.role not in ['admin', 'teacher']:
-        return JsonResponse({'error': 'Access denied'}, status=403)
+    """Analytics Dashboard - FAQAT ADMIN uchun"""
+    if request.user.role != 'admin':
+        return JsonResponse({'error': 'Faqat adminlar kirishi mumkin'}, status=403)
     
     context = {
         'verification_requests_count': 0
@@ -29,9 +29,9 @@ def analytics_dashboard_view(request):
 
 @login_required
 def analytics_api_view(request):
-    """Analytics ma'lumotlarini JSON formatda qaytarish"""
-    if request.user.role not in ['admin', 'teacher']:
-        return JsonResponse({'error': 'Access denied'}, status=403)
+    """Analytics ma'lumotlarini JSON formatda qaytarish - FAQAT ADMIN"""
+    if request.user.role != 'admin':
+        return JsonResponse({'error': 'Faqat adminlar kirishi mumkin'}, status=403)
     
     try:
         # Bugungi va oxirgi 7 kunlik ma'lumotlar

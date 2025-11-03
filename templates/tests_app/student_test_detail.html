@@ -1,0 +1,330 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Test Jarayoni - {{ attempt.student.get_full_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+    }
+
+    .detail-header {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 30px;
+        margin-bottom: 30px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: white;
+    }
+
+    .student-info-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 30px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 15px 0;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .info-row:last-child {
+        border-bottom: none;
+    }
+
+    .info-label {
+        font-weight: 600;
+        color: #718096;
+    }
+
+    .info-value {
+        font-weight: 700;
+        color: #2d3748;
+    }
+
+    .questions-container {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 30px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .question-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 20px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .question-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .question-number {
+        font-size: 18px;
+        font-weight: 700;
+        color: #667eea;
+    }
+
+    .question-status {
+        padding: 6px 16px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .status-correct {
+        background: #10b981;
+        color: white;
+    }
+
+    .status-incorrect {
+        background: #ef4444;
+        color: white;
+    }
+
+    .status-unanswered {
+        background: #94a3b8;
+        color: white;
+    }
+
+    .question-text {
+        font-size: 16px;
+        color: #2d3748;
+        margin-bottom: 20px;
+        line-height: 1.6;
+    }
+
+    .choices-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .choice-item {
+        padding: 12px 16px;
+        margin-bottom: 10px;
+        border-radius: 10px;
+        background: #f7fafc;
+        border: 2px solid transparent;
+    }
+
+    .choice-item.correct {
+        background: #d1fae5;
+        border-color: #10b981;
+    }
+
+    .choice-item.incorrect {
+        background: #fee2e2;
+        border-color: #ef4444;
+    }
+
+    .choice-item.selected {
+        border-color: #667eea;
+        font-weight: 600;
+    }
+
+    .answer-summary {
+        margin-top: 20px;
+        padding: 15px;
+        border-radius: 10px;
+        background: #f8fafc;
+    }
+
+    .answer-row {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+    .answer-label {
+        font-weight: 600;
+        color: #64748b;
+        min-width: 150px;
+    }
+
+    .answer-value {
+        color: #1e293b;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="detail-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1>
+                    <i class="fas fa-user-graduate me-3"></i>
+                    {{ attempt.student.get_full_name|default:attempt.student.username }}
+                </h1>
+                <p class="mb-0">Test: {{ test.title }} | Fan: {{ test.subject }}</p>
+            </div>
+            <button class="btn btn-light" onclick="window.close()">
+                <i class="fas fa-times me-2"></i>
+                Yopish
+            </button>
+        </div>
+    </div>
+
+    <div class="student-info-card">
+        <div class="info-row">
+            <span class="info-label">Boshlangan vaqt:</span>
+            <span class="info-value" id="startedAt">-</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Holat:</span>
+            <span class="info-value" id="attemptStatus">-</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Progress:</span>
+            <span class="info-value" id="progressInfo">-</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Hozirgi savol:</span>
+            <span class="info-value" id="currentQuestion">-</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Ball:</span>
+            <span class="info-value" id="scoreInfo">-</span>
+        </div>
+    </div>
+
+    <div class="questions-container">
+        <h3 class="text-white mb-4">
+            <i class="fas fa-list-check me-2"></i>
+            Barcha Savollar
+        </h3>
+        <div id="questionsContainer">
+            <div class="text-center">
+                <div class="spinner-border text-light" role="status">
+                    <span class="visually-hidden">Yuklanmoqda...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function loadDetails() {
+    fetch('/tests/attempt/{{ attempt.id }}/detail/', {
+        headers: {
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        displayAttemptInfo(data.attempt);
+        displayQuestions(data.questions);
+    })
+    .catch(error => {
+        console.error('Error loading details:', error);
+    });
+}
+
+function displayAttemptInfo(attempt) {
+    document.getElementById('startedAt').textContent = attempt.started_at;
+    
+    let statusText = attempt.is_completed ? 'Tugatilgan' : 'Davom etmoqda';
+    if (attempt.is_terminated) {
+        statusText += ' (To\'xtatilgan)';
+    }
+    document.getElementById('attemptStatus').textContent = statusText;
+    
+    document.getElementById('progressInfo').textContent = 
+        `${attempt.answered_count} / ${attempt.total_questions} savol`;
+    
+    document.getElementById('currentQuestion').textContent = 
+        `#${attempt.current_question}`;
+    
+    document.getElementById('scoreInfo').textContent = 
+        attempt.is_completed ? 
+        `${attempt.score} ball (${attempt.percentage}%)` : 
+        'Hali hisoblanmagan';
+}
+
+function displayQuestions(questions) {
+    const container = document.getElementById('questionsContainer');
+    
+    container.innerHTML = questions.map(q => {
+        let statusClass = q.is_answered ? 
+            (q.is_correct ? 'status-correct' : 'status-incorrect') : 
+            'status-unanswered';
+        
+        let statusIcon = q.is_answered ? 
+            (q.is_correct ? 'check-circle' : 'times-circle') : 
+            'minus-circle';
+        
+        let statusText = q.is_answered ? 
+            (q.is_correct ? 'To\'g\'ri' : 'Noto\'g\'ri') : 
+            'Javob berilmagan';
+        
+        let choicesHTML = '';
+        if (q.choices && q.choices.length > 0) {
+            choicesHTML = `
+                <ul class="choices-list">
+                    ${q.choices.map(c => {
+                        let classes = [];
+                        if (c.is_correct) classes.push('correct');
+                        if (c.is_selected && !c.is_correct) classes.push('incorrect');
+                        if (c.is_selected) classes.push('selected');
+                        
+                        let icon = '';
+                        if (c.is_correct) icon = '<i class="fas fa-check-circle text-success me-2"></i>';
+                        else if (c.is_selected) icon = '<i class="fas fa-times-circle text-danger me-2"></i>';
+                        
+                        return `<li class="choice-item ${classes.join(' ')}">${icon}${c.text}</li>`;
+                    }).join('')}
+                </ul>
+            `;
+        }
+        
+        return `
+            <div class="question-card">
+                <div class="question-header">
+                    <span class="question-number">Savol ${q.order}</span>
+                    <span class="question-status ${statusClass}">
+                        <i class="fas fa-${statusIcon} me-1"></i>
+                        ${statusText}
+                    </span>
+                </div>
+                <div class="question-text">${q.text}</div>
+                ${choicesHTML}
+                ${q.is_answered ? `
+                    <div class="answer-summary">
+                        <div class="answer-row">
+                            <span class="answer-label">O'quvchi javobi:</span>
+                            <span class="answer-value">${q.student_answer}</span>
+                        </div>
+                        ${!q.is_correct ? `
+                            <div class="answer-row">
+                                <span class="answer-label">To'g'ri javob:</span>
+                                <span class="answer-value">${q.correct_answer}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    }).join('');
+}
+
+// Load data on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadDetails();
+});
+</script>
+{% endblock %}
+

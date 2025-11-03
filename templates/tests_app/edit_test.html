@@ -375,7 +375,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <input type="text" class="form-control" name="choice_text_${i}" placeholder="Variant ${i + 1}">
                         `;
                         choiceItems.appendChild(div);
-                    }
+        }
                     // Show success notification
                     showSuccessNotification('✅ Rasmli savol muvaffaqiyatli qo\'shildi! Yana qo\'shishingiz mumkin.');
                     // Focus on question text for next entry
@@ -813,6 +813,15 @@ function createQuestionHtml(question, index) {
     html += `<div class='mb-2'><label class='form-label'>Tushuntirish (ixtiyoriy)</label>`;
     html += `<textarea class='form-control glass-input' name='explanation' rows='1'>${question.explanation || ''}</textarea></div>`;
     
+    // Add image upload option for existing questions
+    if (!question.image) {
+        html += `<div class='mb-2'>`;
+        html += `<label class='form-label'>Rasm yuklash (ixtiyoriy)</label>`;
+        html += `<input type='file' class='form-control glass-input question-image-upload' accept='image/*' data-question-id='${question.id}'>`;
+        html += `<div class='form-text text-white-50'>JPG, PNG, GIF formatlari. Max: 5MB</div>`;
+        html += `</div>`;
+    }
+    
     // Add "Insert Question Below" button
     html += `<div class='mt-3 pt-3 border-top border-secondary'>`;
     html += `<button type='button' class='btn btn-sm btn-outline-primary insert-question-btn w-100'>`;
@@ -903,6 +912,110 @@ function addQuestionEventListeners(questionElement) {
             
             // Store the current question element to insert after it
             window.insertAfterQuestion = this.closest('.question-item');
+        });
+    }
+    
+    // Image upload for existing questions
+    const imageUploadInput = questionElement.querySelector('.question-image-upload');
+    if (imageUploadInput) {
+        imageUploadInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            // Validate file size (5MB max)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('❌ Rasm hajmi 5MB dan oshmasligi kerak!');
+                this.value = '';
+                return;
+            }
+            
+            // Validate file type
+            if (!file.type.match('image.*')) {
+                alert('❌ Faqat rasm fayllari ruxsat etilgan!');
+                this.value = '';
+                return;
+            }
+            
+            const questionId = this.dataset.questionId;
+            const formData = new FormData();
+            formData.append('question_image', file);
+            formData.append('question_id', questionId);
+            formData.append('update_image_only', 'true');
+            
+            // Show loading
+            const label = this.previousElementSibling;
+            const originalLabelText = label.textContent;
+            label.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Yuklanmoqda...';
+            this.disabled = true;
+            
+            // Upload image
+            fetch(window.location.pathname, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showSuccessNotification('✅ Rasm muvaffaqiyatli yuklandi!');
+                    // Reload questions to show the uploaded image
+                    loadExistingQuestions();
+                } else {
+                    alert('❌ Xatolik: ' + (data.error || 'Noma\'lum xatolik'));
+                    label.textContent = originalLabelText;
+                    this.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error uploading image:', error);
+                alert('❌ Rasm yuklashda xatolik yuz berdi!');
+                label.textContent = originalLabelText;
+                this.disabled = false;
+            });
+        });
+    }
+    
+    // Remove image button
+    const removeImageBtn = questionElement.querySelector('.remove-image');
+    if (removeImageBtn) {
+        removeImageBtn.addEventListener('click', function() {
+            if (!confirm('Rasmni o\'chirishni xohlaysizmi?')) return;
+            
+            const questionId = questionElement.querySelector('input[name="question_id"]').value;
+            const formData = new FormData();
+            formData.append('question_id', questionId);
+            formData.append('remove_image', 'true');
+            
+            // Show loading
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> O\'chirilmoqda...';
+            this.disabled = true;
+            
+            fetch(window.location.pathname, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showSuccessNotification('✅ Rasm o\'chirildi!');
+                    loadExistingQuestions();
+                } else {
+                    alert('❌ Xatolik: ' + (data.error || 'Noma\'lum xatolik'));
+                    this.innerHTML = '<i class="fas fa-trash"></i> Rasmini o\'chirish';
+                    this.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error removing image:', error);
+                alert('❌ Rasmni o\'chirishda xatolik yuz berdi!');
+                this.innerHTML = '<i class="fas fa-trash"></i> Rasmini o\'chirish';
+                this.disabled = false;
+            });
         });
     }
 }

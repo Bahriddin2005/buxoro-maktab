@@ -1,0 +1,352 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Barcha O'quvchilar Natijalari - Buxoro Bilimdonlar Maktabi{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <!-- Header -->
+        <div class="glass-card p-4 mb-4" data-aos="fade-down">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="text-white mb-1">
+                        <i class="fas fa-users me-2"></i>
+                        Barcha O'quvchilar Test Natijalari
+                    </h2>
+                    <p class="text-white-50 mb-0">Barcha o'quvchilarning test natijalari va statistikasi</p>
+                </div>
+                <div>
+                    <button class="btn btn-success" onclick="exportToExcel()">
+                        <i class="fas fa-file-excel me-2"></i>
+                        Excel'ga Yuklab Olish
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="glass-card p-4 mb-4" data-aos="fade-up">
+            <h4 class="text-white mb-3">
+                <i class="fas fa-filter me-2"></i>
+                Filterlash
+            </h4>
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="text-white-50 small mb-1">Sinf</label>
+                    <select class="form-select" id="filterGrade" onchange="loadResults()">
+                        <option value="">Barcha sinflar</option>
+                        <option value="1">1-sinf</option>
+                        <option value="2">2-sinf</option>
+                        <option value="3">3-sinf</option>
+                        <option value="4">4-sinf</option>
+                        <option value="5">5-sinf</option>
+                        <option value="6">6-sinf</option>
+                        <option value="7">7-sinf</option>
+                        <option value="8">8-sinf</option>
+                        <option value="9">9-sinf</option>
+                        <option value="10">10-sinf</option>
+                        <option value="11">11-sinf</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="text-white-50 small mb-1">Fan</label>
+                    <select class="form-select" id="filterSubject" onchange="loadResults()">
+                        <option value="">Barcha fanlar</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="text-white-50 small mb-1">Test</label>
+                    <select class="form-select" id="filterTest" onchange="loadResults()">
+                        <option value="">Barcha testlar</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="text-white-50 small mb-1">Qidirish</label>
+                    <input type="text" class="form-control" id="searchStudent" 
+                           placeholder="Ism yoki username..." onkeyup="filterTable()">
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="row g-4 mb-4">
+            <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="100">
+                <div class="glass-card p-4 text-center">
+                    <div class="text-primary mb-2">
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                    <h3 class="text-white mb-1" id="totalStudents">--</h3>
+                    <p class="text-white-50 mb-0">Jami O'quvchilar</p>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="200">
+                <div class="glass-card p-4 text-center">
+                    <div class="text-success mb-2">
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                    <h3 class="text-white mb-1" id="totalResults">--</h3>
+                    <p class="text-white-50 mb-0">Jami Natijalar</p>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="300">
+                <div class="glass-card p-4 text-center">
+                    <div class="text-warning mb-2">
+                        <i class="fas fa-percentage fa-2x"></i>
+                    </div>
+                    <h3 class="text-white mb-1" id="avgPercentage">--%</h3>
+                    <p class="text-white-50 mb-0">O'rtacha Natija</p>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="400">
+                <div class="glass-card p-4 text-center">
+                    <div class="text-info mb-2">
+                        <i class="fas fa-medal fa-2x"></i>
+                    </div>
+                    <h3 class="text-white mb-1" id="excellentCount">--</h3>
+                    <p class="text-white-50 mb-0">A'lo Natijalar</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Table -->
+        <div class="glass-card p-4" data-aos="fade-up">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="text-white mb-0">
+                    <i class="fas fa-table me-2"></i>
+                    Natijalar Jadvali
+                </h4>
+                <button class="btn btn-outline-light" onclick="loadResults()">
+                    <i class="fas fa-sync-alt me-1"></i>
+                    Yangilash
+                </button>
+            </div>
+
+            <div id="loadingIndicator" class="text-center py-4">
+                <div class="text-white">
+                    <div class="loading d-inline-block"></div>
+                    <p class="mt-2">Yuklanmoqda...</p>
+                </div>
+            </div>
+
+            <div id="resultsTable" class="table-responsive d-none">
+                <table class="table table-dark table-hover" id="mainTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Ism Familiya</th>
+                            <th>Username</th>
+                            <th>Sinf</th>
+                            <th>Test</th>
+                            <th>Fan</th>
+                            <th>Ball</th>
+                            <th>Foiz</th>
+                            <th>Baho</th>
+                            <th>Sana</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsTableBody">
+                        <!-- Results will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="noResults" class="text-center py-5 d-none">
+                <div class="text-white-50">
+                    <i class="fas fa-inbox fa-3x mb-3"></i>
+                    <h4>Natijalar topilmadi!</h4>
+                    <p>Hozircha test yechgan o'quvchilar yo'q yoki filter bo'yicha natija topilmadi.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let allResults = [];
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadResults();
+        loadFilters();
+    });
+
+    async function loadFilters() {
+        try {
+            // Load subjects
+            const subjectsResponse = await fetch('/tests/test-api/');
+            const subjectsData = await subjectsResponse.json();
+            
+            const subjectFilter = document.getElementById('filterSubject');
+            const subjects = [...new Set(subjectsData.tests?.map(t => t.subject) || [])];
+            
+            subjects.forEach(subject => {
+                const option = document.createElement('option');
+                option.value = subject;
+                option.textContent = subject;
+                subjectFilter.appendChild(option);
+            });
+            
+        } catch (error) {
+            console.error('Filter load error:', error);
+        }
+    }
+
+    async function loadResults() {
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const resultsTable = document.getElementById('resultsTable');
+        const noResults = document.getElementById('noResults');
+        
+        loadingIndicator.classList.remove('d-none');
+        resultsTable.classList.add('d-none');
+        noResults.classList.add('d-none');
+        
+        try {
+            const grade = document.getElementById('filterGrade').value;
+            const subject = document.getElementById('filterSubject').value;
+            const test = document.getElementById('filterTest').value;
+            
+            let url = '/tests/all-results/';
+            const params = new URLSearchParams();
+            if (grade) params.append('grade', grade);
+            if (subject) params.append('subject', subject);
+            if (test) params.append('test', test);
+            
+            if (params.toString()) {
+                url += '?' + params.toString();
+            }
+            
+            const response = await fetch(url, {
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+            
+            if (!response.ok) throw new Error('Failed to load');
+            
+            const data = await response.json();
+            allResults = data.results || [];
+            
+            displayResults();
+            updateStatistics(data.stats || {});
+            
+        } catch (error) {
+            console.error('Load error:', error);
+            loadingIndicator.classList.add('d-none');
+            noResults.classList.remove('d-none');
+        }
+    }
+
+    function displayResults() {
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const resultsTable = document.getElementById('resultsTable');
+        const noResults = document.getElementById('noResults');
+        const tbody = document.getElementById('resultsTableBody');
+        
+        loadingIndicator.classList.add('d-none');
+        
+        if (allResults.length === 0) {
+            noResults.classList.remove('d-none');
+            resultsTable.classList.add('d-none');
+            return;
+        }
+        
+        resultsTable.classList.remove('d-none');
+        noResults.classList.add('d-none');
+        
+        // Sinflar bo'yicha guruhlash
+        const resultsByGrade = {};
+        allResults.forEach(result => {
+            const grade = result.student.grade || 'N/A';
+            if (!resultsByGrade[grade]) {
+                resultsByGrade[grade] = [];
+            }
+            resultsByGrade[grade].push(result);
+        });
+        
+        // Sinflarni tartiblab chiqarish
+        const grades = Object.keys(resultsByGrade).sort((a, b) => {
+            if (a === 'N/A') return 1;
+            if (b === 'N/A') return -1;
+            return parseInt(a) - parseInt(b);
+        });
+        
+        let html = '';
+        let counter = 1;
+        
+        grades.forEach(grade => {
+            const results = resultsByGrade[grade];
+            
+            // Sinf header row
+            html += `
+                <tr class="table-primary">
+                    <td colspan="10" style="font-weight: 700; font-size: 16px; padding: 15px;">
+                        <i class="fas fa-graduation-cap me-2"></i>
+                        ${grade}-SINF (${results.length} ta natija)
+                    </td>
+                </tr>
+            `;
+            
+            // O'sha sinfning barcha natijalari
+            results.forEach(result => {
+                const gradeClass = result.percentage >= 81 ? 'success' : 
+                                 result.percentage >= 61 ? 'warning' : 
+                                 result.percentage >= 31 ? 'info' : 'danger';
+                
+                const finishedDate = new Date(result.finished_at).toLocaleString('uz-UZ', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                html += `
+                    <tr class="student-row">
+                        <td>${counter}</td>
+                        <td>${result.student.first_name} ${result.student.last_name}</td>
+                        <td><span class="badge bg-secondary">${result.student.username}</span></td>
+                        <td>${result.student.grade || 'N/A'}-sinf</td>
+                        <td>${result.test.title}</td>
+                        <td><span class="badge bg-primary">${result.test.subject}</span></td>
+                        <td><strong>${result.score || 0}</strong>/${result.total_points || 0}</td>
+                        <td><strong>${(result.percentage || 0).toFixed(1)}%</strong></td>
+                        <td><span class="badge bg-${gradeClass}">${result.grade}</span></td>
+                        <td style="font-size: 12px;">${finishedDate}</td>
+                    </tr>
+                `;
+                counter++;
+            });
+        });
+        
+        tbody.innerHTML = html;
+    }
+
+    function updateStatistics(stats) {
+        document.getElementById('totalStudents').textContent = stats.total_students || 0;
+        document.getElementById('totalResults').textContent = stats.total_results || 0;
+        document.getElementById('avgPercentage').textContent = (stats.avg_percentage || 0).toFixed(1) + '%';
+        document.getElementById('excellentCount').textContent = stats.excellent_count || 0;
+    }
+
+    function filterTable() {
+        const searchTerm = document.getElementById('searchStudent').value.toLowerCase();
+        const tbody = document.getElementById('resultsTableBody');
+        const rows = tbody.getElementsByTagName('tr');
+        
+        for (let row of rows) {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(searchTerm) ? '' : 'none';
+        }
+    }
+
+    function exportToExcel() {
+        window.location.href = '/tests/export-all-students/';
+    }
+</script>
+{% endblock %}
+

@@ -12,6 +12,7 @@ from .models import Test, Question, Choice, TestAttempt, Answer, TestResult, Tes
 from accounts.models import User
 from .views_overall import student_overall_results_view, student_export_results_view, test_api_view
 from .export_all_students import export_all_students_results
+
 try:
     from openpyxl import Workbook
     from openpyxl.styles import Font, PatternFill
@@ -23,6 +24,10 @@ except ImportError:
 def test_list_view(request):
     """List all available tests for students or created tests for teachers"""
     if request.method == 'GET' and request.headers.get('Accept') == 'application/json':
+        # Pagination parametrlari
+        page = int(request.GET.get('page', 1))
+        page_size = int(request.GET.get('page_size', 100))  # 100 ta test/sahifa
+        
         if request.user.role == 'student':
             tests = Test.objects.filter(
                 is_active=True,
@@ -69,15 +74,36 @@ def test_list_view(request):
                     'end_time': test.end_time.isoformat() if test.end_time else None,
                 })
             
+            # Pagination
+            start = (page - 1) * page_size
+            end = start + page_size
+            total_count = len(test_data)
+            paginated_data = test_data[start:end]
+            
             return JsonResponse({
-                'tests': test_data,
-                'user_role': 'student'
+                'tests': paginated_data,
+                'user_role': 'student',
+                'pagination': {
+                    'page': page,
+                    'page_size': page_size,
+                    'total': total_count,
+                    'total_pages': (total_count + page_size - 1) // page_size
+                }
             })
             
         elif request.user.role == 'teacher':
-            tests = Test.objects.filter(created_by=request.user).order_by('-created_at')
+            # Teacher sees ALL tests (not just their own) - LIMIT to first 100
+            tests = Test.objects.all().select_related('created_by').order_by('-created_at')
+            
+            # Get total count first
+            total_count = tests.count()
+            
+            # Apply pagination
+            start = (page - 1) * page_size
+            tests_page = tests[start:start + page_size]
+            
             test_data = []
-            for test in tests:
+            for test in tests_page:
                 attempt_count = TestAttempt.objects.filter(test=test, is_completed=True).count()
                 test_data.append({
                     'id': test.id,
@@ -96,14 +122,28 @@ def test_list_view(request):
             
             return JsonResponse({
                 'tests': test_data,
-                'user_role': 'teacher'
+                'user_role': 'teacher',
+                'pagination': {
+                    'page': page,
+                    'page_size': page_size,
+                    'total': total_count,
+                    'total_pages': (total_count + page_size - 1) // page_size
+                }
             })
-    
+        
         elif request.user.role == 'admin':
-            # Admin sees all tests from all teachers
-            tests = Test.objects.filter(created_by__role='teacher').select_related('created_by').order_by('-created_at')
+            # Admin sees ALL tests - LIMIT to first 100
+            tests = Test.objects.all().select_related('created_by').order_by('-created_at')
+            
+            # Get total count first
+            total_count = tests.count()
+            
+            # Apply pagination
+            start = (page - 1) * page_size
+            tests_page = tests[start:start + page_size]
+            
             test_data = []
-            for test in tests:
+            for test in tests_page:
                 attempt_count = TestAttempt.objects.filter(test=test, is_completed=True).count()
                 test_data.append({
                     'id': test.id,
@@ -122,7 +162,13 @@ def test_list_view(request):
             
             return JsonResponse({
                 'tests': test_data,
-                'user_role': 'admin'
+                'user_role': 'admin',
+                'pagination': {
+                    'page': page,
+                    'page_size': page_size,
+                    'total': total_count,
+                    'total_pages': (total_count + page_size - 1) // page_size
+                }
             })
     
     return render(request, 'tests_app/test_list.html')
@@ -333,6 +379,12 @@ def submit_answer(request, attempt_id):
         
         answer.save()
         
+        # Update current question index for monitoring
+        current_index = data.get('current_question_index', 0)
+        if current_index is not None:
+            attempt.current_question_index = current_index
+            attempt.save(update_fields=['current_question_index'])
+        
         # Verify answer was saved
         saved_choices = list(answer.selected_choices.values_list('id', flat=True))
         print(f"Answer saved successfully. Selected choices: {saved_choices}")
@@ -490,7 +542,21 @@ def test_results_view(request, test_id):
                 # 'incorrect_questions': incorrect_questions,
                 # 'unanswered_questions': unanswered_questions
             }
-            return JsonResponse({'result': result_data})
+            
+            # Test info qo'shish
+            test_info = {
+                'title': test.title,
+                'subject': test.subject,
+                'grade': test.grade,
+                'total_questions': test.total_questions,
+                'time_limit': test.time_limit
+            }
+            
+            return JsonResponse({
+                'result': result_data,
+                'test_info': test_info,
+                'user_role': 'student'
+            })
         
         elif (request.user.role == 'teacher' and test.created_by == request.user) or request.user.role == 'admin':
             # Faqat har bir o'quvchining oxirgi (eng so'nggi) natijasini olish
@@ -568,7 +634,20 @@ def test_results_view(request, test_id):
                     'unanswered_questions': unanswered_questions
                 })
             
-            return JsonResponse({'results': results_data})
+            # Test info qo'shish
+            test_info = {
+                'title': test.title,
+                'subject': test.subject,
+                'grade': test.grade,
+                'total_questions': test.total_questions,
+                'time_limit': test.time_limit
+            }
+            
+            return JsonResponse({
+                'results': results_data,
+                'test_info': test_info,
+                'user_role': request.user.role
+            })
         
         else:
             return JsonResponse({'error': 'Access denied'}, status=403)
@@ -819,18 +898,31 @@ def all_results_view(request):
         return JsonResponse({'error': 'Access denied'}, status=403)
     
     if request.method == 'GET' and request.headers.get('Accept') == 'application/json':
-        # Admin barcha natijalarni ko'radi, Teacher faqat o'z testlari natijalarini
+        # BARCHA natijalarni olish (faqat oxirgi emas, HAMMASI!)
         if request.user.role == 'admin':
             attempts = TestAttempt.objects.filter(is_completed=True).select_related(
                 'student', 'test', 'result'
-            ).order_by('student__grade', 'student__class_name', 'student__first_name', '-finished_at')
+            )
         else:  # teacher
             attempts = TestAttempt.objects.filter(
                 test__created_by=request.user, 
                 is_completed=True
-            ).select_related('student', 'test', 'result').order_by(
-                'student__grade', 'student__class_name', 'student__first_name', '-finished_at'
-            )
+            ).select_related('student', 'test', 'result')
+        
+        # Filters
+        grade = request.GET.get('grade')
+        subject = request.GET.get('subject')
+        test_id = request.GET.get('test')
+        
+        if grade:
+            attempts = attempts.filter(student__grade=grade)
+        if subject:
+            attempts = attempts.filter(test__subject=subject)
+        if test_id:
+            attempts = attempts.filter(test_id=test_id)
+        
+        # Order - Sinf bo'yicha, keyin sana bo'yicha
+        attempts = attempts.order_by('student__grade', 'student__last_name', 'student__first_name', '-finished_at')
         
         results_data = []
         for attempt in attempts:
@@ -869,12 +961,27 @@ def all_results_view(request):
                 'finished_at': attempt.finished_at.isoformat(),
                 'correct_answers': attempt.result.correct_answers if hasattr(attempt, 'result') else 0,
                 'incorrect_answers': attempt.result.incorrect_answers if hasattr(attempt, 'result') else 0,
-                'unanswered': attempt.result.unanswered if hasattr(attempt, 'result') else 0
+                'unanswered': attempt.result.unanswered if hasattr(attempt, 'result') else 0,
+                'student_name': f"{attempt.student.first_name} {attempt.student.last_name}",
+                'username': attempt.student.username,
+                'test_title': attempt.test.title,
             })
         
-        return JsonResponse({'results': results_data})
+        # Statistics
+        from django.db.models import Avg, Count
+        stats = {
+            'total_students': User.objects.filter(role='student', is_verified=True).count(),
+            'total_results': attempts.count(),
+            'avg_percentage': attempts.aggregate(Avg('percentage'))['percentage__avg'] or 0,
+            'excellent_count': attempts.filter(percentage__gte=81).count(),
+        }
+        
+        return JsonResponse({
+            'results': results_data,
+            'stats': stats
+        })
     
-    return render(request, 'tests_app/all_results.html', {
+    return render(request, 'tests_app/all_students_results.html', {
         'user_role': request.user.role
     })
 
@@ -1158,7 +1265,50 @@ def edit_test_view(request, test_id):
             print(f"Request FILES: {request.FILES}")
             
             if request.content_type and 'multipart/form-data' in request.content_type:
-                # Handle FormData for image upload
+                # Handle FormData for image upload or removal
+                
+                # Check if this is an image update/removal for existing question
+                if request.POST.get('update_image_only') or request.POST.get('remove_image'):
+                    question_id = request.POST.get('question_id')
+                    if not question_id:
+                        return JsonResponse({'success': False, 'error': 'Question ID kerak!'})
+                    
+                    try:
+                        question = Question.objects.get(id=question_id, test=test)
+                        
+                        if request.POST.get('remove_image'):
+                            # Remove image
+                            if question.image:
+                                question.image.delete(save=False)
+                                question.image = None
+                                question.save()
+                                return JsonResponse({'success': True, 'message': 'Rasm o\'chirildi!'})
+                            else:
+                                return JsonResponse({'success': False, 'error': 'Rasm mavjud emas!'})
+                        
+                        elif request.POST.get('update_image_only'):
+                            # Update image only
+                            question_image = request.FILES.get('question_image')
+                            if question_image:
+                                # Remove old image if exists
+                                if question.image:
+                                    question.image.delete(save=False)
+                                question.image = question_image
+                                question.save()
+                                return JsonResponse({
+                                    'success': True, 
+                                    'message': 'Rasm yuklandi!',
+                                    'image_url': question.image.url
+                                })
+                            else:
+                                return JsonResponse({'success': False, 'error': 'Rasm fayli topilmadi!'})
+                    
+                    except Question.DoesNotExist:
+                        return JsonResponse({'success': False, 'error': 'Savol topilmadi!'})
+                    except Exception as e:
+                        return JsonResponse({'success': False, 'error': str(e)})
+                
+                # Handle new question creation with image
                 question_text = request.POST.get('question_text')
                 question_type = request.POST.get('question_type')
                 points = request.POST.get('points', 1)
@@ -1232,63 +1382,84 @@ def edit_test_view(request, test_id):
                 data = json.loads(request.body)
                 print(f"Received data for test {test_id}: {data}")
             
-            # Update test fields
-            test.title = data.get('title', test.title)
-            test.description = data.get('description', test.description)
-            test.subject = data.get('subject', test.subject)
-            test.grade = int(data.get('grade', test.grade))
-            test.time_limit = int(data.get('time_limit', test.time_limit))
-            test.max_attempts = int(data.get('max_attempts', test.max_attempts))
-            test.show_results = data.get('show_results', test.show_results)
-            test.is_active = data.get('is_active', test.is_active)
-            test.shuffle_questions = data.get('shuffle_questions', test.shuffle_questions)
-            test.save()
-            print(f"Test {test_id} updated successfully")
+                # Update test fields
+                test.title = data.get('title', test.title)
+                test.description = data.get('description', test.description)
+                test.subject = data.get('subject', test.subject)
+                test.grade = int(data.get('grade', test.grade))
+                test.time_limit = int(data.get('time_limit', test.time_limit))
+                test.max_attempts = int(data.get('max_attempts', test.max_attempts))
+                test.show_results = data.get('show_results', test.show_results)
+                test.is_active = data.get('is_active', test.is_active)
+                test.shuffle_questions = data.get('shuffle_questions', test.shuffle_questions)
+                test.save()
+                print(f"Test {test_id} updated successfully")
 
-            # Update questions
-            questions_data = data.get('questions', [])
-            print(f"Processing {len(questions_data)} questions")
+                # Update questions
+                questions_data = data.get('questions', [])
+                print(f"Processing {len(questions_data)} questions")
             
-            # Get existing question IDs
-            existing_question_ids = set(test.questions.values_list('id', flat=True))
-            new_question_ids = set()
+                # Get existing question IDs
+                existing_question_ids = set(test.questions.values_list('id', flat=True))
+                new_question_ids = set()
             
-            for i, q_data in enumerate(questions_data):
-                question_id = q_data.get('id')
-                print(f"Processing question {i+1}: ID={question_id}, Text='{q_data.get('question_text', '')[:50]}...'")
+                for i, q_data in enumerate(questions_data):
+                    question_id = q_data.get('id')
+                    print(f"Processing question {i+1}: ID={question_id}, Text='{q_data.get('question_text', '')[:50]}...'")
                 
-                if question_id and question_id in existing_question_ids:
-                    # Update existing question
-                    try:
-                        question = Question.objects.get(id=question_id, test=test)
-                        question.question_text = q_data['question_text']
-                        question.question_type = q_data['question_type']
-                        question.points = float(q_data.get('points', 1.0))
-                        question.order = i + 1
-                        question.explanation = q_data.get('explanation', '')
-                        question.save()
-                        new_question_ids.add(question_id)
-                        print(f"Updated existing question {question_id}")
+                    if question_id and question_id in existing_question_ids:
+                        # Update existing question
+                        try:
+                            question = Question.objects.get(id=question_id, test=test)
+                            question.question_text = q_data['question_text']
+                            question.question_type = q_data['question_type']
+                            question.points = float(q_data.get('points', 1.0))
+                            question.order = i + 1
+                            question.explanation = q_data.get('explanation', '')
+                            question.save()
+                            new_question_ids.add(question_id)
+                            print(f"Updated existing question {question_id}")
                         
-                        # Update choices
-                        if q_data['question_type'] in ['single_choice', 'multiple_choice']:
-                            choices_data = q_data.get('choices', [])
-                            # Clear existing choices
-                            question.choices.all().delete()
-                            # Add new choices
-                            for c_data in choices_data:
-                                if c_data.get('text'):  # Only add if text is not empty
-                                    Choice.objects.create(
-                                        question=question,
-                                        choice_text=c_data['text'],
-                                        is_correct=c_data.get('is_correct', False)
-                                    )
-                        else:
-                            # For text answers, remove all choices
-                            question.choices.all().delete()
+                            # Update choices
+                            if q_data['question_type'] in ['single_choice', 'multiple_choice']:
+                                choices_data = q_data.get('choices', [])
+                                # Clear existing choices
+                                question.choices.all().delete()
+                                # Add new choices
+                                for c_data in choices_data:
+                                    if c_data.get('text'):  # Only add if text is not empty
+                                        Choice.objects.create(
+                                            question=question,
+                                            choice_text=c_data['text'],
+                                            is_correct=c_data.get('is_correct', False)
+                                        )
+                            else:
+                                # For text answers, remove all choices
+                                question.choices.all().delete()
                             
-                    except Question.DoesNotExist:
-                        # If question doesn't exist, create new one
+                        except Question.DoesNotExist:
+                            # If question doesn't exist, create new one
+                            question = Question.objects.create(
+                                test=test,
+                                question_text=q_data['question_text'],
+                                question_type=q_data['question_type'],
+                                points=float(q_data.get('points', 1.0)),
+                                order=i + 1,
+                                explanation=q_data.get('explanation', '')
+                            )
+                            new_question_ids.add(question.id)
+                        
+                            if q_data['question_type'] in ['single_choice', 'multiple_choice']:
+                                for c_data in q_data.get('choices', []):
+                                    if c_data.get('text'):
+                                        Choice.objects.create(
+                                            question=question,
+                                            choice_text=c_data['text'],
+                                            is_correct=c_data.get('is_correct', False)
+                                        )
+                    else:
+                        # Create new question
+                        print(f"Creating new question: {q_data['question_text'][:50]}...")
                         question = Question.objects.create(
                             test=test,
                             question_text=q_data['question_text'],
@@ -1298,7 +1469,8 @@ def edit_test_view(request, test_id):
                             explanation=q_data.get('explanation', '')
                         )
                         new_question_ids.add(question.id)
-                        
+                        print(f"Created new question with ID {question.id}")
+                    
                         if q_data['question_type'] in ['single_choice', 'multiple_choice']:
                             for c_data in q_data.get('choices', []):
                                 if c_data.get('text'):
@@ -1307,51 +1479,30 @@ def edit_test_view(request, test_id):
                                         choice_text=c_data['text'],
                                         is_correct=c_data.get('is_correct', False)
                                     )
-                else:
-                    # Create new question
-                    print(f"Creating new question: {q_data['question_text'][:50]}...")
-                    question = Question.objects.create(
-                        test=test,
-                        question_text=q_data['question_text'],
-                        question_type=q_data['question_type'],
-                        points=float(q_data.get('points', 1.0)),
-                        order=i + 1,
-                        explanation=q_data.get('explanation', '')
-                    )
-                    new_question_ids.add(question.id)
-                    print(f"Created new question with ID {question.id}")
-                    
-                    if q_data['question_type'] in ['single_choice', 'multiple_choice']:
-                        for c_data in q_data.get('choices', []):
-                            if c_data.get('text'):
-                                Choice.objects.create(
-                                    question=question,
-                                    choice_text=c_data['text'],
-                                    is_correct=c_data.get('is_correct', False)
-                                )
             
-            # Remove questions that are no longer in the list
-            questions_to_delete = existing_question_ids - new_question_ids
-            if questions_to_delete:
-                test.questions.filter(id__in=questions_to_delete).delete()
-            # Saqlangan savollarni JSON ko‘rinishda qaytarish:
-            questions = test.questions.all().order_by('order')
-            questions_data = []
-            for q in questions:
-                q_data = {
-                    "id": q.id,
-                    "question_text": q.question_text,
-                    "question_type": q.question_type,
-                    "points": q.points,
-                    "explanation": q.explanation,
-                    "image": q.image.url if q.image else None,
-                    "choices": [
-                        {"text": c.choice_text, "is_correct": c.is_correct}
-                        for c in q.choices.all()
-                    ]
-                }
-                questions_data.append(q_data)
-            return JsonResponse({"success": True, "questions": questions_data})
+                # Remove questions that are no longer in the list
+                questions_to_delete = existing_question_ids - new_question_ids
+                if questions_to_delete:
+                    test.questions.filter(id__in=questions_to_delete).delete()
+                
+                # Saqlangan savollarni JSON ko'rinishda qaytarish:
+                questions = test.questions.all().order_by('order')
+                questions_data = []
+                for q in questions:
+                    q_data = {
+                        "id": q.id,
+                        "question_text": q.question_text,
+                        "question_type": q.question_type,
+                        "points": q.points,
+                        "explanation": q.explanation,
+                        "image": q.image.url if q.image else None,
+                        "choices": [
+                            {"text": c.choice_text, "is_correct": c.is_correct}
+                            for c in q.choices.all()
+                        ]
+                    }
+                    questions_data.append(q_data)
+                return JsonResponse({"success": True, "questions": questions_data})
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)}, status=400)
 
@@ -1367,6 +1518,7 @@ def edit_test_view(request, test_id):
                 'question_type': q.question_type,
                 'points': q.points,
                 'explanation': q.explanation,
+                'image': q.image.url if q.image else None,  # Add image URL
                 'choices': []
             }
             if q.question_type in ['single_choice', 'multiple_choice']:
@@ -1405,6 +1557,7 @@ def edit_test_view(request, test_id):
             'question_type': q.question_type,
             'points': q.points,
             'explanation': q.explanation,
+            'image': q.image.url if q.image else None,  # Add image URL
             'choices': []
         }
         if q.question_type in ['single_choice', 'multiple_choice']:
@@ -1440,13 +1593,14 @@ from .models import Test
 @user_passes_test(lambda u: u.is_staff or u.is_superuser)
 def admin_teacher_tests(request):
     """
-    Admin uchun: o'qituvchilar tomonidan yaratilgan testlar ro'yxatini ko'rsatadi.
-    URL: /tests/admin/teacher-tests/  (tests_app/urls.py da allaqachon mavjud)
+    Admin uchun: barcha testlarni ko'rsatish
+    URL: /tests/admin/teacher-tests/
     """
     tests = (
         Test.objects
-        .filter(created_by__role='teacher')   # created_by field is correct
+        .all()  # Barcha testlar
         .select_related('created_by')
+        .prefetch_related('attempts')
         .order_by('-created_at')
     )
 
@@ -1503,8 +1657,8 @@ def grade_based_results_view(request):
             highest_score = 0
             lowest_score = 0
         
-        # Eng yaxshi natijalar
-        top_performers = attempts.order_by('-percentage')[:5]
+        # BARCHA natijalar (faqat top 5 emas!)
+        all_performers = attempts.order_by('-percentage')  # Barcha natijalarni olish
         
         grade_stats.append({
             'grade': grade,
@@ -1514,16 +1668,17 @@ def grade_based_results_view(request):
             'avg_percentage': round(avg_percentage, 1),
             'highest_score': round(highest_score, 1),
             'lowest_score': round(lowest_score, 1),
-            'top_performers': [
+            'all_results': [  # 'top_performers' o'rniga 'all_results'
                 {
                     'student_name': f"{attempt.student.first_name} {attempt.student.last_name}",
                     'student_username': attempt.student.username,
                     'test_title': attempt.test.title,
                     'percentage': round(attempt.percentage, 1),
                     'score': attempt.score,
+                    'total_points': attempt.total_points,
                     'finished_at': attempt.finished_at
                 }
-                for attempt in top_performers
+                for attempt in all_performers  # Barcha natijalar
             ]
         })
     
@@ -1656,22 +1811,6 @@ def export_grade_results_view(request):
                 ws.cell(row=row, column=col).fill = PatternFill(start_color=fill_color, end_color=fill_color, fill_type="solid")
             
             row += 1
-        
-        # Eng yaxshi natijalar
-        if total_attempts > 0:
-            ws[f'A{row+2}'] = "Eng Yaxshi Natijalar (Top 5):"
-            ws[f'A{row+2}'].font = Font(bold=True)
-            
-            top_attempts = attempts.order_by('-percentage')[:5]
-            for i, attempt in enumerate(top_attempts, 1):
-                student_name = f"{attempt.student.first_name} {attempt.student.last_name}"
-                if not student_name.strip():
-                    student_name = attempt.student.username
-                
-                ws.cell(row=row+3+i, column=1, value=f"{i}. {student_name}")
-                ws.cell(row=row+3+i, column=2, value=attempt.test.title)
-                ws.cell(row=row+3+i, column=3, value=f"{attempt.percentage:.1f}%")
-                ws.cell(row=row+3+i, column=4, value=attempt.score)
         
         # Ustun kengliklarini sozlash
         ws.column_dimensions['A'].width = 25
@@ -1811,25 +1950,9 @@ def export_single_grade_results_view(request, grade):
             
             row += 1
     
-        # Eng yaxshi natijalar
-        if total_attempts > 0:
-            ws[f'A{row+2}'] = "Eng Yaxshi Natijalar (Top 5):"
-            ws[f'A{row+2}'].font = Font(bold=True)
-        
-            top_attempts = attempts.order_by('-percentage')[:5]
-            for i, attempt in enumerate(top_attempts, 1):
-                student_name = f"{attempt.student.first_name} {attempt.student.last_name}"
-                if not student_name.strip():
-                    student_name = attempt.student.username
-            
-                    ws.cell(row=row+3+i, column=1, value=f"{i}. {student_name}")
-                    ws.cell(row=row+3+i, column=2, value=attempt.test.title)
-                    ws.cell(row=row+3+i, column=3, value=f"{attempt.percentage:.1f}%")
-                    ws.cell(row=row+3+i, column=4, value=attempt.score)
-    
-                    # Ustun kengliklarini sozlash
-                    ws.column_dimensions['A'].width = 25
-                    ws.column_dimensions['B'].width = 30
+        # Ustun kengliklarini sozlash
+        ws.column_dimensions['A'].width = 25
+        ws.column_dimensions['B'].width = 30
         ws.column_dimensions['C'].width = 10
         ws.column_dimensions['D'].width = 10
         ws.column_dimensions['E'].width = 15
@@ -2001,6 +2124,149 @@ def export_all_results_view(request):
         
     except Exception as e:
         print(f"Export all results error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'error': f'Export xatolik yuz berdi: {str(e)}'}, status=500)
+
+
+@login_required
+@user_passes_test(lambda u: u.role in ['teacher', 'admin'])
+def export_subject_results_view(request):
+    """Fanlar bo'yicha natijalarni Excel faylga export qilish - har bir fan alohida sheet"""
+    if not OPENPYXL_AVAILABLE:
+        return JsonResponse({'error': 'Excel export funksiyasi mavjud emas.'}, status=500)
+    
+    try:
+        from openpyxl.utils import get_column_letter
+        from openpyxl.styles import Alignment
+        
+        # Excel workbook yaratish
+        wb = Workbook()
+        wb.remove(wb.active)  # Default sheet'ni o'chirish
+        
+        # Barcha fanlarni olish
+        subjects = Test.objects.values_list('subject', flat=True).distinct().order_by('subject')
+        
+        print(f"Found subjects: {list(subjects)}")
+        
+        for subject in subjects:
+            if not subject:
+                continue
+                
+            print(f"\nProcessing subject: {subject}")
+            
+            # Sheet yaratish
+            ws = wb.create_sheet(title=subject[:31])  # Excel sheet name limit: 31 characters
+            
+            # Header qo'shish
+            ws['A1'] = f"{subject} - Barcha Natijalar"
+            ws['A1'].font = Font(bold=True, size=16, color="FFFFFF")
+            ws['A1'].fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
+            ws.merge_cells('A1:H1')
+            ws['A1'].alignment = Alignment(horizontal="center")
+            
+            # Umumiy statistika
+            tests = Test.objects.filter(subject=subject, is_active=True)
+            total_tests = tests.count()
+            
+            attempts = TestAttempt.objects.filter(
+                test__subject=subject,
+                is_completed=True
+            ).select_related('student', 'test')
+            
+            total_attempts = attempts.count()
+            
+            if total_attempts > 0:
+                avg_percentage = attempts.aggregate(avg=Avg('percentage'))['avg'] or 0
+                max_percentage = attempts.aggregate(max=Max('percentage'))['max'] or 0
+                min_percentage = attempts.aggregate(min=Min('percentage'))['min'] or 0
+            else:
+                avg_percentage = max_percentage = min_percentage = 0
+            
+            # Statistika qo'shish
+            ws['A3'] = "Umumiy Ma'lumotlar:"
+            ws['A3'].font = Font(bold=True, size=12)
+            
+            ws['A4'] = f"Jami Testlar: {total_tests}"
+            ws['A5'] = f"Jami Urinishlar: {total_attempts}"
+            ws['A6'] = f"O'rtacha Foiz: {avg_percentage:.1f}%"
+            ws['A7'] = f"Eng Yuqori Foiz: {max_percentage:.1f}%"
+            ws['A8'] = f"Eng Past Foiz: {min_percentage:.1f}%"
+            
+            # Natijalar jadvali header
+            ws['A10'] = "Barcha Natijalar:"
+            ws['A10'].font = Font(bold=True, size=12)
+            
+            headers = ['O\'quvchi', 'Sinf', 'Test Nomi', 'Ball', 'Maksimal', 'Foiz', 'Vaqt', 'Sana']
+            for col, header in enumerate(headers, 1):
+                cell = ws.cell(row=11, column=col, value=header)
+                cell.font = Font(bold=True, color="FFFFFF")
+                cell.fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+                cell.alignment = Alignment(horizontal="center")
+            
+            # Natijalarni yozish
+            row = 12
+            for attempt in attempts.order_by('-percentage', '-finished_at'):
+                student_name = f"{attempt.student.first_name} {attempt.student.last_name}".strip()
+                if not student_name:
+                    student_name = attempt.student.username
+                
+                ws.cell(row=row, column=1, value=student_name)
+                ws.cell(row=row, column=2, value=f"{attempt.student.grade}-sinf")
+                ws.cell(row=row, column=3, value=attempt.test.title)
+                ws.cell(row=row, column=4, value=attempt.score)
+                ws.cell(row=row, column=5, value=attempt.total_points)
+                ws.cell(row=row, column=6, value=f"{attempt.percentage:.1f}%")
+                ws.cell(row=row, column=7, value=str(attempt.time_taken) if attempt.time_taken else '-')
+                ws.cell(row=row, column=8, value=attempt.finished_at.strftime('%d.%m.%Y %H:%M') if attempt.finished_at else '-')
+                
+                # Rangli formatlar
+                if attempt.percentage >= 81:
+                    fill_color = "C6EFCE"  # Yashil
+                elif attempt.percentage >= 61:
+                    fill_color = "FFEB9C"  # Sariq
+                elif attempt.percentage >= 31:
+                    fill_color = "BDD7EE"  # Ko'k
+                else:
+                    fill_color = "FFC7CE"  # Qizil
+                
+                for col in range(1, 9):
+                    ws.cell(row=row, column=col).fill = PatternFill(start_color=fill_color, end_color=fill_color, fill_type="solid")
+                
+                row += 1
+            
+            # Ustun kengliklarini sozlash
+            ws.column_dimensions['A'].width = 25
+            ws.column_dimensions['B'].width = 10
+            ws.column_dimensions['C'].width = 35
+            ws.column_dimensions['D'].width = 10
+            ws.column_dimensions['E'].width = 10
+            ws.column_dimensions['F'].width = 10
+            ws.column_dimensions['G'].width = 12
+            ws.column_dimensions['H'].width = 18
+            
+            print(f"Sheet '{subject}' created with {row-12} results")
+        
+        # Agar hech qanday fan topilmasa
+        if len(wb.sheetnames) == 0:
+            ws = wb.create_sheet(title="Ma'lumot yo'q")
+            ws['A1'] = "Hozircha natijalar mavjud emas"
+            ws['A1'].font = Font(bold=True, size=14)
+        
+        # Response yaratish
+        response = HttpResponse(
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = 'attachment; filename="fanlar_boyicha_natijalar.xlsx"'
+        
+        # Excel faylni saqlash
+        wb.save(response)
+        
+        print(f"Excel file created successfully with {len(wb.sheetnames)} sheets")
+        return response
+        
+    except Exception as e:
+        print(f"Export subject results error: {str(e)}")
         import traceback
         traceback.print_exc()
         return JsonResponse({'error': f'Export xatolik yuz berdi: {str(e)}'}, status=500)

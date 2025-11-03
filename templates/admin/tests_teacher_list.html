@@ -39,6 +39,10 @@
         <div class="col-md-2">
           <select class="form-select bg-transparent border-secondary text-white" id="gradeFilter">
             <option value="">Barcha sinflar</option>
+            <option value="5">5-sinf</option>
+            <option value="6">6-sinf</option>
+            <option value="7">7-sinf</option>
+            <option value="8">8-sinf</option>
             <option value="9">9-sinf</option>
             <option value="10">10-sinf</option>
             <option value="11">11-sinf</option>
@@ -78,11 +82,11 @@
                 <div class="d-flex align-items-center">
                   <div>
                     <a href="{% url 'tests:test_info' t.id %}" class="text-white text-decoration-none fw-bold">
-                      {{ t.title|default:"(Nomi yo'q)" }}
-                    </a>
-                    {% if t.description %}
+                  {{ t.title|default:"(Nomi yo'q)" }}
+                </a>
+                {% if t.description %}
                     <div class="text-muted small mt-1">{{ t.description|truncatechars:60 }}</div>
-                    {% endif %}
+                {% endif %}
                   </div>
                 </div>
               </td>
@@ -113,6 +117,11 @@
               </td>
               <td class="text-center">
                 <div class="btn-group" role="group">
+                  <a href="/tests/{{ t.id }}/active-sessions/" 
+                     class="btn btn-sm btn-outline-success" 
+                     title="Real-time Monitoring">
+                    <i class="fas fa-desktop"></i>
+                  </a>
                   <a href="{% url 'tests:edit_test' t.id %}" 
                      class="btn btn-sm btn-outline-warning" 
                      title="Tahrirlash">
@@ -123,9 +132,11 @@
                      title="Natijalar">
                     <i class="fas fa-chart-bar"></i>
                   </a>
-                  <button onclick="deleteTest({{ t.id }}, '{{ t.title|escapejs }}')" 
-                          class="btn btn-sm btn-outline-danger" 
-                          title="O'chirish">
+                  <button type="button"
+                          class="btn btn-sm btn-outline-danger delete-test-btn"
+                          title="O'chirish"
+                          data-test-id="{{ t.id }}"
+                          data-test-title="{{ t.title }}">
                     <i class="fas fa-trash"></i>
                   </button>
                 </div>
@@ -156,6 +167,15 @@ document.addEventListener('DOMContentLoaded', function() {
     if (teacherFilter) teacherFilter.addEventListener('change', applyFilters);
     if (statusFilter) statusFilter.addEventListener('change', applyFilters);
     if (gradeFilter) gradeFilter.addEventListener('change', applyFilters);
+    
+    // Delete test button event listeners
+    document.querySelectorAll('.delete-test-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const testId = this.getAttribute('data-test-id');
+            const testTitle = this.getAttribute('data-test-title');
+            deleteTest(testId, testTitle);
+        });
+    });
 });
 
 function applyFilters() {
@@ -281,6 +301,17 @@ function getCookie(name) {
 .btn-group .btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.btn-outline-success {
+    color: #10b981;
+    border-color: #10b981;
+}
+
+.btn-outline-success:hover {
+    background-color: #10b981;
+    border-color: #10b981;
+    color: white;
 }
 
 .badge {

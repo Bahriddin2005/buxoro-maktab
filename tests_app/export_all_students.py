@@ -55,99 +55,119 @@ def export_all_students_results(request):
                 bottom=Side(style='thin')
             )
         
-        # Barcha o'quvchilarni olish
+        # Barcha o'quvchilarni sinf bo'yicha olish
         students = User.objects.filter(role='student', is_verified=True).order_by('grade', 'last_name', 'first_name')
         
         if students.count() == 0:
             return JsonResponse({'error': 'O\'quvchilar topilmadi'}, status=404)
         
-        # Ma'lumotlarni yig'ish
+        # Ma'lumotlarni sinf bo'yicha guruhlash
+        students_by_grade = {}
+        for student in students:
+            grade = student.grade or 'N/A'
+            if grade not in students_by_grade:
+                students_by_grade[grade] = []
+            students_by_grade[grade].append(student)
+        
+        # Sinflarni tartiblab chiqarish
+        grades = sorted(students_by_grade.keys(), key=lambda x: (x == 'N/A', int(x) if x != 'N/A' else 0))
+        
         row = 4
         counter = 1
         
-        for student in students:
-            # Har bir o'quvchining barcha tugallangan testlari
-            # Har bir test uchun eng so'nggi attempt
-            latest_attempts = TestAttempt.objects.filter(
-                student=student,
-                is_completed=True
-            ).values('test').annotate(
-                latest_attempt_id=Max('id')
-            ).values_list('latest_attempt_id', flat=True)
+        # Har bir sinf uchun
+        for grade in grades:
+            grade_students = students_by_grade[grade]
             
-            attempts = TestAttempt.objects.filter(
-                id__in=latest_attempts
-            ).select_related('test').order_by('test__subject', 'test__title')
+            # SINF HEADER
+            ws.cell(row=row, column=1, value=f"{grade}-SINF ({len(grade_students)} ta o'quvchi)")
+            ws.merge_cells(f'A{row}:H{row}')
+            header_cell = ws.cell(row=row, column=1)
+            header_cell.font = Font(bold=True, size=14, color="FFFFFF")
+            header_cell.fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
+            header_cell.alignment = Alignment(horizontal="center")
+            row += 1
             
-            if attempts.count() == 0:
-                # Hech qanday test yechmagan o'quvchi
-                ws.cell(row=row, column=1, value=counter)
-                ws.cell(row=row, column=2, value=student.first_name or student.username)
-                ws.cell(row=row, column=3, value=student.last_name or '')
-                ws.cell(row=row, column=4, value=student.grade or 'N/A')
-                ws.cell(row=row, column=5, value='Test yechmagan')
-                ws.cell(row=row, column=6, value='-')
-                ws.cell(row=row, column=7, value='-')
-                ws.cell(row=row, column=8, value='-')
+            # Sinf ichidagi har bir o'quvchi
+            for student in grade_students:
+                # BARCHA tugallangan testlarni olish (faqat oxirgi emas, HAMMASI!)
+                attempts = TestAttempt.objects.filter(
+                    student=student,
+                    is_completed=True
+                ).select_related('test').order_by('test__subject', 'test__title', '-finished_at')
                 
-                # Style
-                for col in range(1, 9):
-                    cell = ws.cell(row=row, column=col)
-                    cell.fill = PatternFill(start_color="F5F5F5", end_color="F5F5F5", fill_type="solid")
-                    cell.alignment = Alignment(horizontal="center")
-                    cell.border = Border(
-                        left=Side(style='thin'),
-                        right=Side(style='thin'),
-                        top=Side(style='thin'),
-                        bottom=Side(style='thin')
-                    )
+                if attempts.count() == 0:
+                    # Hech qanday test yechmagan o'quvchi
+                    ws.cell(row=row, column=1, value=counter)
+                    ws.cell(row=row, column=2, value=student.first_name or student.username)
+                    ws.cell(row=row, column=3, value=student.last_name or '')
+                    ws.cell(row=row, column=4, value=student.grade or 'N/A')
+                    ws.cell(row=row, column=5, value='Test yechmagan')
+                    ws.cell(row=row, column=6, value='-')
+                    ws.cell(row=row, column=7, value='-')
+                    ws.cell(row=row, column=8, value='-')
+                    
+                    # Style
+                    for col in range(1, 9):
+                        cell = ws.cell(row=row, column=col)
+                        cell.fill = PatternFill(start_color="F5F5F5", end_color="F5F5F5", fill_type="solid")
+                        cell.alignment = Alignment(horizontal="center")
+                        cell.border = Border(
+                            left=Side(style='thin'),
+                            right=Side(style='thin'),
+                            top=Side(style='thin'),
+                            bottom=Side(style='thin')
+                        )
+                    
+                    row += 1
+                    counter += 1
+                    continue
                 
-                row += 1
-                counter += 1
-                continue
+                # Har bir test natijasi uchun (HAMMASI!)
+                for attempt in attempts:
+                    percentage = attempt.percentage or 0
+                    
+                    # Baho'ni hisoblash
+                    if percentage >= 81:
+                        grade_text = "A'lo"
+                        fill_color = "C6EFCE"  # Yashil
+                    elif percentage >= 61:
+                        grade_text = "Yaxshi"
+                        fill_color = "FFEB9C"  # Sariq
+                    elif percentage >= 31:
+                        grade_text = "Qoniqarli"
+                        fill_color = "BDD7EE"  # Ko'k
+                    else:
+                        grade_text = "Qoniqarsiz"
+                        fill_color = "FFC7CE"  # Qizil
+                    
+                    # Ma'lumotlarni yozish
+                    ws.cell(row=row, column=1, value=counter)
+                    ws.cell(row=row, column=2, value=student.first_name or student.username)
+                    ws.cell(row=row, column=3, value=student.last_name or '')
+                    ws.cell(row=row, column=4, value=student.grade or 'N/A')
+                    ws.cell(row=row, column=5, value=attempt.test.title)
+                    ws.cell(row=row, column=6, value=f"{attempt.score}/{attempt.total_points}")
+                    ws.cell(row=row, column=7, value=f"{percentage:.1f}%")
+                    ws.cell(row=row, column=8, value=grade_text)
+                    
+                    # Style
+                    for col in range(1, 9):
+                        cell = ws.cell(row=row, column=col)
+                        cell.fill = PatternFill(start_color=fill_color, end_color=fill_color, fill_type="solid")
+                        cell.alignment = Alignment(horizontal="center")
+                        cell.border = Border(
+                            left=Side(style='thin'),
+                            right=Side(style='thin'),
+                            top=Side(style='thin'),
+                            bottom=Side(style='thin')
+                        )
+                    
+                    row += 1
+                    counter += 1
             
-            # Har bir test natijasi uchun
-            for attempt in attempts:
-                percentage = attempt.percentage or 0
-                
-                # Baho'ni hisoblash
-                if percentage >= 81:
-                    grade = "A'lo"
-                    fill_color = "C6EFCE"  # Yashil
-                elif percentage >= 61:
-                    grade = "Yaxshi"
-                    fill_color = "FFEB9C"  # Sariq
-                elif percentage >= 31:
-                    grade = "Qoniqarli"
-                    fill_color = "BDD7EE"  # Ko'k
-                else:
-                    grade = "Qoniqarsiz"
-                    fill_color = "FFC7CE"  # Qizil
-                
-                # Ma'lumotlarni yozish
-                ws.cell(row=row, column=1, value=counter)
-                ws.cell(row=row, column=2, value=student.first_name or student.username)
-                ws.cell(row=row, column=3, value=student.last_name or '')
-                ws.cell(row=row, column=4, value=student.grade or 'N/A')
-                ws.cell(row=row, column=5, value=attempt.test.title)
-                ws.cell(row=row, column=6, value=f"{attempt.score}/{attempt.total_points}")
-                ws.cell(row=row, column=7, value=f"{percentage:.1f}%")
-                ws.cell(row=row, column=8, value=grade)
-                
-                # Style
-                for col in range(1, 9):
-                    cell = ws.cell(row=row, column=col)
-                    cell.fill = PatternFill(start_color=fill_color, end_color=fill_color, fill_type="solid")
-                    cell.alignment = Alignment(horizontal="center")
-                    cell.border = Border(
-                        left=Side(style='thin'),
-                        right=Side(style='thin'),
-                        top=Side(style='thin'),
-                        bottom=Side(style='thin')
-                    )
-                
-                row += 1
-                counter += 1
+            # Bo'sh qator sinf orasida
+            row += 1
         
         # Umumiy statistika qo'shish
         row += 2

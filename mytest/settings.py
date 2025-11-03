@@ -77,11 +77,11 @@ WSGI_APPLICATION = 'mytest.wsgi.application'
 
 #PostgreSQL
 
-DATABASES = {
-    'default': {
+DATABASES = { 
+     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
-    }
+     }
 }
 # Валидаторы паролей
 AUTH_PASSWORD_VALIDATORS = [

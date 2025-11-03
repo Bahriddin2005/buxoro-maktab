@@ -1,0 +1,761 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Aktiv Sessiyalar - {{ test.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+    }
+
+    .monitoring-header {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 30px;
+        margin-bottom: 30px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .monitoring-header h1 {
+        color: white;
+        margin: 0 0 10px 0;
+        font-size: 32px;
+        font-weight: 700;
+    }
+
+    .test-info {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 16px;
+    }
+
+    .stats-row {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .stat-card {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        padding: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        text-align: center;
+    }
+
+    .stat-number {
+        font-size: 48px;
+        font-weight: 800;
+        color: white;
+        margin: 10px 0;
+    }
+
+    .stat-label {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .sessions-container {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 30px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .session-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 20px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .session-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    .session-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .student-info {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .student-avatar {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+        font-size: 20px;
+    }
+
+    .student-name {
+        font-size: 20px;
+        font-weight: 700;
+        color: #2d3748;
+    }
+
+    .student-username {
+        font-size: 14px;
+        color: #718096;
+    }
+
+    .session-status {
+        display: flex;
+        gap: 10px;
+    }
+
+    .status-badge {
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .status-active {
+        background: #10b981;
+        color: white;
+    }
+
+    .status-late {
+        background: #ef4444;
+        color: white;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+    }
+
+    .progress-section {
+        margin-bottom: 20px;
+    }
+
+    .progress-info {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        color: #4a5568;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .progress-bar-container {
+        height: 10px;
+        background: #e2e8f0;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .progress-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        transition: width 0.5s ease;
+    }
+
+    .time-info {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    .time-item {
+        flex: 1;
+        background: #f7fafc;
+        padding: 15px;
+        border-radius: 10px;
+        text-align: center;
+    }
+
+    .time-label {
+        font-size: 12px;
+        color: #718096;
+        margin-bottom: 5px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .time-value {
+        font-size: 24px;
+        font-weight: 700;
+        color: #2d3748;
+    }
+
+    .time-value.warning {
+        color: #f59e0b;
+    }
+
+    .time-value.danger {
+        color: #ef4444;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+    }
+
+    .btn-action {
+        flex: 1;
+        padding: 12px 24px;
+        border-radius: 10px;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 14px;
+    }
+
+    .btn-view {
+        background: #3b82f6;
+        color: white;
+    }
+
+    .btn-view:hover {
+        background: #2563eb;
+        transform: scale(1.05);
+    }
+
+    .btn-terminate {
+        background: #ef4444;
+        color: white;
+    }
+
+    .btn-terminate:hover {
+        background: #dc2626;
+        transform: scale(1.05);
+    }
+
+    .btn-time {
+        background: #f59e0b;
+        color: white;
+    }
+
+    .btn-time:hover {
+        background: #d97706;
+        transform: scale(1.05);
+    }
+
+    .time-control-modal {
+        display: flex;
+        gap: 10px;
+        margin: 20px 0;
+    }
+
+    .time-control-btn {
+        flex: 1;
+        padding: 15px;
+        border-radius: 10px;
+        border: 2px solid #e2e8f0;
+        background: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+    }
+
+    .time-control-btn:hover {
+        border-color: #667eea;
+        background: #f7fafc;
+        transform: translateY(-2px);
+    }
+
+    .time-control-btn.selected {
+        border-color: #667eea;
+        background: #eef2ff;
+    }
+
+    .time-control-btn .icon {
+        font-size: 24px;
+        margin-bottom: 10px;
+        color: #667eea;
+    }
+
+    .time-control-btn .label {
+        font-size: 14px;
+        font-weight: 600;
+        color: #2d3748;
+    }
+
+    .time-input-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 20px 0;
+    }
+
+    .time-input-group input {
+        flex: 1;
+        padding: 12px;
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: 600;
+    }
+
+    .time-input-group input:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+
+    .no-sessions {
+        text-align: center;
+        padding: 60px 20px;
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    .no-sessions i {
+        font-size: 64px;
+        margin-bottom: 20px;
+        opacity: 0.5;
+    }
+
+    .no-sessions h3 {
+        color: white;
+        margin: 0;
+    }
+
+    .back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 24px;
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        border-radius: 10px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .back-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+        color: white;
+        transform: translateX(-5px);
+    }
+
+    .auto-refresh {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 14px;
+    }
+
+    .refresh-indicator {
+        width: 10px;
+        height: 10px;
+        background: #10b981;
+        border-radius: 50%;
+        animation: blink 2s infinite;
+    }
+
+    @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.3; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="monitoring-header">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h1><i class="fas fa-desktop me-3"></i>Real-time Monitoring</h1>
+                <div class="test-info">
+                    <strong>Test:</strong> {{ test.title }} | 
+                    <strong>Fan:</strong> {{ test.subject }} | 
+                    <strong>Sinf:</strong> {{ test.grade }} | 
+                    <strong>Vaqt:</strong> {{ test.time_limit }} daqiqa
+                </div>
+            </div>
+            <a href="{% url 'tests:tests' %}" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+                Ortga
+            </a>
+        </div>
+        <div class="auto-refresh">
+            <div class="refresh-indicator"></div>
+            <span>Avtomatik yangilanish: 5 soniyada</span>
+        </div>
+    </div>
+
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-label">Aktiv Sessiyalar</div>
+            <div class="stat-number" id="totalActiveStat">0</div>
+        </div>
+    </div>
+
+    <div class="sessions-container">
+        <h3 class="text-white mb-4">
+            <i class="fas fa-users me-2"></i>
+            Aktiv O'quvchilar
+        </h3>
+        <div id="sessionsContainer">
+            <div class="text-center">
+                <div class="spinner-border text-light" role="status">
+                    <span class="visually-hidden">Yuklanmoqda...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Time Control Modal -->
+<div class="modal fade" id="timeControlModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">⏱️ Vaqtni Boshqarish</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>O'quvchi:</strong> <span id="timeControlStudentName"></span></p>
+                <p class="text-muted"><strong>Joriy vaqt:</strong> <span id="timeControlCurrentTime"></span></p>
+                
+                <div class="time-control-modal">
+                    <div class="time-control-btn" onclick="selectTimeAction('add')">
+                        <div class="icon">➕</div>
+                        <div class="label">Vaqt Qo'shish</div>
+                    </div>
+                    <div class="time-control-btn" onclick="selectTimeAction('reduce')">
+                        <div class="icon">➖</div>
+                        <div class="label">Vaqt Kamaytirish</div>
+                    </div>
+                    <div class="time-control-btn" onclick="selectTimeAction('remove')">
+                        <div class="icon">🚫</div>
+                        <div class="label">Vaqtni Olib Tashlash</div>
+                    </div>
+                </div>
+
+                <div id="timeInputSection" style="display: none;">
+                    <div class="time-input-group">
+                        <label style="min-width: 80px;">Daqiqa:</label>
+                        <input type="number" id="timeMinutesInput" class="form-control" min="1" max="120" placeholder="Daqiqa kiriting...">
+                        <span class="text-muted">daqiqa</span>
+                    </div>
+                </div>
+
+                <div id="timeRemoveSection" style="display: none;">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Vaqt chekovi olib tashlanadi va o'quvchi cheksiz vaqt oladi.
+                    </div>
+                </div>
+
+                <div class="alert alert-warning mt-3">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    O'zgarishlar darhol qo'llaniladi!
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bekor qilish</button>
+                <button type="button" class="btn btn-primary" onclick="confirmTimeControl()">
+                    <i class="fas fa-check me-2"></i>
+                    Qo'llash
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Terminate Modal -->
+<div class="modal fade" id="terminateModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Testni To'xtatish</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>O'quvchi:</strong> <span id="terminateStudentName"></span></p>
+                <div class="mb-3">
+                    <label class="form-label">Sabab:</label>
+                    <textarea class="form-control" id="terminateReason" rows="3" placeholder="Testni to'xtatish sababi..."></textarea>
+                </div>
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Test darhol to'xtatiladi va natija saqlanadi!
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bekor qilish</button>
+                <button type="button" class="btn btn-danger" onclick="confirmTerminate()">
+                    <i class="fas fa-stop-circle me-2"></i>
+                    To'xtatish
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentAttemptId = null;
+let refreshInterval = null;
+
+function loadSessions() {
+    fetch(`/tests/{{ test.id }}/active-sessions/`, {
+        headers: {
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('totalActiveStat').textContent = data.total_active;
+        displaySessions(data.sessions);
+    })
+    .catch(error => {
+        console.error('Error loading sessions:', error);
+    });
+}
+
+function displaySessions(sessions) {
+    const container = document.getElementById('sessionsContainer');
+    
+    if (sessions.length === 0) {
+        container.innerHTML = `
+            <div class="no-sessions">
+                <i class="fas fa-user-clock"></i>
+                <h3>Hozirda aktiv sessiyalar yo'q</h3>
+                <p>O'quvchilar testni boshlashlari kutilmoqda...</p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = sessions.map(session => `
+        <div class="session-card" data-attempt-id="${session.attempt_id}">
+            <div class="session-header">
+                <div class="student-info">
+                    <div class="student-avatar">
+                        ${session.student_name.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                        <div class="student-name">${session.student_name}</div>
+                        <div class="student-username">@${session.student_username}</div>
+                    </div>
+                </div>
+                <div class="session-status">
+                    ${session.is_late ? 
+                        '<span class="status-badge status-late"><i class="fas fa-exclamation-circle me-1"></i>Vaqt o\'tdi!</span>' :
+                        '<span class="status-badge status-active"><i class="fas fa-circle me-1"></i>Aktiv</span>'
+                    }
+                </div>
+            </div>
+
+            <div class="progress-section">
+                <div class="progress-info">
+                    <span>Progress</span>
+                    <span>${session.answered_count} / ${session.total_questions} savol</span>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar-fill" style="width: ${session.progress_percent}%"></div>
+                </div>
+            </div>
+
+            <div class="time-info">
+                <div class="time-item">
+                    <div class="time-label">O'tgan vaqt</div>
+                    <div class="time-value">${session.elapsed_minutes} min</div>
+                </div>
+                <div class="time-item">
+                    <div class="time-label">Qolgan vaqt</div>
+                    <div class="time-value ${session.remaining_minutes < 5 ? 'danger' : session.remaining_minutes < 10 ? 'warning' : ''}">
+                        ${session.remaining_minutes} min
+                    </div>
+                </div>
+                <div class="time-item">
+                    <div class="time-label">Hozirgi savol</div>
+                    <div class="time-value">#${session.current_question}</div>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn-action btn-time" onclick="showTimeControlModal(${session.attempt_id}, '${session.student_name}', ${session.remaining_minutes})">
+                    <i class="fas fa-clock me-2"></i>
+                    Vaqt
+                </button>
+                <button class="btn-action btn-view" onclick="viewDetails(${session.attempt_id})">
+                    <i class="fas fa-eye me-2"></i>
+                    Batafsil
+                </button>
+                <button class="btn-action btn-terminate" onclick="showTerminateModal(${session.attempt_id}, '${session.student_name}')">
+                    <i class="fas fa-stop-circle me-2"></i>
+                    To'xtatish
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function showTerminateModal(attemptId, studentName) {
+    currentAttemptId = attemptId;
+    document.getElementById('terminateStudentName').textContent = studentName;
+    document.getElementById('terminateReason').value = '';
+    new bootstrap.Modal(document.getElementById('terminateModal')).show();
+}
+
+function confirmTerminate() {
+    const reason = document.getElementById('terminateReason').value.trim() || 'O\'qituvchi tomonidan to\'xtatildi';
+    
+    fetch(`/tests/attempt/${currentAttemptId}/terminate/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({ reason })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('terminateModal')).hide();
+            alert('✅ Test to\'xtatildi!\n\nO\'quvchi: ' + data.attempt.student_name + '\nBall: ' + data.attempt.score + ' (' + data.attempt.percentage + '%)');
+            loadSessions();
+        } else {
+            alert('❌ Xatolik: ' + (data.error || 'Noma\'lum xatolik'));
+        }
+    })
+    .catch(error => {
+        console.error('Error terminating test:', error);
+        alert('❌ Server xatoligi');
+    });
+}
+
+function viewDetails(attemptId) {
+    window.open(`/tests/attempt/${attemptId}/detail/`, '_blank');
+}
+
+// Time Control
+let timeControlAction = '';
+let timeControlAttemptId = null;
+let timeControlRemainingMinutes = 0;
+
+function showTimeControlModal(attemptId, studentName, remainingMinutes) {
+    timeControlAttemptId = attemptId;
+    timeControlRemainingMinutes = remainingMinutes;
+    timeControlAction = '';
+    
+    document.getElementById('timeControlStudentName').textContent = studentName;
+    document.getElementById('timeControlCurrentTime').textContent = `${remainingMinutes} daqiqa qolgan`;
+    document.getElementById('timeInputSection').style.display = 'none';
+    document.getElementById('timeRemoveSection').style.display = 'none';
+    document.getElementById('timeMinutesInput').value = '';
+    
+    // Reset selected buttons
+    document.querySelectorAll('.time-control-btn').forEach(btn => {
+        btn.classList.remove('selected');
+    });
+    
+    new bootstrap.Modal(document.getElementById('timeControlModal')).show();
+}
+
+function selectTimeAction(action) {
+    timeControlAction = action;
+    
+    // Update UI
+    document.querySelectorAll('.time-control-btn').forEach(btn => {
+        btn.classList.remove('selected');
+    });
+    event.target.closest('.time-control-btn').classList.add('selected');
+    
+    // Show/hide input sections
+    if (action === 'add' || action === 'reduce') {
+        document.getElementById('timeInputSection').style.display = 'block';
+        document.getElementById('timeRemoveSection').style.display = 'none';
+    } else if (action === 'remove') {
+        document.getElementById('timeInputSection').style.display = 'none';
+        document.getElementById('timeRemoveSection').style.display = 'block';
+    }
+}
+
+function confirmTimeControl() {
+    if (!timeControlAction) {
+        alert('⚠️ Iltimos, amal turini tanlang!');
+        return;
+    }
+    
+    let minutes = 0;
+    if (timeControlAction === 'add' || timeControlAction === 'reduce') {
+        minutes = parseInt(document.getElementById('timeMinutesInput').value);
+        if (!minutes || minutes < 1) {
+            alert('⚠️ Iltimos, to\'g\'ri daqiqa kiriting!');
+            return;
+        }
+    }
+    
+    // Send request
+    fetch(`/tests/attempt/${timeControlAttemptId}/control-time/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+            action: timeControlAction,
+            minutes: minutes
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('timeControlModal')).hide();
+            
+            let message = '';
+            if (timeControlAction === 'add') {
+                message = `✅ ${minutes} daqiqa qo'shildi!\\n\\nYangi vaqt: ${data.new_time} daqiqa`;
+            } else if (timeControlAction === 'reduce') {
+                message = `✅ ${minutes} daqiqa kamaytirildi!\\n\\nYangi vaqt: ${data.new_time} daqiqa`;
+            } else if (timeControlAction === 'remove') {
+                message = `✅ Vaqt cheklovi olib tashlandi!\\n\\nO'quvchi cheksiz vaqt oldi`;
+            }
+            
+            alert(message);
+            loadSessions();
+        } else {
+            alert('❌ Xatolik: ' + (data.error || 'Noma\'lum xatolik'));
+        }
+    })
+    .catch(error => {
+        console.error('Error controlling time:', error);
+        alert('❌ Server xatoligi');
+    });
+}
+
+// Avtomatik yangilash
+document.addEventListener('DOMContentLoaded', function() {
+    loadSessions();
+    refreshInterval = setInterval(loadSessions, 5000); // Har 5 soniyada yangilash
+});
+
+// Sahifa yopilganda interval to'xtatish
+window.addEventListener('beforeunload', function() {
+    if (refreshInterval) {
+        clearInterval(refreshInterval);
+    }
+});
+</script>
+{% endblock %}
+
