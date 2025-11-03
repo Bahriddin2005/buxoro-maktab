@@ -33,6 +33,31 @@
                 </button>
             </div>
 
+            <!-- Bulk Actions Bar -->
+            <div id="bulkActionsBar" class="glass-card p-3 mb-3 d-none" style="background: rgba(255, 255, 255, 0.15);">
+                <div class="row align-items-center">
+                    <div class="col-md-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()">
+                            <label class="form-check-label text-white" for="selectAllCheckbox">
+                                <strong>Hammasini belgilash</strong>
+                                <span id="selectedCount" class="badge bg-primary ms-2">0</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-8 text-end">
+                        <button class="btn btn-success me-2" onclick="bulkApprove()" id="bulkApproveBtn" disabled>
+                            <i class="fas fa-check-double me-1"></i>
+                            Belgilanganlarni Tasdiqlash
+                        </button>
+                        <button class="btn btn-danger" onclick="bulkReject()" id="bulkRejectBtn" disabled>
+                            <i class="fas fa-times-circle me-1"></i>
+                            Belgilanganlarni Rad Etish
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <div id="loadingIndicator" class="text-center py-4">
                 <div class="text-white">
                     <div class="loading d-inline-block"></div>
@@ -113,6 +138,7 @@
 <script>
     let currentRequestId = null;
     let verificationRequests = [];
+    let selectedRequests = new Set();
 
     document.addEventListener('DOMContentLoaded', function() {
         loadVerificationRequests();
@@ -149,29 +175,47 @@
         const requestsList = document.getElementById('requestsList');
         const noRequests = document.getElementById('noRequests');
         const pendingCount = document.getElementById('pendingCount');
+        const bulkActionsBar = document.getElementById('bulkActionsBar');
 
         loadingIndicator.classList.add('d-none');
         
         if (verificationRequests.length === 0) {
             noRequests.classList.remove('d-none');
             requestsList.classList.add('d-none');
+            bulkActionsBar.classList.add('d-none');
             pendingCount.textContent = '0';
             return;
         }
 
         noRequests.classList.add('d-none');
         requestsList.classList.remove('d-none');
+        bulkActionsBar.classList.remove('d-none');
         pendingCount.textContent = verificationRequests.length;
+        
+        // Reset selection
+        selectedRequests.clear();
+        updateBulkActions();
 
         let html = '';
         
         verificationRequests.forEach((request, index) => {
             const user = request.user;
             const requestDate = new Date(request.requested_at).toLocaleDateString('uz-UZ');
+            const isSelected = selectedRequests.has(request.id);
             
             html += `
-                <div class="glass-card p-4 mb-3" data-aos="fade-up" data-aos-delay="${index * 100}">
+                <div class="glass-card p-4 mb-3" data-aos="fade-up" data-aos-delay="${index * 100}" id="request-${request.id}">
                     <div class="row align-items-center">
+                        <div class="col-md-1">
+                            <div class="form-check">
+                                <input class="form-check-input request-checkbox" type="checkbox" 
+                                       id="checkbox-${request.id}" 
+                                       data-request-id="${request.id}"
+                                       onchange="toggleRequestSelection(${request.id})"
+                                       ${isSelected ? 'checked' : ''}>
+                            </div>
+                        </div>
+                        
                         <div class="col-md-2">
                             <div class="text-center">
                                 <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-2" 
@@ -182,7 +226,7 @@
                             </div>
                         </div>
                         
-                        <div class="col-md-6">
+                        <div class="col-md-5">
                             <h5 class="text-white mb-1">${user.first_name} ${user.last_name}</h5>
                             <p class="text-white-50 mb-1">
                                 <i class="fas fa-at me-1"></i>${user.username}
@@ -231,6 +275,161 @@
         
         // Re-initialize AOS for new elements
         AOS.refresh();
+    }
+
+    function toggleRequestSelection(requestId) {
+        if (selectedRequests.has(requestId)) {
+            selectedRequests.delete(requestId);
+        } else {
+            selectedRequests.add(requestId);
+        }
+        updateBulkActions();
+    }
+
+    function toggleSelectAll() {
+        const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+        const checkboxes = document.querySelectorAll('.request-checkbox');
+        
+        if (selectAllCheckbox.checked) {
+            // Select all
+            verificationRequests.forEach(req => selectedRequests.add(req.id));
+            checkboxes.forEach(cb => cb.checked = true);
+        } else {
+            // Deselect all
+            selectedRequests.clear();
+            checkboxes.forEach(cb => cb.checked = false);
+        }
+        
+        updateBulkActions();
+    }
+
+    function updateBulkActions() {
+        const count = selectedRequests.size;
+        const selectedCountBadge = document.getElementById('selectedCount');
+        const bulkApproveBtn = document.getElementById('bulkApproveBtn');
+        const bulkRejectBtn = document.getElementById('bulkRejectBtn');
+        const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+        
+        selectedCountBadge.textContent = count;
+        
+        if (count > 0) {
+            bulkApproveBtn.disabled = false;
+            bulkRejectBtn.disabled = false;
+        } else {
+            bulkApproveBtn.disabled = true;
+            bulkRejectBtn.disabled = true;
+        }
+        
+        // Update select all checkbox state
+        if (count === 0) {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = false;
+        } else if (count === verificationRequests.length) {
+            selectAllCheckbox.checked = true;
+            selectAllCheckbox.indeterminate = false;
+        } else {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = true;
+        }
+    }
+
+    async function bulkApprove() {
+        const count = selectedRequests.size;
+        if (count === 0) return;
+        
+        if (!confirm(`${count} ta foydalanuvchini tasdiqlashni xohlaysizmi?`)) return;
+        
+        const requestIds = Array.from(selectedRequests);
+        let successCount = 0;
+        let failCount = 0;
+        
+        // Show loading
+        showAlert('Tasdiqlash jarayoni boshlanmoqda...', 'info');
+        
+        for (const requestId of requestIds) {
+            try {
+                const response = await fetch(`{% url "accounts:approve_verification" 0 %}`.replace('0', requestId), {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    successCount++;
+                    verificationRequests = verificationRequests.filter(r => r.id !== requestId);
+                    selectedRequests.delete(requestId);
+                } else {
+                    failCount++;
+                }
+            } catch (error) {
+                failCount++;
+            }
+        }
+        
+        // Show results
+        if (successCount > 0) {
+            showAlert(`${successCount} ta foydalanuvchi muvaffaqiyatli tasdiqlandi!`, 'success');
+        }
+        if (failCount > 0) {
+            showAlert(`${failCount} ta foydalanuvchini tasdiqlashda xatolik yuz berdi`, 'warning');
+        }
+        
+        displayRequests();
+    }
+
+    async function bulkReject() {
+        const count = selectedRequests.size;
+        if (count === 0) return;
+        
+        const reason = prompt(`${count} ta foydalanuvchi so'rovini rad etish sababi:`);
+        if (!reason || !reason.trim()) {
+            showAlert('Rad etish sababini ko\'rsating', 'warning');
+            return;
+        }
+        
+        if (!confirm(`${count} ta foydalanuvchi so'rovini rad etishni xohlaysizmi?`)) return;
+        
+        const requestIds = Array.from(selectedRequests);
+        let successCount = 0;
+        let failCount = 0;
+        
+        // Show loading
+        showAlert('Rad etish jarayoni boshlanmoqda...', 'info');
+        
+        for (const requestId of requestIds) {
+            try {
+                const response = await fetch(`{% url "accounts:reject_verification" 0 %}`.replace('0', requestId), {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ reason: reason.trim() })
+                });
+                
+                if (response.ok) {
+                    successCount++;
+                    verificationRequests = verificationRequests.filter(r => r.id !== requestId);
+                    selectedRequests.delete(requestId);
+                } else {
+                    failCount++;
+                }
+            } catch (error) {
+                failCount++;
+            }
+        }
+        
+        // Show results
+        if (successCount > 0) {
+            showAlert(`${successCount} ta so'rov muvaffaqiyatli rad etildi!`, 'success');
+        }
+        if (failCount > 0) {
+            showAlert(`${failCount} ta so'rovni rad etishda xatolik yuz berdi`, 'warning');
+        }
+        
+        displayRequests();
     }
 
     function getRoleDisplayName(role) {
