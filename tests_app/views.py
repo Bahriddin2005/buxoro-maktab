@@ -819,18 +819,31 @@ def all_results_view(request):
         return JsonResponse({'error': 'Access denied'}, status=403)
     
     if request.method == 'GET' and request.headers.get('Accept') == 'application/json':
-        # Admin barcha natijalarni ko'radi, Teacher faqat o'z testlari natijalarini
+        # BARCHA natijalarni olish (faqat oxirgi emas, HAMMASI!)
         if request.user.role == 'admin':
             attempts = TestAttempt.objects.filter(is_completed=True).select_related(
                 'student', 'test', 'result'
-            ).order_by('student__grade', 'student__class_name', 'student__first_name', '-finished_at')
+            )
         else:  # teacher
             attempts = TestAttempt.objects.filter(
                 test__created_by=request.user, 
                 is_completed=True
-            ).select_related('student', 'test', 'result').order_by(
-                'student__grade', 'student__class_name', 'student__first_name', '-finished_at'
-            )
+            ).select_related('student', 'test', 'result')
+        
+        # Filters
+        grade = request.GET.get('grade')
+        subject = request.GET.get('subject')
+        test_id = request.GET.get('test')
+        
+        if grade:
+            attempts = attempts.filter(student__grade=grade)
+        if subject:
+            attempts = attempts.filter(test__subject=subject)
+        if test_id:
+            attempts = attempts.filter(test_id=test_id)
+        
+        # Order - Sinf bo'yicha, keyin sana bo'yicha
+        attempts = attempts.order_by('student__grade', 'student__last_name', 'student__first_name', '-finished_at')
         
         results_data = []
         for attempt in attempts:
@@ -869,12 +882,27 @@ def all_results_view(request):
                 'finished_at': attempt.finished_at.isoformat(),
                 'correct_answers': attempt.result.correct_answers if hasattr(attempt, 'result') else 0,
                 'incorrect_answers': attempt.result.incorrect_answers if hasattr(attempt, 'result') else 0,
-                'unanswered': attempt.result.unanswered if hasattr(attempt, 'result') else 0
+                'unanswered': attempt.result.unanswered if hasattr(attempt, 'result') else 0,
+                'student_name': f"{attempt.student.first_name} {attempt.student.last_name}",
+                'username': attempt.student.username,
+                'test_title': attempt.test.title,
             })
         
-        return JsonResponse({'results': results_data})
+        # Statistics
+        from django.db.models import Avg, Count
+        stats = {
+            'total_students': User.objects.filter(role='student', is_verified=True).count(),
+            'total_results': attempts.count(),
+            'avg_percentage': attempts.aggregate(Avg('percentage'))['percentage__avg'] or 0,
+            'excellent_count': attempts.filter(percentage__gte=81).count(),
+        }
+        
+        return JsonResponse({
+            'results': results_data,
+            'stats': stats
+        })
     
-    return render(request, 'tests_app/all_results.html', {
+    return render(request, 'tests_app/all_students_results.html', {
         'user_role': request.user.role
     })
 

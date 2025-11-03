@@ -419,15 +419,23 @@
                         </div>
                         
                         <!-- Bottom Row -->
-                        <div class="col-md-4">
-                            <a href="{% url 'tests:grade_based_results' %}" class="action-btn action-btn-featured text-white">
+                        <div class="col-md-3 col-6">
+                            <a href="{% url 'tests:grade_based_results' %}" class="action-btn action-btn-primary text-white">
                                 <div class="action-btn-icon">
                                     <i class="fas fa-graduation-cap"></i>
                                 </div>
-                                <div class="action-btn-text">NATIJALAR</div>
+                                <div class="action-btn-text">Sinf Natijalari</div>
                             </a>
                         </div>
-                        <div class="col-md-4 col-6">
+                        <div class="col-md-3 col-6">
+                            <a href="{% url 'tests:all_results' %}" class="action-btn action-btn-featured text-white">
+                                <div class="action-btn-icon">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div class="action-btn-text">BARCHA O'QUVCHILAR</div>
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-6">
                             <a href="{% url 'tests:admin_teacher_tests' %}" class="action-btn action-btn-outline text-white">
                                 <div class="action-btn-icon">
                                     <i class="fas fa-file-alt"></i>
@@ -435,12 +443,12 @@
                                 <div class="action-btn-text">Testlar</div>
                             </a>
                         </div>
-                        <div class="col-md-4 col-6">
+                        <div class="col-md-3 col-6">
                             <a href="{% url 'tests:export_all_students' %}" class="action-btn action-btn-green text-white">
                                 <div class="action-btn-icon">
                                     <i class="fas fa-file-excel"></i>
                                 </div>
-                                <div class="action-btn-text">Excel'ga Yuklab Olish</div>
+                                <div class="action-btn-text">Excel Export</div>
                             </a>
                         </div>
                     </div>
