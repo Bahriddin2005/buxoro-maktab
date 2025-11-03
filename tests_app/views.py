@@ -24,6 +24,10 @@ except ImportError:
 def test_list_view(request):
     """List all available tests for students or created tests for teachers"""
     if request.method == 'GET' and request.headers.get('Accept') == 'application/json':
+        # Pagination parametrlari
+        page = int(request.GET.get('page', 1))
+        page_size = int(request.GET.get('page_size', 100))  # 100 ta test/sahifa
+        
         if request.user.role == 'student':
             tests = Test.objects.filter(
                 is_active=True,
@@ -70,41 +74,36 @@ def test_list_view(request):
                     'end_time': test.end_time.isoformat() if test.end_time else None,
                 })
             
+            # Pagination
+            start = (page - 1) * page_size
+            end = start + page_size
+            total_count = len(test_data)
+            paginated_data = test_data[start:end]
+            
             return JsonResponse({
-                'tests': test_data,
-                'user_role': 'student'
+                'tests': paginated_data,
+                'user_role': 'student',
+                'pagination': {
+                    'page': page,
+                    'page_size': page_size,
+                    'total': total_count,
+                    'total_pages': (total_count + page_size - 1) // page_size
+                }
             })
             
         elif request.user.role == 'teacher':
-            tests = Test.objects.filter(created_by=request.user).order_by('-created_at')
-            test_data = []
-            for test in tests:
-                attempt_count = TestAttempt.objects.filter(test=test, is_completed=True).count()
-                test_data.append({
-                    'id': test.id,
-                    'title': test.title,
-                    'subject': test.subject,
-                    'description': test.description,
-                    'grade': test.grade,
-                    'total_questions': test.total_questions,
-                    'is_active': test.is_active,
-                    'created_at': test.created_at.isoformat(),
-                    'created_by': test.created_by.get_full_name() or test.created_by.username,
-                    'attempt_count': attempt_count,
-                    'max_attempts': test.max_attempts,
-                    'time_limit': test.time_limit,
-                })
-            
-            return JsonResponse({
-                'tests': test_data,
-                'user_role': 'teacher'
-            })
-    
-        elif request.user.role == 'admin':
-            # Admin sees ALL tests (from teachers and admins)
+            # Teacher sees ALL tests (not just their own) - LIMIT to first 100
             tests = Test.objects.all().select_related('created_by').order_by('-created_at')
+            
+            # Get total count first
+            total_count = tests.count()
+            
+            # Apply pagination
+            start = (page - 1) * page_size
+            tests_page = tests[start:start + page_size]
+            
             test_data = []
-            for test in tests:
+            for test in tests_page:
                 attempt_count = TestAttempt.objects.filter(test=test, is_completed=True).count()
                 test_data.append({
                     'id': test.id,
@@ -123,7 +122,53 @@ def test_list_view(request):
             
             return JsonResponse({
                 'tests': test_data,
-                'user_role': 'admin'
+                'user_role': 'teacher',
+                'pagination': {
+                    'page': page,
+                    'page_size': page_size,
+                    'total': total_count,
+                    'total_pages': (total_count + page_size - 1) // page_size
+                }
+            })
+        
+        elif request.user.role == 'admin':
+            # Admin sees ALL tests - LIMIT to first 100
+            tests = Test.objects.all().select_related('created_by').order_by('-created_at')
+            
+            # Get total count first
+            total_count = tests.count()
+            
+            # Apply pagination
+            start = (page - 1) * page_size
+            tests_page = tests[start:start + page_size]
+            
+            test_data = []
+            for test in tests_page:
+                attempt_count = TestAttempt.objects.filter(test=test, is_completed=True).count()
+                test_data.append({
+                    'id': test.id,
+                    'title': test.title,
+                    'subject': test.subject,
+                    'description': test.description,
+                    'grade': test.grade,
+                    'total_questions': test.total_questions,
+                    'is_active': test.is_active,
+                    'created_at': test.created_at.isoformat(),
+                    'created_by': test.created_by.get_full_name() or test.created_by.username,
+                    'attempt_count': attempt_count,
+                    'max_attempts': test.max_attempts,
+                    'time_limit': test.time_limit,
+                })
+            
+            return JsonResponse({
+                'tests': test_data,
+                'user_role': 'admin',
+                'pagination': {
+                    'page': page,
+                    'page_size': page_size,
+                    'total': total_count,
+                    'total_pages': (total_count + page_size - 1) // page_size
+                }
             })
     
     return render(request, 'tests_app/test_list.html')
@@ -491,7 +536,21 @@ def test_results_view(request, test_id):
                 # 'incorrect_questions': incorrect_questions,
                 # 'unanswered_questions': unanswered_questions
             }
-            return JsonResponse({'result': result_data})
+            
+            # Test info qo'shish
+            test_info = {
+                'title': test.title,
+                'subject': test.subject,
+                'grade': test.grade,
+                'total_questions': test.total_questions,
+                'time_limit': test.time_limit
+            }
+            
+            return JsonResponse({
+                'result': result_data,
+                'test_info': test_info,
+                'user_role': 'student'
+            })
         
         elif (request.user.role == 'teacher' and test.created_by == request.user) or request.user.role == 'admin':
             # Faqat har bir o'quvchining oxirgi (eng so'nggi) natijasini olish
@@ -569,7 +628,20 @@ def test_results_view(request, test_id):
                     'unanswered_questions': unanswered_questions
                 })
             
-            return JsonResponse({'results': results_data})
+            # Test info qo'shish
+            test_info = {
+                'title': test.title,
+                'subject': test.subject,
+                'grade': test.grade,
+                'total_questions': test.total_questions,
+                'time_limit': test.time_limit
+            }
+            
+            return JsonResponse({
+                'results': results_data,
+                'test_info': test_info,
+                'user_role': request.user.role
+            })
         
         else:
             return JsonResponse({'error': 'Access denied'}, status=403)

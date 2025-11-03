@@ -92,16 +92,17 @@
                     </label>
                     <select class="form-select bg-dark text-white border-secondary" id="subjectFilter" onchange="filterTests()">
                         <option value="">Barcha fanlar</option>
-                        <option value="Informatika">Informatika</option>
                         <option value="Matematika">Matematika</option>
+                        <option value="Informatika">Informatika</option>
+                        <option value="Tarix">Tarix</option>
                         <option value="Ona tili">Ona tili</option>
                         <option value="Adabiyot">Adabiyot</option>
+                        <option value="Huquq">Huquq</option>
+                        <option value="Ingliz tili">Ingliz tili</option>
+                        <option value="Geografiya">Geografiya</option>
+                        <option value="Rus tili">Rus tili</option>
                         <option value="Fizika">Fizika</option>
                         <option value="Tabiiy fan">Tabiiy fan</option>
-                        <option value="Geografiya">Geografiya</option>
-                        <option value="Ingliz tili">Ingliz tili</option>
-                        <option value="Rus tili">Rus tili</option>
-                        <option value="Tarix">Tarix</option>
                     </select>
                 </div>
                 <div class="col-md-3">
@@ -148,28 +149,66 @@
         <!-- Filter va Search -->
         {% if user.role == 'student' %}
         <div class="glass-card p-4 mb-4" data-aos="fade-right">
-            <div class="row align-items-center">
-                <div class="col-md-4">
+            <h5 class="text-white mb-3">
+                <i class="fas fa-filter me-2"></i>
+                Filterlash
+            </h5>
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label text-white-50 small mb-2">
+                        <i class="fas fa-search me-1"></i>
+                        Qidiruv
+                    </label>
                     <div class="input-group">
-                        <span class="input-group-text bg-transparent border-secondary text-white">
+                        <span class="input-group-text bg-dark border-secondary text-white">
                             <i class="fas fa-search"></i>
                         </span>
-                        <input type="text" class="form-control bg-transparent border-secondary text-white" 
-                               placeholder="Test qidiring..." id="searchInput">
+                        <input type="text" class="form-control bg-dark border-secondary text-white" 
+                               placeholder="Test qidiring..." id="searchInput" onkeyup="filterTests()">
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <select class="form-select bg-transparent border-secondary text-white" id="subjectFilter">
-                        <option value="">Barcha fanlar</option>
-                        <option value="Matematika">Matematika</option>
-                        <option value="Fizika">Fizika</option>
-                        <option value="Kimyo">Kimyo</option>
-                        <option value="Ingliz tili">Ingliz tili</option>
-                        <option value="Adabiyot">Adabiyot</option>
+                <div class="col-md-2">
+                    <label class="form-label text-white-50 small mb-2">
+                        <i class="fas fa-graduation-cap me-1"></i>
+                        Sinf
+                    </label>
+                    <select class="form-select bg-dark border-secondary text-white" id="gradeFilterStudent" onchange="filterTests()">
+                        <option value="">Barcha sinflar</option>
+                        <option value="5">5-sinf</option>
+                        <option value="6">6-sinf</option>
+                        <option value="7">7-sinf</option>
+                        <option value="8">8-sinf</option>
+                        <option value="9">9-sinf</option>
+                        <option value="10">10-sinf</option>
+                        <option value="11">11-sinf</option>
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <select class="form-select bg-transparent border-secondary text-white" id="statusFilter">
+                    <label class="form-label text-white-50 small mb-2">
+                        <i class="fas fa-book me-1"></i>
+                        Fan
+                    </label>
+                    <select class="form-select bg-dark border-secondary text-white" id="subjectFilter" onchange="filterTests()">
+                        <option value="">Barcha fanlar</option>
+                        <option value="Matematika">Matematika</option>
+                        <option value="Informatika">Informatika</option>
+                        <option value="Tarix">Tarix</option>
+                        <option value="Ona tili">Ona tili</option>
+                        <option value="Adabiyot">Adabiyot</option>
+                        <option value="Huquq">Huquq</option>
+                        <option value="Ingliz tili">Ingliz tili</option>
+                        <option value="Geografiya">Geografiya</option>
+                        <option value="Rus tili">Rus tili</option>
+                        <option value="Fizika">Fizika</option>
+                        <option value="Tabiiy fan">Tabiiy fan</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label text-white-50 small mb-2">
+                        <i class="fas fa-filter me-1"></i>
+                        Status
+                    </label>
+                    <select class="form-select bg-dark border-secondary text-white" id="statusFilter" onchange="filterTests()">
                         <option value="">Barcha testlar</option>
                         <option value="available">Mavjud testlar</option>
                         <option value="completed">Tugallangan</option>
@@ -181,6 +220,10 @@
                         <i class="fas fa-times me-2"></i>Tozalash
                     </button>
                 </div>
+            </div>
+            <div class="mt-3 text-white-50 small">
+                <i class="fas fa-info-circle me-1"></i>
+                <span id="filterResultsStudent">Barcha testlar ko'rsatilmoqda</span>
             </div>
         </div>
         {% endif %}
@@ -194,6 +237,21 @@
                         <span class="visually-hidden">Yuklanmoqda...</span>
                     </div>
                     <p class="text-white mt-3">Testlar yuklanmoqda...</p>
+                </div>
+            </div>
+            
+            <!-- Pagination Info & Load More -->
+            <div class="row mt-4 d-none" id="paginationSection">
+                <div class="col-12 text-center">
+                    <p class="text-white-50 mb-3" id="paginationInfo">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <span id="showingCount">0</span> dan <span id="totalCount">0</span> ta test ko'rsatilmoqda
+                    </p>
+                    <button class="btn btn-primary btn-lg" id="loadMoreBtn" onclick="loadMoreTests()" style="display: none;">
+                        <i class="fas fa-plus-circle me-2"></i>
+                        Ko'proq yuklash
+                        <span class="badge bg-light text-dark ms-2" id="remainingCount">0</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -283,6 +341,11 @@
 </template>
 
 <script>
+let currentPage = 1;
+let totalPages = 1;
+let allLoadedTests = [];
+let userRole = 'student';
+
 document.addEventListener('DOMContentLoaded', function() {
     loadTests();
     
@@ -299,23 +362,57 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-async function loadTests() {
+async function loadTests(page = 1) {
+    console.log(`🔍 Loading tests... Page: ${page}`);
     try {
-        const response = await fetch('/tests/', {
+        const response = await fetch(`/tests/?page=${page}&page_size=100`, {
             headers: {
                 'Accept': 'application/json'
             }
         });
+        
+        console.log('📡 Response status:', response.status);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
-        displayTests(data.tests || [], data.user_role || 'student');
+        console.log('📦 Data received:', data);
+        console.log('📊 Tests count:', data.tests?.length || 0);
+        console.log('👤 User role:', data.user_role);
+        console.log('📄 Pagination:', data.pagination);
+        
+        // Save pagination info
+        if (data.pagination) {
+            currentPage = data.pagination.page;
+            totalPages = data.pagination.total_pages;
+            
+            // Update pagination UI
+            updatePaginationUI(data.pagination);
+        }
+        
+        // Save user role
+        userRole = data.user_role || 'student';
+        
+        // If page 1, replace all tests, otherwise append
+        if (page === 1) {
+            allLoadedTests = data.tests || [];
+            displayTests(allLoadedTests, userRole);
+        } else {
+            allLoadedTests = allLoadedTests.concat(data.tests || []);
+            appendTests(data.tests || [], userRole);
+        }
+        
     } catch (error) {
-        console.error('Error loading tests:', error);
+        console.error('❌ Error loading tests:', error);
         document.getElementById('testsList').innerHTML = `
             <div class="col-12 text-center py-5">
                 <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
                 <h4 class="text-white">Testlarni yuklashda xatolik</h4>
-                <p class="text-white-50">Sahifani qayta yuklang</p>
-                <button class="btn btn-primary mt-3" onclick="loadTests()">
+                <p class="text-white-50">Xato: ${error.message}</p>
+                <p class="text-white-50 small">Sahifani qayta yuklang (F5)</p>
+                <button class="btn btn-primary mt-3" onclick="location.reload()">
                     <i class="fas fa-redo me-2"></i>Qayta yuklash
                 </button>
             </div>
@@ -323,26 +420,72 @@ async function loadTests() {
     }
 }
 
+function updatePaginationUI(pagination) {
+    const paginationSection = document.getElementById('paginationSection');
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    const showingCount = document.getElementById('showingCount');
+    const totalCount = document.getElementById('totalCount');
+    const remainingCount = document.getElementById('remainingCount');
+    
+    // Show pagination section
+    paginationSection.classList.remove('d-none');
+    
+    // Update counts
+    const currentlyShowing = pagination.page * pagination.page_size;
+    const actualShowing = Math.min(currentlyShowing, pagination.total);
+    const remaining = pagination.total - actualShowing;
+    
+    showingCount.textContent = actualShowing;
+    totalCount.textContent = pagination.total;
+    
+    // Show/hide load more button
+    if (pagination.page < pagination.total_pages) {
+        loadMoreBtn.style.display = 'inline-block';
+        remainingCount.textContent = remaining;
+    } else {
+        loadMoreBtn.style.display = 'none';
+    }
+}
+
+function loadMoreTests() {
+    const nextPage = currentPage + 1;
+    if (nextPage <= totalPages) {
+        loadTests(nextPage);
+    }
+}
+
 function displayTests(tests, userRole = 'student') {
-    console.log('Displaying tests:', tests);
+    console.log('🎨 Displaying tests...');
+    console.log('📊 Tests array:', tests);
+    console.log('📏 Tests length:', tests.length);
+    console.log('👤 User role:', userRole);
+    
     const container = document.getElementById('testsList');
     const template = document.getElementById('testCardTemplate');
+    
+    console.log('📦 Container:', container);
+    console.log('🎯 Template:', template);
     
     if (tests.length === 0) {
         const message = userRole === 'teacher' 
             ? 'Siz hali test yaratmagansiz' 
+            : userRole === 'admin'
+            ? 'Hozircha testlar mavjud emas'
             : 'Hozircha sizning sinfingiz uchun testlar mavjud emas';
             
+        console.log('⚠️ No tests found, showing message');
         container.innerHTML = `
             <div class="col-12 text-center py-5" data-aos="fade-in">
                 <i class="fas fa-clipboard-list fa-3x text-info mb-3"></i>
                 <h4 class="text-white">Testlar topilmadi</h4>
                 <p class="text-white-50">${message}</p>
+                ${userRole === 'admin' ? '<p class="text-white-50 small">Database\'da 6370 ta test bor, lekin ko\'rinmayapti</p>' : ''}
             </div>
         `;
         return;
     }
     
+    console.log('✅ Rendering', tests.length, 'tests...');
     container.innerHTML = '';
     
     tests.forEach((test, index) => {
@@ -455,6 +598,46 @@ function displayTests(tests, userRole = 'student') {
     }
 }
 
+function appendTests(tests, userRole = 'student') {
+    console.log('➕ Appending more tests...');
+    const container = document.getElementById('testsList');
+    const template = document.getElementById('testCardTemplate');
+    
+    tests.forEach((test, index) => {
+        const clone = template.content.cloneNode(true);
+        
+        // Fill test data
+        clone.querySelector('.subject-badge').textContent = test.subject;
+        clone.querySelector('.grade-badge').textContent = test.grade + '-sinf';
+        clone.querySelector('.test-title').textContent = test.title;
+        clone.querySelector('.test-description').textContent = test.description || 'Test tavsifi mavjud emas';
+        clone.querySelector('.questions-count').textContent = test.total_questions + ' savol';
+        clone.querySelector('.time-limit').textContent = test.time_limit + ' daq';
+        clone.querySelector('.teacher-name').textContent = test.created_by || 'Noma\'lum';
+        clone.querySelector('.created-date').textContent = formatDate(test.created_at);
+        
+        clone.querySelector('.test-card').setAttribute('data-test-id', test.id);
+        clone.querySelector('.test-card').setAttribute('data-grade', test.grade);
+        
+        // Role-based config
+        const startBtn = clone.querySelector('.start-test-btn');
+        const resultsBtn = clone.querySelector('.view-results-btn');
+        
+        if (userRole === 'teacher' || userRole === 'admin') {
+            startBtn.classList.add('d-none');
+            resultsBtn.classList.remove('d-none');
+        }
+        
+        container.appendChild(clone);
+    });
+    
+    console.log(`✅ Appended ${tests.length} more tests`);
+    
+    if (typeof AOS !== 'undefined') {
+        AOS.refresh();
+    }
+}
+
 function startTest(button) {
     const testCard = button.closest('.test-card');
     const testId = testCard.getAttribute('data-test-id');
@@ -482,7 +665,7 @@ function filterTests() {
     const searchTerm = (document.getElementById('searchFilter') || document.getElementById('searchInput'))?.value.toLowerCase() || '';
     const subjectFilter = document.getElementById('subjectFilter')?.value || '';
     const statusFilter = document.getElementById('statusFilter')?.value || '';
-    const gradeFilter = document.getElementById('gradeFilter')?.value || '';
+    const gradeFilter = document.getElementById('gradeFilter')?.value || document.getElementById('gradeFilterStudent')?.value || '';
     
     const testItems = document.querySelectorAll('.test-item');
     let visibleCount = 0;
@@ -513,7 +696,7 @@ function filterTests() {
             if (statusFilter === 'inactive' && isActive) showItem = false;
         }
         
-        // Grade filter
+        // Grade filter (both admin/teacher and student)
         if (gradeFilter && grade !== gradeFilter) {
             showItem = false;
         }
@@ -528,7 +711,7 @@ function filterTests() {
     });
     
     // Update filter results message
-    const filterResults = document.getElementById('filterResults');
+    const filterResults = document.getElementById('filterResults') || document.getElementById('filterResultsStudent');
     if (filterResults) {
         const totalCount = testItems.length;
         if (visibleCount === totalCount) {
@@ -540,10 +723,18 @@ function filterTests() {
 }
 
 function clearFilters() {
-    document.getElementById('searchInput').value = '';
-    document.getElementById('subjectFilter').value = '';
-    document.getElementById('statusFilter').value = '';
-    document.getElementById('gradeFilter').value = '';
+    const searchInput = document.getElementById('searchInput');
+    const subjectFilter = document.getElementById('subjectFilter');
+    const statusFilter = document.getElementById('statusFilter');
+    const gradeFilter = document.getElementById('gradeFilter');
+    const gradeFilterStudent = document.getElementById('gradeFilterStudent');
+    
+    if (searchInput) searchInput.value = '';
+    if (subjectFilter) subjectFilter.value = '';
+    if (statusFilter) statusFilter.value = '';
+    if (gradeFilter) gradeFilter.value = '';
+    if (gradeFilterStudent) gradeFilterStudent.value = '';
+    
     filterTests();
 }
 

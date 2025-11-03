@@ -9,12 +9,16 @@ from django.shortcuts import render
 def home_view(request):
     return render(request, 'home.html')
 
+def test_debug_view(request):
+    return render(request, 'test_debug.html')
+
 urlpatterns = [
     path("", home_view, name='home'),
     path("admin/", admin.site.urls),
     path('accounts/', include('accounts.urls')),
     path('tests/', include('tests_app.urls')),
     path('analytics/', include('analytics.urls')),
+    path('debug-tests/', test_debug_view, name='debug_tests'),
 ]
 
 if settings.DEBUG:
