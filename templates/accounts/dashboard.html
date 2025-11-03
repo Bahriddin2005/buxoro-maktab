@@ -202,13 +202,14 @@
                 flex-direction: column;
                 align-items: center;
                 justify-content: center;
-                padding: 20px 15px;
+                padding: 25px 15px;
                 border-radius: 20px;
                 text-decoration: none;
                 transition: all 0.3s ease;
                 position: relative;
                 overflow: hidden;
-                min-height: 100px;
+                min-height: 130px;
+                height: 130px;
                 border: none;
             }
 
@@ -280,9 +281,6 @@
 
             .action-btn-featured {
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                padding: 20px 15px;
-                border-radius: 20px;
-                min-height: 100px;
                 box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
             }
 
@@ -291,10 +289,10 @@
             }
 
             .action-btn-featured .action-btn-text {
-                font-size: 15px;
+                font-size: 14px;
                 font-weight: 700;
                 text-transform: uppercase;
-                letter-spacing: 0.5px;
+                letter-spacing: 0.3px;
             }
 
             @media (max-width: 768px) {
@@ -303,7 +301,8 @@
                 }
 
                 .action-btn {
-                    min-height: 80px;
+                    min-height: 110px;
+                    height: 110px;
                     padding: 15px 10px;
                 }
 
@@ -351,9 +350,9 @@
                                 <div class="action-btn-text">Profilni Tahrirlash</div>
                             </a>
                         </div>
-                    </div>
-                    
-                    {% elif user.role == 'teacher' %}
+                        </div>
+                        
+                        {% elif user.role == 'teacher' %}
                     <div class="row g-3">
                         <div class="col-md-4 col-6">
                             <a href="{% url 'tests:create_test' %}" class="action-btn action-btn-green text-white">
@@ -451,8 +450,8 @@
                                 <div class="action-btn-text">Excel Export</div>
                             </a>
                         </div>
-                    </div>
-                    {% endif %}
+                        </div>
+                        {% endif %}
                 </div>
             </div>
             

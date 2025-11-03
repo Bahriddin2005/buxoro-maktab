@@ -12,6 +12,7 @@ from .models import Test, Question, Choice, TestAttempt, Answer, TestResult, Tes
 from accounts.models import User
 from .views_overall import student_overall_results_view, student_export_results_view, test_api_view
 from .export_all_students import export_all_students_results
+
 try:
     from openpyxl import Workbook
     from openpyxl.styles import Font, PatternFill
@@ -1260,63 +1261,84 @@ def edit_test_view(request, test_id):
                 data = json.loads(request.body)
                 print(f"Received data for test {test_id}: {data}")
             
-            # Update test fields
-            test.title = data.get('title', test.title)
-            test.description = data.get('description', test.description)
-            test.subject = data.get('subject', test.subject)
-            test.grade = int(data.get('grade', test.grade))
-            test.time_limit = int(data.get('time_limit', test.time_limit))
-            test.max_attempts = int(data.get('max_attempts', test.max_attempts))
-            test.show_results = data.get('show_results', test.show_results)
-            test.is_active = data.get('is_active', test.is_active)
-            test.shuffle_questions = data.get('shuffle_questions', test.shuffle_questions)
-            test.save()
-            print(f"Test {test_id} updated successfully")
+                # Update test fields
+                test.title = data.get('title', test.title)
+                test.description = data.get('description', test.description)
+                test.subject = data.get('subject', test.subject)
+                test.grade = int(data.get('grade', test.grade))
+                test.time_limit = int(data.get('time_limit', test.time_limit))
+                test.max_attempts = int(data.get('max_attempts', test.max_attempts))
+                test.show_results = data.get('show_results', test.show_results)
+                test.is_active = data.get('is_active', test.is_active)
+                test.shuffle_questions = data.get('shuffle_questions', test.shuffle_questions)
+                test.save()
+                print(f"Test {test_id} updated successfully")
 
-            # Update questions
-            questions_data = data.get('questions', [])
-            print(f"Processing {len(questions_data)} questions")
+                # Update questions
+                questions_data = data.get('questions', [])
+                print(f"Processing {len(questions_data)} questions")
             
-            # Get existing question IDs
-            existing_question_ids = set(test.questions.values_list('id', flat=True))
-            new_question_ids = set()
+                # Get existing question IDs
+                existing_question_ids = set(test.questions.values_list('id', flat=True))
+                new_question_ids = set()
             
-            for i, q_data in enumerate(questions_data):
-                question_id = q_data.get('id')
-                print(f"Processing question {i+1}: ID={question_id}, Text='{q_data.get('question_text', '')[:50]}...'")
+                for i, q_data in enumerate(questions_data):
+                    question_id = q_data.get('id')
+                    print(f"Processing question {i+1}: ID={question_id}, Text='{q_data.get('question_text', '')[:50]}...'")
                 
-                if question_id and question_id in existing_question_ids:
-                    # Update existing question
-                    try:
-                        question = Question.objects.get(id=question_id, test=test)
-                        question.question_text = q_data['question_text']
-                        question.question_type = q_data['question_type']
-                        question.points = float(q_data.get('points', 1.0))
-                        question.order = i + 1
-                        question.explanation = q_data.get('explanation', '')
-                        question.save()
-                        new_question_ids.add(question_id)
-                        print(f"Updated existing question {question_id}")
+                    if question_id and question_id in existing_question_ids:
+                        # Update existing question
+                        try:
+                            question = Question.objects.get(id=question_id, test=test)
+                            question.question_text = q_data['question_text']
+                            question.question_type = q_data['question_type']
+                            question.points = float(q_data.get('points', 1.0))
+                            question.order = i + 1
+                            question.explanation = q_data.get('explanation', '')
+                            question.save()
+                            new_question_ids.add(question_id)
+                            print(f"Updated existing question {question_id}")
                         
-                        # Update choices
-                        if q_data['question_type'] in ['single_choice', 'multiple_choice']:
-                            choices_data = q_data.get('choices', [])
-                            # Clear existing choices
-                            question.choices.all().delete()
-                            # Add new choices
-                            for c_data in choices_data:
-                                if c_data.get('text'):  # Only add if text is not empty
-                                    Choice.objects.create(
-                                        question=question,
-                                        choice_text=c_data['text'],
-                                        is_correct=c_data.get('is_correct', False)
-                                    )
-                        else:
-                            # For text answers, remove all choices
-                            question.choices.all().delete()
+                            # Update choices
+                            if q_data['question_type'] in ['single_choice', 'multiple_choice']:
+                                choices_data = q_data.get('choices', [])
+                                # Clear existing choices
+                                question.choices.all().delete()
+                                # Add new choices
+                                for c_data in choices_data:
+                                    if c_data.get('text'):  # Only add if text is not empty
+                                        Choice.objects.create(
+                                            question=question,
+                                            choice_text=c_data['text'],
+                                            is_correct=c_data.get('is_correct', False)
+                                        )
+                            else:
+                                # For text answers, remove all choices
+                                question.choices.all().delete()
                             
-                    except Question.DoesNotExist:
-                        # If question doesn't exist, create new one
+                        except Question.DoesNotExist:
+                            # If question doesn't exist, create new one
+                            question = Question.objects.create(
+                                test=test,
+                                question_text=q_data['question_text'],
+                                question_type=q_data['question_type'],
+                                points=float(q_data.get('points', 1.0)),
+                                order=i + 1,
+                                explanation=q_data.get('explanation', '')
+                            )
+                            new_question_ids.add(question.id)
+                        
+                            if q_data['question_type'] in ['single_choice', 'multiple_choice']:
+                                for c_data in q_data.get('choices', []):
+                                    if c_data.get('text'):
+                                        Choice.objects.create(
+                                            question=question,
+                                            choice_text=c_data['text'],
+                                            is_correct=c_data.get('is_correct', False)
+                                        )
+                    else:
+                        # Create new question
+                        print(f"Creating new question: {q_data['question_text'][:50]}...")
                         question = Question.objects.create(
                             test=test,
                             question_text=q_data['question_text'],
@@ -1326,7 +1348,8 @@ def edit_test_view(request, test_id):
                             explanation=q_data.get('explanation', '')
                         )
                         new_question_ids.add(question.id)
-                        
+                        print(f"Created new question with ID {question.id}")
+                    
                         if q_data['question_type'] in ['single_choice', 'multiple_choice']:
                             for c_data in q_data.get('choices', []):
                                 if c_data.get('text'):
@@ -1335,51 +1358,30 @@ def edit_test_view(request, test_id):
                                         choice_text=c_data['text'],
                                         is_correct=c_data.get('is_correct', False)
                                     )
-                else:
-                    # Create new question
-                    print(f"Creating new question: {q_data['question_text'][:50]}...")
-                    question = Question.objects.create(
-                        test=test,
-                        question_text=q_data['question_text'],
-                        question_type=q_data['question_type'],
-                        points=float(q_data.get('points', 1.0)),
-                        order=i + 1,
-                        explanation=q_data.get('explanation', '')
-                    )
-                    new_question_ids.add(question.id)
-                    print(f"Created new question with ID {question.id}")
-                    
-                    if q_data['question_type'] in ['single_choice', 'multiple_choice']:
-                        for c_data in q_data.get('choices', []):
-                            if c_data.get('text'):
-                                Choice.objects.create(
-                                    question=question,
-                                    choice_text=c_data['text'],
-                                    is_correct=c_data.get('is_correct', False)
-                                )
             
-            # Remove questions that are no longer in the list
-            questions_to_delete = existing_question_ids - new_question_ids
-            if questions_to_delete:
-                test.questions.filter(id__in=questions_to_delete).delete()
-            # Saqlangan savollarni JSON ko‘rinishda qaytarish:
-            questions = test.questions.all().order_by('order')
-            questions_data = []
-            for q in questions:
-                q_data = {
-                    "id": q.id,
-                    "question_text": q.question_text,
-                    "question_type": q.question_type,
-                    "points": q.points,
-                    "explanation": q.explanation,
-                    "image": q.image.url if q.image else None,
-                    "choices": [
-                        {"text": c.choice_text, "is_correct": c.is_correct}
-                        for c in q.choices.all()
-                    ]
-                }
-                questions_data.append(q_data)
-            return JsonResponse({"success": True, "questions": questions_data})
+                # Remove questions that are no longer in the list
+                questions_to_delete = existing_question_ids - new_question_ids
+                if questions_to_delete:
+                    test.questions.filter(id__in=questions_to_delete).delete()
+                
+                # Saqlangan savollarni JSON ko'rinishda qaytarish:
+                questions = test.questions.all().order_by('order')
+                questions_data = []
+                for q in questions:
+                    q_data = {
+                        "id": q.id,
+                        "question_text": q.question_text,
+                        "question_type": q.question_type,
+                        "points": q.points,
+                        "explanation": q.explanation,
+                        "image": q.image.url if q.image else None,
+                        "choices": [
+                            {"text": c.choice_text, "is_correct": c.is_correct}
+                            for c in q.choices.all()
+                        ]
+                    }
+                    questions_data.append(q_data)
+                return JsonResponse({"success": True, "questions": questions_data})
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)}, status=400)
 

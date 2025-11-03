@@ -78,11 +78,11 @@
                 <div class="d-flex align-items-center">
                   <div>
                     <a href="{% url 'tests:test_info' t.id %}" class="text-white text-decoration-none fw-bold">
-                      {{ t.title|default:"(Nomi yo'q)" }}
-                    </a>
-                    {% if t.description %}
+                  {{ t.title|default:"(Nomi yo'q)" }}
+                </a>
+                {% if t.description %}
                     <div class="text-muted small mt-1">{{ t.description|truncatechars:60 }}</div>
-                    {% endif %}
+                {% endif %}
                   </div>
                 </div>
               </td>
@@ -123,9 +123,11 @@
                      title="Natijalar">
                     <i class="fas fa-chart-bar"></i>
                   </a>
-                  <button onclick="deleteTest({{ t.id }}, '{{ t.title|escapejs }}')" 
-                          class="btn btn-sm btn-outline-danger" 
-                          title="O'chirish">
+                  <button type="button"
+                          class="btn btn-sm btn-outline-danger delete-test-btn"
+                          title="O'chirish"
+                          data-test-id="{{ t.id }}"
+                          data-test-title="{{ t.title }}">
                     <i class="fas fa-trash"></i>
                   </button>
                 </div>
@@ -156,6 +158,15 @@ document.addEventListener('DOMContentLoaded', function() {
     if (teacherFilter) teacherFilter.addEventListener('change', applyFilters);
     if (statusFilter) statusFilter.addEventListener('change', applyFilters);
     if (gradeFilter) gradeFilter.addEventListener('change', applyFilters);
+    
+    // Delete test button event listeners
+    document.querySelectorAll('.delete-test-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const testId = this.getAttribute('data-test-id');
+            const testTitle = this.getAttribute('data-test-title');
+            deleteTest(testId, testTitle);
+        });
+    });
 });
 
 function applyFilters() {

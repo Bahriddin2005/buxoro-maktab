@@ -23,21 +23,21 @@
         }
 
         body {
-            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #00f2fe 100%);
             min-height: 100vh;
             overflow-x: hidden;
             padding: 0;
             margin: 0;
         }
 
-        /* Light Glassmorphism Sidebar - Rasmga o'xshash */
+        /* Glassmorphism Sidebar */
         .sidebar {
             position: fixed;
             left: 20px;
             top: 50%;
             transform: translateY(-50%);
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.15);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border-radius: 30px;
@@ -60,23 +60,22 @@
             justify-content: center;
             cursor: pointer;
             transition: all 0.3s ease;
-            background: rgba(51, 65, 85, 0.5);
-            color: #94a3b8;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
             font-size: 18px;
             position: relative;
             text-decoration: none;
         }
 
         .sidebar-icon:hover {
-            background: rgba(71, 85, 105, 0.8);
+            background: rgba(255, 255, 255, 0.3);
             transform: scale(1.1);
             color: white;
         }
 
         .sidebar-icon.active {
-            background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
-            box-shadow: 0 4px 15px rgba(90, 103, 216, 0.5);
-            color: white;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
         }
 
         .sidebar-icon.active:hover {
@@ -102,12 +101,12 @@
             min-height: 100vh;
         }
 
-        /* Light Glass Cards - Rasmga o'xshash */
+        /* Glass Cards */
         .glass-card {
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.15);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border-radius: 20px;
+            border-radius: 25px;
             border: 1px solid rgba(255, 255, 255, 0.3);
             padding: 25px;
             margin-bottom: 20px;
@@ -119,7 +118,6 @@
         .glass-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.5);
-            border-color: rgba(255, 255, 255, 0.4);
         }
 
         .card-title {
@@ -164,23 +162,21 @@
             box-shadow: 0 4px 12px rgba(90, 103, 216, 0.5);
         }
 
-        /* Stats Numbers - Rasmga o'xshash */
+        /* Stats Numbers */
         .stat-number {
-            font-size: 48px;
-            font-weight: 800;
+            font-size: 42px;
+            font-weight: 700;
             color: white;
             margin: 15px 0 10px 0;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-            letter-spacing: -1px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
         }
 
         .stat-change {
             font-size: 14px;
-            color: rgba(255, 255, 255, 0.9);
+            color: rgba(255, 255, 255, 0.8);
             display: flex;
             align-items: center;
             gap: 5px;
-            font-weight: 600;
         }
 
         .stat-change.positive {
@@ -298,7 +294,7 @@
 
         /* Activity List - Rasmga o'xshash */
         .activity-item {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.08);
             border-radius: 12px;
             padding: 12px 15px;
             margin-bottom: 10px;
@@ -307,14 +303,12 @@
             gap: 15px;
             transition: all 0.3s ease;
             cursor: pointer;
-            border: 1px solid rgba(255, 255, 255, 0.15);
         }
 
         .activity-item:hover {
-            background: rgba(255, 255, 255, 0.25);
+            background: rgba(255, 255, 255, 0.15);
             transform: translateX(8px);
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            border-color: rgba(255, 255, 255, 0.3);
         }
 
         .activity-icon {
@@ -349,25 +343,25 @@
         }
 
         .activity-title {
-            color: #e2e8f0;
+            color: white;
             font-size: 15px;
             font-weight: 600;
             margin-bottom: 4px;
         }
 
         .activity-time {
-            color: #64748b;
+            color: rgba(255, 255, 255, 0.5);
             font-size: 12px;
             font-weight: 500;
         }
 
-        /* Top Stats - Rasmga o'xshash Light Menu */
+        /* Top Stats - Rasmga o'xshash Menu Items */
         .top-stat-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 16px 15px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 15px 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
             cursor: pointer;
             transition: all 0.3s ease;
             border-radius: 10px;
@@ -375,9 +369,8 @@
         }
 
         .top-stat-item:hover {
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.1);
             transform: translateX(5px);
-            border-color: rgba(255, 255, 255, 0.2);
         }
 
         .top-stat-item:last-child {
@@ -385,7 +378,7 @@
         }
 
         .top-stat-name {
-            color: rgba(255, 255, 255, 0.95);
+            color: rgba(255, 255, 255, 0.9);
             font-size: 15px;
             font-weight: 500;
             display: flex;
@@ -496,18 +489,16 @@
         }
 
         .dashboard-title {
-            color: #e2e8f0;
-            font-size: 36px;
-            font-weight: 800;
-            text-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
-            margin-bottom: 8px;
-            letter-spacing: -0.5px;
+            color: white;
+            font-size: 32px;
+            font-weight: 700;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            margin-bottom: 5px;
         }
 
         .dashboard-subtitle {
-            color: #94a3b8;
+            color: rgba(255, 255, 255, 0.8);
             font-size: 16px;
-            font-weight: 500;
         }
 
         /* Grid Layout */
@@ -516,63 +507,6 @@
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 20px;
             margin-bottom: 20px;
-        }
-
-        /* Simple Stat Cards - Rasmga o'xshash */
-        .simple-stat-card {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.25);
-            padding: 30px 25px;
-            text-align: center;
-            transition: all 0.3s ease;
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-        }
-
-        .simple-stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.5);
-            border-color: rgba(255, 255, 255, 0.35);
-        }
-
-        .simple-stat-icon {
-            font-size: 48px;
-            margin-bottom: 20px;
-            filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.2));
-        }
-
-        .simple-stat-icon.blue {
-            color: #3b82f6;
-        }
-
-        .simple-stat-icon.green {
-            color: #10b981;
-        }
-
-        .simple-stat-icon.yellow {
-            color: #fbbf24;
-        }
-
-        .simple-stat-icon.cyan {
-            color: #06b6d4;
-        }
-
-        .simple-stat-number {
-            font-size: 56px;
-            font-weight: 800;
-            color: white;
-            margin: 15px 0;
-            text-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-            letter-spacing: -2px;
-        }
-
-        .simple-stat-label {
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 16px;
-            font-weight: 600;
-            text-transform: none;
         }
 
         /* Donut Chart */
@@ -721,22 +655,16 @@
         }
 
         .modal-section-title {
-            color: #e2e8f0;
-            font-size: 16px;
+            color: white;
+            font-size: 18px;
             font-weight: 600;
-            margin-bottom: 25px;
-            margin-top: 30px;
-            padding: 16px 24px;
-            background: rgba(51, 65, 85, 0.6);
-            border-radius: 12px;
+            margin-bottom: 20px;
+            padding: 14px 20px;
+            background: linear-gradient(135deg, #334155 0%, #475569 100%);
+            border-radius: 8px;
             display: flex;
             align-items: center;
-            gap: 12px;
-            border: 1px solid rgba(148, 163, 184, 0.15);
-        }
-        
-        .modal-section-title:first-child {
-            margin-top: 0;
+            gap: 10px;
         }
 
         .modal-stat-grid {
@@ -747,29 +675,28 @@
         }
 
         .modal-stat-item {
-            background: rgba(51, 65, 85, 0.6);
-            padding: 30px 24px;
+            background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
+            padding: 24px;
             border-radius: 16px;
             text-align: center;
-            border: 1px solid rgba(148, 163, 184, 0.2);
+            border: 1px solid rgba(148, 163, 184, 0.15);
             transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
         }
 
         .modal-stat-item:hover {
-            transform: translateY(-3px);
-            background: rgba(71, 85, 105, 0.7);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
-            border-color: rgba(148, 163, 184, 0.3);
+            transform: translateY(-5px);
+            background: linear-gradient(135deg, #475569 0%, #64748b 100%);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
         }
 
         .modal-stat-label {
-            color: #94a3b8;
-            font-size: 11px;
-            font-weight: 600;
-            margin-bottom: 12px;
+            color: #cbd5e1;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 10px;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
         }
 
         .modal-stat-value {
@@ -792,52 +719,43 @@
             margin-top: 20px;
             border-radius: 12px;
             overflow: hidden;
-            border: 1px solid rgba(148, 163, 184, 0.2);
-            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(148, 163, 184, 0.15);
         }
 
         .modal-table th {
-            color: #e2e8f0;
+            color: white;
             font-weight: 600;
-            font-size: 12px;
-            padding: 18px 20px;
-            background: rgba(51, 65, 85, 0.8);
-            border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+            font-size: 13px;
+            padding: 16px 15px;
+            background: linear-gradient(135deg, #475569 0%, #64748b 100%);
+            border-bottom: 1px solid rgba(148, 163, 184, 0.2);
             text-transform: uppercase;
-            letter-spacing: 0.8px;
-            text-align: left;
+            letter-spacing: 0.5px;
         }
 
         .modal-table td {
-            color: #cbd5e1;
-            padding: 16px 20px;
+            color: #e2e8f0;
+            padding: 14px 15px;
             border-bottom: 1px solid rgba(148, 163, 184, 0.1);
             background: transparent;
-            font-size: 14px;
         }
 
         .modal-table tbody tr {
-            background: rgba(30, 41, 59, 0.3);
+            background: rgba(51, 65, 85, 0.3);
             transition: all 0.2s ease;
         }
 
         .modal-table tbody tr:nth-child(even) {
-            background: rgba(30, 41, 59, 0.5);
+            background: rgba(51, 65, 85, 0.5);
         }
 
         .modal-table tbody tr:hover {
-            background: rgba(51, 65, 85, 0.8);
-            transform: scale(1.01);
-        }
-
-        .modal-table tbody tr:last-child td {
-            border-bottom: none;
+            background: rgba(71, 85, 105, 0.8);
         }
 
         .modal-table td strong {
             color: white;
             font-weight: 700;
-            font-size: 15px;
         }
 
         /* Custom Scrollbar for Modal - Dark theme */
@@ -950,53 +868,6 @@
 
         <!-- Dashboard Content -->
         <div id="dashboard-content" style="display: none;">
-            <!-- Simple Stats Row - Rasmga o'xshash -->
-            <div class="row mb-4">
-                <!-- Total Students -->
-                <div class="col-lg-3 col-md-6 mb-3">
-                    <div class="simple-stat-card">
-                        <div class="simple-stat-icon blue">
-                            <i class="fas fa-user-graduate"></i>
-                        </div>
-                        <div class="simple-stat-number" id="totalStudentsStat">0</div>
-                        <div class="simple-stat-label">Jami O'quvchilar</div>
-                    </div>
-                </div>
-
-                <!-- Total Teachers -->
-                <div class="col-lg-3 col-md-6 mb-3">
-                    <div class="simple-stat-card">
-                        <div class="simple-stat-icon green">
-                            <i class="fas fa-chalkboard-teacher"></i>
-                        </div>
-                        <div class="simple-stat-number" id="totalTeachersStat">0</div>
-                        <div class="simple-stat-label">Jami O'qituvchilar</div>
-                    </div>
-                </div>
-
-                <!-- Pending Approvals -->
-                <div class="col-lg-3 col-md-6 mb-3">
-                    <div class="simple-stat-card">
-                        <div class="simple-stat-icon yellow">
-                            <i class="fas fa-clock"></i>
-                        </div>
-                        <div class="simple-stat-number" id="pendingApprovalsStat">0</div>
-                        <div class="simple-stat-label">Tasdiq Kutilmoqda</div>
-                    </div>
-                </div>
-
-                <!-- Total Tests -->
-                <div class="col-lg-3 col-md-6 mb-3">
-                    <div class="simple-stat-card">
-                        <div class="simple-stat-icon cyan">
-                            <i class="fas fa-file-alt"></i>
-                        </div>
-                        <div class="simple-stat-number" id="totalTestsStat">0</div>
-                        <div class="simple-stat-label">Jami Testlar</div>
-                    </div>
-                </div>
-            </div>
-
             <!-- Row 1: Main Stats -->
             <div class="row mb-4">
                 <!-- Logins Chart -->
@@ -1299,7 +1170,6 @@
                 document.getElementById('dashboard-content').style.display = 'block';
                 
                 // Update all components
-                updateSimpleStats();
                 updateTodayStats();
                 updateProgressBars();
                 updateCircularProgress();
@@ -1315,19 +1185,6 @@
                     Xatolik yuz berdi: ${error.message}
                 `;
             }
-        }
-
-        // Update Simple Stats - Rasmga o'xshash
-        function updateSimpleStats() {
-            if (!analyticsData) return;
-            
-            const users = analyticsData.users;
-            const today = analyticsData.today;
-            
-            document.getElementById('totalStudentsStat').textContent = users.students || 0;
-            document.getElementById('totalTeachersStat').textContent = users.teachers || 0;
-            document.getElementById('pendingApprovalsStat').textContent = users.pending_verification || 0;
-            document.getElementById('totalTestsStat').textContent = analyticsData.weekly?.total_tests || 0;
         }
 
         // Update Today Stats
