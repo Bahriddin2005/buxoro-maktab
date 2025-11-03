@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'accounts',
     'tests_app',
+    'analytics',  # Analytics va statistika
 ]
 
 STATICFILES_FINDERS = [
@@ -51,6 +52,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'mytest.middleware.NoCacheMiddleware',
+    'analytics.middleware.AnalyticsMiddleware',  # Analytics tracking
 ]
 
 ROOT_URLCONF = 'mytest.urls'

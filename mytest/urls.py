@@ -13,7 +13,8 @@ urlpatterns = [
     path("", home_view, name='home'),
     path("admin/", admin.site.urls),
     path('accounts/', include('accounts.urls')),
-    path('tests/', include('tests_app.urls'))
+    path('tests/', include('tests_app.urls')),
+    path('analytics/', include('analytics.urls')),
 ]
 
 if settings.DEBUG:

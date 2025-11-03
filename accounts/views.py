@@ -75,6 +75,13 @@ def signup_view(request):
             # Create verification request
             VerificationRequest.objects.create(user=user)
             
+            # Track signup activity
+            try:
+                from analytics.middleware import AnalyticsMiddleware
+                AnalyticsMiddleware.log_activity(user, 'signup', request)
+            except:
+                pass
+            
             return JsonResponse({
                 'message': 'Account created successfully. Please wait for admin approval.',
                 'user_id': user.id
@@ -117,6 +124,14 @@ def login_view(request):
                     return JsonResponse({'error': 'Account not verified yet. Please wait for admin approval.'}, status=403)
                 
                 login(request, user)
+                
+                # Track login activity
+                try:
+                    from analytics.middleware import AnalyticsMiddleware
+                    AnalyticsMiddleware.log_activity(user, 'login', request)
+                except:
+                    pass  # Analytics xatosi login'ni to'xtatmasligi kerak
+                
                 return JsonResponse({
                     'message': 'Login successful',
                     'user': {
@@ -139,6 +154,13 @@ def login_view(request):
 
 @login_required
 def logout_view(request):
+    # Track logout activity
+    try:
+        from analytics.middleware import AnalyticsMiddleware
+        AnalyticsMiddleware.log_activity(request.user, 'logout', request)
+    except:
+        pass
+    
     logout(request)
     return JsonResponse({'message': 'Logged out successfully'})
 

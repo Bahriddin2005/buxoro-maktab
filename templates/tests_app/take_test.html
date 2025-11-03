@@ -129,7 +129,7 @@
         color: #6c757d;
         display: inline-flex;
         align-items: center;
-        justify-content-center;
+        justify-content:center;
         margin: 5px;
         cursor: pointer;
         transition: all 0.3s ease;
@@ -409,9 +409,9 @@
                 // Xatolikni faqat bir marta ko'rsatish
                 if (!window.errorShown) {
                     window.errorShown = true;
-                    showAlert(error.error || 'Testni boshlashda xatolik yuz berdi', 'danger');
-                    setTimeout(() => {
-                        window.location.href = '{% url "tests:tests" %}';
+                showAlert(error.error || 'Testni boshlashda xatolik yuz berdi', 'danger');
+                setTimeout(() => {
+                    window.location.href = '{% url "tests:tests" %}';
                     }, 3000);
                 }
             }
@@ -421,9 +421,9 @@
             // Xatolikni faqat bir marta ko'rsatish
             if (!window.errorShown) {
                 window.errorShown = true;
-                showAlert('Server bilan bog\'lanishda xatolik yuz berdi', 'danger');
-                setTimeout(() => {
-                    window.location.href = '{% url "tests:tests" %}';
+            showAlert('Server bilan bog\'lanishda xatolik yuz berdi', 'danger');
+            setTimeout(() => {
+                window.location.href = '{% url "tests:tests" %}';
                 }, 3000);
             }
         }
@@ -585,10 +585,10 @@
                 // Agar tanlanmagan bo'lsa, qo'shish
                 answers[questionId].choice_ids.push(choiceId);
             }
-            
+        
             // Debug: konsolga chiqarish
             console.log('Multiple choice toggled:', { questionId, choiceId, answer: answers[questionId] });
-            
+        
             // Multiple choice - kamida 1 ta tanlov bor bo'lsa, belgilangan deb hisoblaymiz
             if (answers[questionId].choice_ids.length > 0) {
                 answeredQuestions.add(questionId);
@@ -883,7 +883,7 @@
                     console.log('Test already completed, redirecting to results...');
                     window.location.href = `{% url "tests:test_results" test.id %}`;
                 } else {
-                    showAlert(error.error || 'Test yakunlashda xatolik yuz berdi', 'danger');
+                showAlert(error.error || 'Test yakunlashda xatolik yuz berdi', 'danger');
                     window.isSubmitting = false; // Qayta urinish uchun
                 }
             }
@@ -896,7 +896,7 @@
         // Hide modal
         const modal = bootstrap.Modal.getInstance(document.getElementById('submitConfirmModal'));
         if (modal) {
-            modal.hide();
+        modal.hide();
         }
     }
 

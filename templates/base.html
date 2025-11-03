@@ -297,6 +297,11 @@
 <body>
     <div class="animated-bg"></div>
     
+    <!-- Glassmorphism Sidebar (only for authenticated users) -->
+    {% if user.is_authenticated %}
+        {% include 'includes/sidebar.html' %}
+    {% endif %}
+    
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">

@@ -1,0 +1,193 @@
+{% load static %}
+
+<!-- Glassmorphism Sidebar -->
+<style>
+    /* Sidebar Styles */
+    .glass-sidebar {
+        position: fixed;
+        left: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 30px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        padding: 20px 15px;
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        z-index: 1000;
+        width: 70px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .sidebar-nav-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        font-size: 18px;
+        position: relative;
+        text-decoration: none;
+    }
+
+    .sidebar-nav-icon:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: scale(1.1);
+        color: white;
+    }
+
+    .sidebar-nav-icon.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .sidebar-nav-icon.active:hover {
+        transform: scale(1.05);
+    }
+
+    .sidebar-nav-icon .notification-badge {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        width: 8px;
+        height: 8px;
+        background: #ff4757;
+        border-radius: 50%;
+        border: 2px solid white;
+    }
+
+    .sidebar-nav-icon .notification-count {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background: #ff4757;
+        color: white;
+        font-size: 10px;
+        font-weight: 700;
+        padding: 2px 5px;
+        border-radius: 10px;
+        min-width: 18px;
+        text-align: center;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .glass-sidebar {
+            left: 10px;
+            width: 60px;
+            padding: 15px 10px;
+            gap: 15px;
+        }
+
+        .sidebar-nav-icon {
+            width: 35px;
+            height: 35px;
+            font-size: 16px;
+        }
+    }
+
+    /* Hide sidebar on very small screens */
+    @media (max-width: 576px) {
+        .glass-sidebar {
+            display: none;
+        }
+    }
+</style>
+
+<div class="glass-sidebar">
+    <!-- User Profile -->
+    <a href="{% url 'accounts:profile' %}" 
+       class="sidebar-nav-icon {% if request.resolver_match.url_name == 'profile' %}active{% endif %}" 
+       title="Profil"
+       data-bs-toggle="tooltip" 
+       data-bs-placement="right">
+        <i class="fas fa-user"></i>
+    </a>
+    
+    <!-- Home / Dashboard -->
+    <a href="{% url 'accounts:dashboard' %}" 
+       class="sidebar-nav-icon {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" 
+       title="Dashboard"
+       data-bs-toggle="tooltip" 
+       data-bs-placement="right">
+        <i class="fas fa-home"></i>
+        {% if user.role == 'admin' %}
+            {% if verification_requests_count > 0 %}
+                <span class="notification-count">{{ verification_requests_count }}</span>
+            {% endif %}
+        {% endif %}
+    </a>
+    
+    <!-- Analytics -->
+    {% if user.role == 'admin' or user.role == 'teacher' %}
+    <a href="{% url 'analytics:dashboard' %}" 
+       class="sidebar-nav-icon {% if 'analytics' in request.path %}active{% endif %}" 
+       title="Analytics"
+       data-bs-toggle="tooltip" 
+       data-bs-placement="right">
+        <i class="fas fa-chart-line"></i>
+    </a>
+    {% endif %}
+    
+    <!-- Users Management / Tests -->
+    {% if user.role == 'admin' %}
+        <a href="{% url 'accounts:verification_requests' %}" 
+           class="sidebar-nav-icon {% if request.resolver_match.url_name == 'verification_requests' %}active{% endif %}" 
+           title="Foydalanuvchilar"
+           data-bs-toggle="tooltip" 
+           data-bs-placement="right">
+            <i class="fas fa-users"></i>
+            {% if verification_requests_count > 0 %}
+                <span class="notification-badge"></span>
+            {% endif %}
+        </a>
+    {% else %}
+        <a href="{% url 'tests:tests' %}" 
+           class="sidebar-nav-icon {% if 'tests' in request.path and 'analytics' not in request.path %}active{% endif %}" 
+           title="Testlar"
+           data-bs-toggle="tooltip" 
+           data-bs-placement="right">
+            <i class="fas fa-clipboard-list"></i>
+        </a>
+    {% endif %}
+    
+    <!-- Settings / Admin Panel -->
+    {% if user.role == 'admin' %}
+        <a href="/admin/" 
+           class="sidebar-nav-icon" 
+           title="Admin Panel"
+           data-bs-toggle="tooltip" 
+           data-bs-placement="right"
+           target="_blank">
+            <i class="fas fa-cog"></i>
+        </a>
+    {% else %}
+        <a href="{% url 'accounts:profile' %}" 
+           class="sidebar-nav-icon" 
+           title="Sozlamalar"
+           data-bs-toggle="tooltip" 
+           data-bs-placement="right">
+            <i class="fas fa-cog"></i>
+        </a>
+    {% endif %}
+</div>
+
+<!-- Initialize Tooltips -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Bootstrap tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script>
+
