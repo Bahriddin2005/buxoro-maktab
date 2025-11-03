@@ -126,8 +126,8 @@
         {% endif %}
     </a>
     
-    <!-- Analytics -->
-    {% if user.role == 'admin' or user.role == 'teacher' %}
+    <!-- Analytics - FAQAT ADMIN uchun -->
+    {% if user.role == 'admin' %}
     <a href="{% url 'analytics:dashboard' %}" 
        class="sidebar-nav-icon {% if 'analytics' in request.path %}active{% endif %}" 
        title="Analytics"

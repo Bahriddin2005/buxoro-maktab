@@ -355,16 +355,7 @@
                     
                     {% elif user.role == 'teacher' %}
                     <div class="row g-3">
-                        <div class="col-md-3 col-6">
-                            <a href="{% url 'analytics:dashboard' %}" class="action-btn action-btn-gradient text-white">
-                                <div class="action-btn-icon">
-                                    <i class="fas fa-chart-line"></i>
-                                    <i class="fas fa-chart-bar"></i>
-                                </div>
-                                <div class="action-btn-text">Analytics</div>
-                            </a>
-                        </div>
-                        <div class="col-md-3 col-6">
+                        <div class="col-md-4 col-6">
                             <a href="{% url 'tests:create_test' %}" class="action-btn action-btn-green text-white">
                                 <div class="action-btn-icon">
                                     <i class="fas fa-plus-circle"></i>
@@ -372,7 +363,7 @@
                                 <div class="action-btn-text">Yangi Test</div>
                             </a>
                         </div>
-                        <div class="col-md-3 col-6">
+                        <div class="col-md-4 col-6">
                             <a href="{% url 'tests:grade_based_results' %}" class="action-btn action-btn-cyan text-white">
                                 <div class="action-btn-icon">
                                     <i class="fas fa-chart-bar"></i>
@@ -380,7 +371,7 @@
                                 <div class="action-btn-text">Natijalar</div>
                             </a>
                         </div>
-                        <div class="col-md-3 col-6">
+                        <div class="col-md-4 col-6">
                             <a href="{% url 'tests:tests' %}" class="action-btn action-btn-outline text-white">
                                 <div class="action-btn-icon">
                                     <i class="fas fa-file-alt"></i>
