@@ -100,8 +100,8 @@ def test_list_view(request):
             })
     
         elif request.user.role == 'admin':
-            # Admin sees all tests from all teachers
-            tests = Test.objects.filter(created_by__role='teacher').select_related('created_by').order_by('-created_at')
+            # Admin sees ALL tests (from teachers and admins)
+            tests = Test.objects.all().select_related('created_by').order_by('-created_at')
             test_data = []
             for test in tests:
                 attempt_count = TestAttempt.objects.filter(test=test, is_completed=True).count()

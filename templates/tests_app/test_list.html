@@ -61,45 +61,72 @@
             </div>
         </div>
 
-        <!-- Grade Filter for Admin -->
-        {% if user.role == 'admin' %}
-        <div class="glass-card p-3 mb-4" data-aos="fade-in">
-            <div class="row align-items-center">
-                <div class="col-md-4">
-                    <label class="form-label text-white mb-2">
-                        <i class="fas fa-graduation-cap me-2"></i>
-                        Sinf bo'yicha filtrlash
+        <!-- Filters for Admin and Teacher -->
+        {% if user.role == 'admin' or user.role == 'teacher' %}
+        <div class="glass-card p-4 mb-4" data-aos="fade-in">
+            <h5 class="text-white mb-3">
+                <i class="fas fa-filter me-2"></i>
+                Filterlash
+            </h5>
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label text-white-50 small mb-2">
+                        <i class="fas fa-graduation-cap me-1"></i>
+                        Sinf
                     </label>
-                    <select class="form-select bg-dark text-white border-secondary" id="gradeFilter">
+                    <select class="form-select bg-dark text-white border-secondary" id="gradeFilter" onchange="filterTests()">
                         <option value="">Barcha sinflar</option>
-                        {% for grade in "12345678901" %}
-                            <option value="{{ forloop.counter }}">{{ forloop.counter }}-sinf</option>
-                        {% endfor %}
+                        <option value="5">5-sinf</option>
+                        <option value="6">6-sinf</option>
+                        <option value="7">7-sinf</option>
+                        <option value="8">8-sinf</option>
+                        <option value="9">9-sinf</option>
+                        <option value="10">10-sinf</option>
+                        <option value="11">11-sinf</option>
                     </select>
                 </div>
-                <div class="col-md-4">
-                    <label class="form-label text-white mb-2">
-                        <i class="fas fa-book me-2"></i>
-                        Fan bo'yicha filtrlash
+                <div class="col-md-3">
+                    <label class="form-label text-white-50 small mb-2">
+                        <i class="fas fa-book me-1"></i>
+                        Fan
                     </label>
-                    <select class="form-select bg-dark text-white border-secondary" id="subjectFilter">
+                    <select class="form-select bg-dark text-white border-secondary" id="subjectFilter" onchange="filterTests()">
                         <option value="">Barcha fanlar</option>
+                        <option value="Informatika">Informatika</option>
                         <option value="Matematika">Matematika</option>
-                        <option value="Fizika">Fizika</option>
-                        <option value="Kimyo">Kimyo</option>
-                        <option value="Biologiya">Biologiya</option>
                         <option value="Ona tili">Ona tili</option>
-                        <option value="Ingliz tili">Ingliz tili</option>
-                        <option value="Tarix">Tarix</option>
+                        <option value="Adabiyot">Adabiyot</option>
+                        <option value="Fizika">Fizika</option>
+                        <option value="Tabiiy fan">Tabiiy fan</option>
                         <option value="Geografiya">Geografiya</option>
+                        <option value="Ingliz tili">Ingliz tili</option>
+                        <option value="Rus tili">Rus tili</option>
+                        <option value="Tarix">Tarix</option>
                     </select>
                 </div>
-                <div class="col-md-4 text-end">
-                    <button class="btn btn-outline-light" onclick="clearFilters()">
-                        <i class="fas fa-times me-1"></i>
-                        Filtrlarni tozalash
-                    </button>
+                <div class="col-md-3">
+                    <label class="form-label text-white-50 small mb-2">
+                        <i class="fas fa-toggle-on me-1"></i>
+                        Status
+                    </label>
+                    <select class="form-select bg-dark text-white border-secondary" id="statusFilter" onchange="filterTests()">
+                        <option value="">Barcha testlar</option>
+                        <option value="active">Faol testlar</option>
+                        <option value="inactive">Faol emas</option>
+                    </select>
                 </div>
+                <div class="col-md-3">
+                    <label class="form-label text-white-50 small mb-2">
+                        <i class="fas fa-search me-1"></i>
+                        Qidirish
+                    </label>
+                    <input type="text" class="form-control bg-dark text-white border-secondary" 
+                           id="searchFilter" placeholder="Test nomi..." onkeyup="filterTests()">
+                </div>
+            </div>
+            <div class="mt-3 text-white-50 small">
+                <i class="fas fa-info-circle me-1"></i>
+                <span id="filterResults">Barcha testlar ko'rsatilmoqda</span>
             </div>
         </div>
         {% endif %}
@@ -452,24 +479,26 @@ function viewResults(button) {
 }
 
 function filterTests() {
-    const searchTerm = document.getElementById('searchInput')?.value.toLowerCase() || '';
+    const searchTerm = (document.getElementById('searchFilter') || document.getElementById('searchInput'))?.value.toLowerCase() || '';
     const subjectFilter = document.getElementById('subjectFilter')?.value || '';
     const statusFilter = document.getElementById('statusFilter')?.value || '';
     const gradeFilter = document.getElementById('gradeFilter')?.value || '';
     
     const testItems = document.querySelectorAll('.test-item');
+    let visibleCount = 0;
     
     testItems.forEach(item => {
-        const title = item.querySelector('.test-title').textContent.toLowerCase();
-        const subject = item.querySelector('.subject-badge').textContent;
-        const grade = item.getAttribute('data-grade') || '';
-        const isCompleted = !item.querySelector('.completed-badge').classList.contains('d-none');
-        const isInProgress = !item.querySelector('.continue-test-btn').classList.contains('d-none');
+        const title = item.querySelector('.test-title')?.textContent.toLowerCase() || '';
+        const subject = item.querySelector('.subject-badge')?.textContent || '';
+        const gradeText = item.querySelector('.grade-badge')?.textContent || '';
+        const grade = gradeText.replace('-sinf', '').trim();
+        const testCard = item.querySelector('.test-card');
+        const isActive = testCard?.querySelector('.badge.bg-success') !== null;
         
         let showItem = true;
         
-        // Search filter
-        if (searchTerm && !title.includes(searchTerm)) {
+        // Search filter (test nomi yoki fan)
+        if (searchTerm && !title.includes(searchTerm) && !subject.toLowerCase().includes(searchTerm)) {
             showItem = false;
         }
         
@@ -478,11 +507,10 @@ function filterTests() {
             showItem = false;
         }
         
-        // Status filter
+        // Status filter (active/inactive)
         if (statusFilter) {
-            if (statusFilter === 'completed' && !isCompleted) showItem = false;
-            if (statusFilter === 'in-progress' && !isInProgress) showItem = false;
-            if (statusFilter === 'available' && (isCompleted || isInProgress)) showItem = false;
+            if (statusFilter === 'active' && !isActive) showItem = false;
+            if (statusFilter === 'inactive' && isActive) showItem = false;
         }
         
         // Grade filter
@@ -490,8 +518,25 @@ function filterTests() {
             showItem = false;
         }
         
-        item.style.display = showItem ? 'block' : 'none';
+        // Show/hide item
+        if (showItem) {
+            item.style.display = 'block';
+            visibleCount++;
+        } else {
+            item.style.display = 'none';
+        }
     });
+    
+    // Update filter results message
+    const filterResults = document.getElementById('filterResults');
+    if (filterResults) {
+        const totalCount = testItems.length;
+        if (visibleCount === totalCount) {
+            filterResults.innerHTML = `Barcha testlar ko'rsatilmoqda (${totalCount} ta)`;
+        } else {
+            filterResults.innerHTML = `${visibleCount} ta test topildi (jami ${totalCount} ta)`;
+        }
+    }
 }
 
 function clearFilters() {
