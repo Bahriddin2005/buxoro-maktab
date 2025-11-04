@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from . import monitoring_views
 
 app_name = 'tests'
 
@@ -30,4 +31,11 @@ urlpatterns = [
     path('student-export-results/', views.student_export_results_view, name='student_export_results'),
     path('test-api/', views.test_api_view, name='test_api'),
     path('export-all-students/', views.export_all_students_results, name='export_all_students'),
+    # Real-time monitoring
+    path('<int:test_id>/active-sessions/', monitoring_views.active_test_sessions_view, name='active_sessions'),
+    path('attempt/<int:attempt_id>/terminate/', monitoring_views.terminate_test_attempt_view, name='terminate_attempt'),
+    path('attempt/<int:attempt_id>/detail/', monitoring_views.student_test_detail_view, name='student_test_detail'),
+    path('attempt/<int:attempt_id>/control-time/', monitoring_views.control_time_view, name='control_time'),
+    path('students-monitoring/', monitoring_views.students_monitoring_view, name='students_monitoring'),
+    path('export-cross-grade-results/', monitoring_views.export_cross_grade_results, name='export_cross_grade_results'),
 ]

@@ -379,6 +379,12 @@ def submit_answer(request, attempt_id):
         
         answer.save()
         
+        # Update current question index for monitoring
+        current_index = data.get('current_question_index', 0)
+        if current_index is not None:
+            attempt.current_question_index = current_index
+            attempt.save(update_fields=['current_question_index'])
+        
         # Verify answer was saved
         saved_choices = list(answer.selected_choices.values_list('id', flat=True))
         print(f"Answer saved successfully. Selected choices: {saved_choices}")
@@ -1542,13 +1548,14 @@ from .models import Test
 @user_passes_test(lambda u: u.is_staff or u.is_superuser)
 def admin_teacher_tests(request):
     """
-    Admin uchun: o'qituvchilar tomonidan yaratilgan testlar ro'yxatini ko'rsatadi.
-    URL: /tests/admin/teacher-tests/  (tests_app/urls.py da allaqachon mavjud)
+    Admin uchun: barcha testlarni ko'rsatish
+    URL: /tests/admin/teacher-tests/
     """
     tests = (
         Test.objects
-        .filter(created_by__role='teacher')   # created_by field is correct
+        .all()  # Barcha testlar
         .select_related('created_by')
+        .prefetch_related('attempts')
         .order_by('-created_at')
     )
 

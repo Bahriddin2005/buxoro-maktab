@@ -275,9 +275,13 @@
         </h1>
         <p class="mb-3">Barcha sinflar uchun test natijalari va statistikalar</p>
         <div class="d-flex justify-content-center gap-3">
-            <a href="{% url 'tests:export_all_results' %}" class="btn btn-light btn-lg">
+            <a href="{% url 'tests:export_cross_grade_results' %}" class="btn btn-success btn-lg" style="background: linear-gradient(45deg, #28a745 0%, #20c997 100%); border: none;">
                 <i class="fas fa-file-excel me-2"></i>
-                Barcha Natijalarni Excel'ga Export
+                Sinflararo Natijalar (Excel)
+            </a>
+            <a href="{% url 'tests:export_all_results' %}" class="btn btn-light btn-lg">
+                <i class="fas fa-download me-2"></i>
+                Barcha Natijalar
             </a>
         </div>
     </div>

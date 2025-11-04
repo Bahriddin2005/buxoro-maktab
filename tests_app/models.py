@@ -88,6 +88,16 @@ class TestAttempt(models.Model):
     correct_answers = models.IntegerField(default=0)  # To'g'ri javoblar soni
     incorrect_answers = models.IntegerField(default=0)  # Noto'g'ri javoblar soni
     unanswered = models.IntegerField(default=0)  # Javob berilmagan savollar
+    current_question_index = models.IntegerField(default=0)  # Hozir qaysi savolda
+    is_terminated = models.BooleanField(default=False)  # O'qituvchi tomonidan to'xtatilganmi
+    terminated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='terminated_attempts'
+    )  # Kim to'xtatdi
+    termination_reason = models.TextField(blank=True)  # To'xtatish sababi
     
     class Meta:
         ordering = ['-started_at']

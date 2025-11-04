@@ -76,6 +76,7 @@
                     </label>
                     <select class="form-select bg-dark text-white border-secondary" id="gradeFilter" onchange="filterTests()">
                         <option value="">Barcha sinflar</option>
+                        <option value="4">4-sinf</option>
                         <option value="5">5-sinf</option>
                         <option value="6">6-sinf</option>
                         <option value="7">7-sinf</option>
@@ -174,6 +175,7 @@
                     </label>
                     <select class="form-select bg-dark border-secondary text-white" id="gradeFilterStudent" onchange="filterTests()">
                         <option value="">Barcha sinflar</option>
+                        <option value="4">4-sinf</option>
                         <option value="5">5-sinf</option>
                         <option value="6">6-sinf</option>
                         <option value="7">7-sinf</option>
@@ -303,7 +305,7 @@
                 </div>
 
                 <!-- Action Buttons -->
-                <div class="d-grid gap-2">
+                <div class="d-grid gap-2 test-actions">
                     <!-- Start Test Button -->
                     <button class="btn btn-success start-test-btn" onclick="startTest(this)">
                         <i class="fas fa-play me-2"></i>Testni Boshlash
@@ -364,22 +366,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
 async function loadTests(page = 1) {
     console.log(`🔍 Loading tests... Page: ${page}`);
+    console.log('🔧 Cache Busting - timestamp:', Date.now());
     try {
-        const response = await fetch(`/tests/?page=${page}&page_size=100`, {
+        // Add cache busting parameter
+        const cacheBuster = Date.now();
+        const response = await fetch(`/tests/?page=${page}&page_size=100&_cb=${cacheBuster}`, {
             headers: {
                 'Accept': 'application/json'
-            }
+            },
+            cache: 'no-cache'  // Force no cache
         });
         
         console.log('📡 Response status:', response.status);
         
         if (!response.ok) {
+            console.error('❌ Response not OK:', response.status, response.statusText);
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         
         const data = await response.json();
         console.log('📦 Data received:', data);
         console.log('📊 Tests count:', data.tests?.length || 0);
+        console.log('🎯 User role:', data.user_role);
         console.log('👤 User role:', data.user_role);
         console.log('📄 Pagination:', data.pagination);
         
@@ -489,18 +497,19 @@ function displayTests(tests, userRole = 'student') {
     container.innerHTML = '';
     
     tests.forEach((test, index) => {
-        const clone = template.content.cloneNode(true);
-        
-        // Fill test data
-        clone.querySelector('.subject-badge').textContent = test.subject;
-        clone.querySelector('.grade-badge').textContent = test.grade + '-sinf';
-        clone.querySelector('.test-title').textContent = test.title;
-        clone.querySelector('.test-description').textContent = test.description || 'Test tavsifi mavjud emas';
-        clone.querySelector('.questions-count').textContent = test.total_questions + ' savol';
-        console.log(`Test ${test.id} (${test.title}): ${test.total_questions} savol`);
-        clone.querySelector('.time-limit').textContent = test.time_limit + ' daq';
-        clone.querySelector('.teacher-name').textContent = test.created_by || 'Noma\'lum';
-        clone.querySelector('.created-date').textContent = formatDate(test.created_at);
+        try {
+            console.log(`🔨 Rendering test ${index + 1}/${tests.length}:`, test.id, test.title);
+            const clone = template.content.cloneNode(true);
+            
+            // Fill test data
+            clone.querySelector('.subject-badge').textContent = test.subject;
+            clone.querySelector('.grade-badge').textContent = test.grade + '-sinf';
+            clone.querySelector('.test-title').textContent = test.title;
+            clone.querySelector('.test-description').textContent = test.description || 'Test tavsifi mavjud emas';
+            clone.querySelector('.questions-count').textContent = test.total_questions + ' savol';
+            clone.querySelector('.time-limit').textContent = test.time_limit + ' daq';
+            clone.querySelector('.teacher-name').textContent = test.created_by || 'Noma\'lum';
+            clone.querySelector('.created-date').textContent = formatDate(test.created_at);
         
         // Set test ID and grade
         clone.querySelector('.test-card').setAttribute('data-test-id', test.id);
@@ -533,26 +542,41 @@ function displayTests(tests, userRole = 'student') {
             }
             
             clone.querySelector('.attempts-left').textContent = 'Boshqarish';
-
-                // Add Edit Test button
-                const editBtn = document.createElement('button');
-                editBtn.className = 'btn btn-outline-warning edit-test-btn';
-                editBtn.innerHTML = '<i class="fas fa-edit me-2"></i>Testni Tahrirlash';
-                editBtn.onclick = function() {
-                    window.location.href = `/tests/${test.id}/edit/`;
-                };
-                // Insert before results button
-                resultsBtn.parentNode.insertBefore(editBtn, resultsBtn);
-                
-                // Add Delete Test button
-                const deleteBtn = document.createElement('button');
-                deleteBtn.className = 'btn btn-outline-danger delete-test-btn mt-2';
-                deleteBtn.innerHTML = '<i class="fas fa-trash me-2"></i>Testni O\'chirish';
-                deleteBtn.onclick = function() {
-                    deleteTest(test.id, test.title);
-                };
-                // Insert after results button
-                resultsBtn.parentNode.appendChild(deleteBtn);
+            
+            // Add Monitoring button
+            const monitorBtn = document.createElement('button');
+            monitorBtn.className = 'btn btn-outline-success monitor-btn me-2';
+            monitorBtn.innerHTML = '<i class="fas fa-desktop me-2"></i>Monitoring';
+            monitorBtn.onclick = function() {
+                window.location.href = `/tests/${test.id}/active-sessions/`;
+            };
+            
+            // Add Edit Test button
+            const editBtn = document.createElement('button');
+            editBtn.className = 'btn btn-outline-warning edit-test-btn me-2';
+            editBtn.innerHTML = '<i class="fas fa-edit me-2"></i>Testni Tahrirlash';
+            editBtn.onclick = function() {
+                window.location.href = `/tests/${test.id}/edit/`;
+            };
+            
+            // Add Delete Test button
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'btn btn-outline-danger delete-test-btn mt-2';
+            deleteBtn.innerHTML = '<i class="fas fa-trash me-2"></i>Testni O\'chirish';
+            deleteBtn.onclick = function() {
+                deleteTest(test.id, test.title);
+            };
+            
+            // Get the test-actions container
+            const testActions = clone.querySelector('.test-actions');
+            if (testActions) {
+                const resultsBtn = clone.querySelector('.results-btn');
+                if (resultsBtn) {
+                    testActions.insertBefore(monitorBtn, resultsBtn);
+                    testActions.insertBefore(editBtn, resultsBtn);
+                }
+                testActions.appendChild(deleteBtn);
+            }
         } else {
             // Student view - original logic
             if (test.has_attempted) {
@@ -586,10 +610,15 @@ function displayTests(tests, userRole = 'student') {
             }
         }
         
-        // Add animation delay
-        clone.querySelector('.test-item').setAttribute('data-aos-delay', (index * 100).toString());
-        
-        container.appendChild(clone);
+            // Add animation delay
+            clone.querySelector('.test-item').setAttribute('data-aos-delay', (index * 100).toString());
+            
+            container.appendChild(clone);
+            console.log(`✅ Test ${test.id} rendered successfully`);
+        } catch (error) {
+            console.error(`❌ Error rendering test ${test.id}:`, error);
+            console.error('Test data:', test);
+        }
     });
     
     // Reinitialize AOS for new elements

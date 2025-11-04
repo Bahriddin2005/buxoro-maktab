@@ -781,10 +781,17 @@
 {% block content %}
 <div class="results-container">
     <!-- Back Button -->
-    <a href="{% url 'tests:tests' %}" class="back-btn">
-        <i class="fas fa-arrow-left"></i>
-        Testlarga qaytish
-    </a>
+    <div class="d-flex gap-3 mb-3">
+        <a href="{% url 'tests:tests' %}" class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+            Testlarga qaytish
+        </a>
+        <a href="/tests/{{ test.id }}/active-sessions/" class="back-btn" style="background: rgba(16, 185, 129, 0.2); border-color: rgba(16, 185, 129, 0.5);" id="activeSessionsBtn">
+            <i class="fas fa-desktop"></i>
+            Aktiv Sessiyalar
+            <span class="badge bg-success" id="activeCount">0</span>
+        </a>
+            </div>
 
     <!-- Header Card -->
     <div class="header-card" data-aos="fade-down">
@@ -793,7 +800,7 @@
             Test Natijalari
         </h1>
         <p id="testTitle">Natijalar yuklanmoqda...</p>
-    </div>
+            </div>
 
     <!-- Loading Section -->
     <div id="loadingSection" class="loading" data-aos="fade-up">
@@ -830,8 +837,8 @@
                 <div class="value" id="testTimeLimit">-</div>
             </div>
         </div>
-    </div>
-
+        </div>
+        
     <!-- Statistics Section (for teachers/admins) -->
     <div id="statisticsSection" class="statistics-section" style="display: none;" data-aos="fade-up">
         <h2 class="text-center">
@@ -913,7 +920,7 @@ async function loadResults() {
                 'Accept': 'application/json'
             }
         });
-
+        
         if (!response.ok) {
             throw new Error('Failed to load results');
         }
@@ -922,7 +929,7 @@ async function loadResults() {
         
         // Hide loading
         document.getElementById('loadingSection').style.display = 'none';
-        
+
         // Display test info
         displayTestInfo(data.test_info);
         
@@ -932,7 +939,7 @@ async function loadResults() {
         } else {
             displayTeacherResults(data.results, testId);
         }
-        
+
     } catch (error) {
         console.error('Error loading results:', error);
         document.getElementById('loadingSection').innerHTML = `
@@ -1181,7 +1188,7 @@ function createResultCard(result, isStudentView = false) {
                 <h3>${studentName}</h3>
                 <p>
                     ${result.student.student_id ? `ID: ${result.student.student_id}` : ''} 
-                    ${result.student.grade ? `• ${result.student.grade}-sinf` : ''} 
+                   ${result.student.grade ? `• ${result.student.grade}-sinf` : ''} 
                     ${result.student.class_name ? `• ${result.student.class_name}` : ''}
                 </p>
             </div>
@@ -1240,7 +1247,7 @@ function toggleMistakes(event, button) {
         icon.classList.remove('fa-eye');
         icon.classList.add('fa-eye-slash');
         button.innerHTML = button.innerHTML.replace('ko\'rish', 'yashirish');
-    } else {
+        } else {
         content.style.display = 'none';
         icon.classList.remove('fa-eye-slash');
         icon.classList.add('fa-eye');

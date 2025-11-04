@@ -159,6 +159,17 @@
         </a>
     {% endif %}
     
+    <!-- Monitoring - FAQAT O'QITUVCHI VA ADMIN uchun -->
+    {% if user.role == 'teacher' or user.role == 'admin' %}
+    <a href="{% url 'tests:students_monitoring' %}" 
+       class="sidebar-nav-icon {% if 'students-monitoring' in request.path %}active{% endif %}" 
+       title="Monitoring"
+       data-bs-toggle="tooltip" 
+       data-bs-placement="right">
+        <i class="fas fa-desktop"></i>
+    </a>
+    {% endif %}
+    
     <!-- Settings / Admin Panel -->
     {% if user.role == 'admin' %}
         <a href="/admin/" 

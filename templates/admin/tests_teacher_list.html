@@ -39,6 +39,10 @@
         <div class="col-md-2">
           <select class="form-select bg-transparent border-secondary text-white" id="gradeFilter">
             <option value="">Barcha sinflar</option>
+            <option value="5">5-sinf</option>
+            <option value="6">6-sinf</option>
+            <option value="7">7-sinf</option>
+            <option value="8">8-sinf</option>
             <option value="9">9-sinf</option>
             <option value="10">10-sinf</option>
             <option value="11">11-sinf</option>
@@ -113,6 +117,11 @@
               </td>
               <td class="text-center">
                 <div class="btn-group" role="group">
+                  <a href="/tests/{{ t.id }}/active-sessions/" 
+                     class="btn btn-sm btn-outline-success" 
+                     title="Real-time Monitoring">
+                    <i class="fas fa-desktop"></i>
+                  </a>
                   <a href="{% url 'tests:edit_test' t.id %}" 
                      class="btn btn-sm btn-outline-warning" 
                      title="Tahrirlash">
@@ -292,6 +301,17 @@ function getCookie(name) {
 .btn-group .btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.btn-outline-success {
+    color: #10b981;
+    border-color: #10b981;
+}
+
+.btn-outline-success:hover {
+    background-color: #10b981;
+    border-color: #10b981;
+    color: white;
 }
 
 .badge {
