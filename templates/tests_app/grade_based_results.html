@@ -274,10 +274,14 @@
             Sinf Bo'yicha Test Natijalari
         </h1>
         <p class="mb-3">Barcha sinflar uchun test natijalari va statistikalar</p>
-        <div class="d-flex justify-content-center gap-3">
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
+            <a href="{% url 'tests:export_subject_results' %}" class="btn btn-primary btn-lg" style="background: linear-gradient(45deg, #667eea 0%, #764ba2 100%); border: none;">
+                <i class="fas fa-book me-2"></i>
+                Fanlar Bo'yicha Natijalar
+            </a>
             <a href="{% url 'tests:export_cross_grade_results' %}" class="btn btn-success btn-lg" style="background: linear-gradient(45deg, #28a745 0%, #20c997 100%); border: none;">
                 <i class="fas fa-file-excel me-2"></i>
-                Sinflararo Natijalar (Excel)
+                Sinflararo Natijalar
             </a>
             <a href="{% url 'tests:export_all_results' %}" class="btn btn-light btn-lg">
                 <i class="fas fa-download me-2"></i>

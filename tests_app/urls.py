@@ -38,4 +38,5 @@ urlpatterns = [
     path('attempt/<int:attempt_id>/control-time/', monitoring_views.control_time_view, name='control_time'),
     path('students-monitoring/', monitoring_views.students_monitoring_view, name='students_monitoring'),
     path('export-cross-grade-results/', monitoring_views.export_cross_grade_results, name='export_cross_grade_results'),
+    path('export-subject-results/', views.export_subject_results_view, name='export_subject_results'),
 ]

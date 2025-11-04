@@ -2127,3 +2127,146 @@ def export_all_results_view(request):
         import traceback
         traceback.print_exc()
         return JsonResponse({'error': f'Export xatolik yuz berdi: {str(e)}'}, status=500)
+
+
+@login_required
+@user_passes_test(lambda u: u.role in ['teacher', 'admin'])
+def export_subject_results_view(request):
+    """Fanlar bo'yicha natijalarni Excel faylga export qilish - har bir fan alohida sheet"""
+    if not OPENPYXL_AVAILABLE:
+        return JsonResponse({'error': 'Excel export funksiyasi mavjud emas.'}, status=500)
+    
+    try:
+        from openpyxl.utils import get_column_letter
+        from openpyxl.styles import Alignment
+        
+        # Excel workbook yaratish
+        wb = Workbook()
+        wb.remove(wb.active)  # Default sheet'ni o'chirish
+        
+        # Barcha fanlarni olish
+        subjects = Test.objects.values_list('subject', flat=True).distinct().order_by('subject')
+        
+        print(f"Found subjects: {list(subjects)}")
+        
+        for subject in subjects:
+            if not subject:
+                continue
+                
+            print(f"\nProcessing subject: {subject}")
+            
+            # Sheet yaratish
+            ws = wb.create_sheet(title=subject[:31])  # Excel sheet name limit: 31 characters
+            
+            # Header qo'shish
+            ws['A1'] = f"{subject} - Barcha Natijalar"
+            ws['A1'].font = Font(bold=True, size=16, color="FFFFFF")
+            ws['A1'].fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
+            ws.merge_cells('A1:H1')
+            ws['A1'].alignment = Alignment(horizontal="center")
+            
+            # Umumiy statistika
+            tests = Test.objects.filter(subject=subject, is_active=True)
+            total_tests = tests.count()
+            
+            attempts = TestAttempt.objects.filter(
+                test__subject=subject,
+                is_completed=True
+            ).select_related('student', 'test')
+            
+            total_attempts = attempts.count()
+            
+            if total_attempts > 0:
+                avg_percentage = attempts.aggregate(avg=Avg('percentage'))['avg'] or 0
+                max_percentage = attempts.aggregate(max=Max('percentage'))['max'] or 0
+                min_percentage = attempts.aggregate(min=Min('percentage'))['min'] or 0
+            else:
+                avg_percentage = max_percentage = min_percentage = 0
+            
+            # Statistika qo'shish
+            ws['A3'] = "Umumiy Ma'lumotlar:"
+            ws['A3'].font = Font(bold=True, size=12)
+            
+            ws['A4'] = f"Jami Testlar: {total_tests}"
+            ws['A5'] = f"Jami Urinishlar: {total_attempts}"
+            ws['A6'] = f"O'rtacha Foiz: {avg_percentage:.1f}%"
+            ws['A7'] = f"Eng Yuqori Foiz: {max_percentage:.1f}%"
+            ws['A8'] = f"Eng Past Foiz: {min_percentage:.1f}%"
+            
+            # Natijalar jadvali header
+            ws['A10'] = "Barcha Natijalar:"
+            ws['A10'].font = Font(bold=True, size=12)
+            
+            headers = ['O\'quvchi', 'Sinf', 'Test Nomi', 'Ball', 'Maksimal', 'Foiz', 'Vaqt', 'Sana']
+            for col, header in enumerate(headers, 1):
+                cell = ws.cell(row=11, column=col, value=header)
+                cell.font = Font(bold=True, color="FFFFFF")
+                cell.fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+                cell.alignment = Alignment(horizontal="center")
+            
+            # Natijalarni yozish
+            row = 12
+            for attempt in attempts.order_by('-percentage', '-finished_at'):
+                student_name = f"{attempt.student.first_name} {attempt.student.last_name}".strip()
+                if not student_name:
+                    student_name = attempt.student.username
+                
+                ws.cell(row=row, column=1, value=student_name)
+                ws.cell(row=row, column=2, value=f"{attempt.student.grade}-sinf")
+                ws.cell(row=row, column=3, value=attempt.test.title)
+                ws.cell(row=row, column=4, value=attempt.score)
+                ws.cell(row=row, column=5, value=attempt.total_points)
+                ws.cell(row=row, column=6, value=f"{attempt.percentage:.1f}%")
+                ws.cell(row=row, column=7, value=str(attempt.time_taken) if attempt.time_taken else '-')
+                ws.cell(row=row, column=8, value=attempt.finished_at.strftime('%d.%m.%Y %H:%M') if attempt.finished_at else '-')
+                
+                # Rangli formatlar
+                if attempt.percentage >= 81:
+                    fill_color = "C6EFCE"  # Yashil
+                elif attempt.percentage >= 61:
+                    fill_color = "FFEB9C"  # Sariq
+                elif attempt.percentage >= 31:
+                    fill_color = "BDD7EE"  # Ko'k
+                else:
+                    fill_color = "FFC7CE"  # Qizil
+                
+                for col in range(1, 9):
+                    ws.cell(row=row, column=col).fill = PatternFill(start_color=fill_color, end_color=fill_color, fill_type="solid")
+                
+                row += 1
+            
+            # Ustun kengliklarini sozlash
+            ws.column_dimensions['A'].width = 25
+            ws.column_dimensions['B'].width = 10
+            ws.column_dimensions['C'].width = 35
+            ws.column_dimensions['D'].width = 10
+            ws.column_dimensions['E'].width = 10
+            ws.column_dimensions['F'].width = 10
+            ws.column_dimensions['G'].width = 12
+            ws.column_dimensions['H'].width = 18
+            
+            print(f"Sheet '{subject}' created with {row-12} results")
+        
+        # Agar hech qanday fan topilmasa
+        if len(wb.sheetnames) == 0:
+            ws = wb.create_sheet(title="Ma'lumot yo'q")
+            ws['A1'] = "Hozircha natijalar mavjud emas"
+            ws['A1'].font = Font(bold=True, size=14)
+        
+        # Response yaratish
+        response = HttpResponse(
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = 'attachment; filename="fanlar_boyicha_natijalar.xlsx"'
+        
+        # Excel faylni saqlash
+        wb.save(response)
+        
+        print(f"Excel file created successfully with {len(wb.sheetnames)} sheets")
+        return response
+        
+    except Exception as e:
+        print(f"Export subject results error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'error': f'Export xatolik yuz berdi: {str(e)}'}, status=500)
