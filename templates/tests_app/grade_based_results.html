@@ -372,13 +372,13 @@
                 </div>
             </div>
             
-            {% if grade_stat.top_performers %}
+            {% if grade_stat.all_results %}
             <div class="top-performers">
                 <h6>
-                    <i class="fas fa-trophy"></i>
-                    Eng Yaxshi Natijalar
+                    <i class="fas fa-list"></i>
+                    Barcha Natijalar ({{ grade_stat.all_results|length }} ta)
                 </h6>
-                {% for performer in grade_stat.top_performers %}
+                {% for performer in grade_stat.all_results %}
                 <div class="performer-item">
                     <div class="performer-info">
                         <div class="performer-name">{{ performer.student_name }}</div>

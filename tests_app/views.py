@@ -1265,7 +1265,50 @@ def edit_test_view(request, test_id):
             print(f"Request FILES: {request.FILES}")
             
             if request.content_type and 'multipart/form-data' in request.content_type:
-                # Handle FormData for image upload
+                # Handle FormData for image upload or removal
+                
+                # Check if this is an image update/removal for existing question
+                if request.POST.get('update_image_only') or request.POST.get('remove_image'):
+                    question_id = request.POST.get('question_id')
+                    if not question_id:
+                        return JsonResponse({'success': False, 'error': 'Question ID kerak!'})
+                    
+                    try:
+                        question = Question.objects.get(id=question_id, test=test)
+                        
+                        if request.POST.get('remove_image'):
+                            # Remove image
+                            if question.image:
+                                question.image.delete(save=False)
+                                question.image = None
+                                question.save()
+                                return JsonResponse({'success': True, 'message': 'Rasm o\'chirildi!'})
+                            else:
+                                return JsonResponse({'success': False, 'error': 'Rasm mavjud emas!'})
+                        
+                        elif request.POST.get('update_image_only'):
+                            # Update image only
+                            question_image = request.FILES.get('question_image')
+                            if question_image:
+                                # Remove old image if exists
+                                if question.image:
+                                    question.image.delete(save=False)
+                                question.image = question_image
+                                question.save()
+                                return JsonResponse({
+                                    'success': True, 
+                                    'message': 'Rasm yuklandi!',
+                                    'image_url': question.image.url
+                                })
+                            else:
+                                return JsonResponse({'success': False, 'error': 'Rasm fayli topilmadi!'})
+                    
+                    except Question.DoesNotExist:
+                        return JsonResponse({'success': False, 'error': 'Savol topilmadi!'})
+                    except Exception as e:
+                        return JsonResponse({'success': False, 'error': str(e)})
+                
+                # Handle new question creation with image
                 question_text = request.POST.get('question_text')
                 question_type = request.POST.get('question_type')
                 points = request.POST.get('points', 1)
@@ -1475,6 +1518,7 @@ def edit_test_view(request, test_id):
                 'question_type': q.question_type,
                 'points': q.points,
                 'explanation': q.explanation,
+                'image': q.image.url if q.image else None,  # Add image URL
                 'choices': []
             }
             if q.question_type in ['single_choice', 'multiple_choice']:
@@ -1513,6 +1557,7 @@ def edit_test_view(request, test_id):
             'question_type': q.question_type,
             'points': q.points,
             'explanation': q.explanation,
+            'image': q.image.url if q.image else None,  # Add image URL
             'choices': []
         }
         if q.question_type in ['single_choice', 'multiple_choice']:
@@ -1612,8 +1657,8 @@ def grade_based_results_view(request):
             highest_score = 0
             lowest_score = 0
         
-        # Eng yaxshi natijalar
-        top_performers = attempts.order_by('-percentage')[:5]
+        # BARCHA natijalar (faqat top 5 emas!)
+        all_performers = attempts.order_by('-percentage')  # Barcha natijalarni olish
         
         grade_stats.append({
             'grade': grade,
@@ -1623,16 +1668,17 @@ def grade_based_results_view(request):
             'avg_percentage': round(avg_percentage, 1),
             'highest_score': round(highest_score, 1),
             'lowest_score': round(lowest_score, 1),
-            'top_performers': [
+            'all_results': [  # 'top_performers' o'rniga 'all_results'
                 {
                     'student_name': f"{attempt.student.first_name} {attempt.student.last_name}",
                     'student_username': attempt.student.username,
                     'test_title': attempt.test.title,
                     'percentage': round(attempt.percentage, 1),
                     'score': attempt.score,
+                    'total_points': attempt.total_points,
                     'finished_at': attempt.finished_at
                 }
-                for attempt in top_performers
+                for attempt in all_performers  # Barcha natijalar
             ]
         })
     
@@ -1765,22 +1811,6 @@ def export_grade_results_view(request):
                 ws.cell(row=row, column=col).fill = PatternFill(start_color=fill_color, end_color=fill_color, fill_type="solid")
             
             row += 1
-        
-        # Eng yaxshi natijalar
-        if total_attempts > 0:
-            ws[f'A{row+2}'] = "Eng Yaxshi Natijalar (Top 5):"
-            ws[f'A{row+2}'].font = Font(bold=True)
-            
-            top_attempts = attempts.order_by('-percentage')[:5]
-            for i, attempt in enumerate(top_attempts, 1):
-                student_name = f"{attempt.student.first_name} {attempt.student.last_name}"
-                if not student_name.strip():
-                    student_name = attempt.student.username
-                
-                ws.cell(row=row+3+i, column=1, value=f"{i}. {student_name}")
-                ws.cell(row=row+3+i, column=2, value=attempt.test.title)
-                ws.cell(row=row+3+i, column=3, value=f"{attempt.percentage:.1f}%")
-                ws.cell(row=row+3+i, column=4, value=attempt.score)
         
         # Ustun kengliklarini sozlash
         ws.column_dimensions['A'].width = 25
@@ -1920,25 +1950,9 @@ def export_single_grade_results_view(request, grade):
             
             row += 1
     
-        # Eng yaxshi natijalar
-        if total_attempts > 0:
-            ws[f'A{row+2}'] = "Eng Yaxshi Natijalar (Top 5):"
-            ws[f'A{row+2}'].font = Font(bold=True)
-        
-            top_attempts = attempts.order_by('-percentage')[:5]
-            for i, attempt in enumerate(top_attempts, 1):
-                student_name = f"{attempt.student.first_name} {attempt.student.last_name}"
-                if not student_name.strip():
-                    student_name = attempt.student.username
-            
-                    ws.cell(row=row+3+i, column=1, value=f"{i}. {student_name}")
-                    ws.cell(row=row+3+i, column=2, value=attempt.test.title)
-                    ws.cell(row=row+3+i, column=3, value=f"{attempt.percentage:.1f}%")
-                    ws.cell(row=row+3+i, column=4, value=attempt.score)
-    
-                    # Ustun kengliklarini sozlash
-                    ws.column_dimensions['A'].width = 25
-                    ws.column_dimensions['B'].width = 30
+        # Ustun kengliklarini sozlash
+        ws.column_dimensions['A'].width = 25
+        ws.column_dimensions['B'].width = 30
         ws.column_dimensions['C'].width = 10
         ws.column_dimensions['D'].width = 10
         ws.column_dimensions['E'].width = 15

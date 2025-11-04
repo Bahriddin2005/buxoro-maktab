@@ -236,10 +236,8 @@ def dashboard_view(request):
             
             context['average_score'] = total_percentage / valid_results if valid_results > 0 else 0
             
-            # Безопасное нахождение лучшего результата
-            best_result = None
-            best_percentage = 0
-            
+            # BARCHA natijalarni contextga qo'shish (faqat best emas)
+            all_results_list = []
             for r in all_results:
                 try:
                     if (r.attempt and 
@@ -247,30 +245,36 @@ def dashboard_view(request):
                         r.attempt.total_points is not None and 
                         r.attempt.total_points > 0):
                         current_percentage = (r.attempt.score / r.attempt.total_points * 100)
-                        if current_percentage > best_percentage:
-                            best_percentage = current_percentage
-                            best_result = r
+                        
+                        # Grade ni hisoblash
+                        if current_percentage >= 81:
+                            grade = "A'lo"
+                        elif current_percentage >= 61:
+                            grade = 'Yaxshi'
+                        elif current_percentage >= 31:
+                            grade = 'Qoniqarli'
+                        else:
+                            grade = 'Qoniqarsiz'
+                        
+                        all_results_list.append({
+                            'test_name': r.attempt.test.title,
+                            'test_subject': r.attempt.test.subject,
+                            'score': r.attempt.score,
+                            'max_score': r.attempt.total_points,
+                            'percentage': current_percentage,
+                            'grade': grade,
+                            'finished_at': r.attempt.finished_at
+                        })
                 except (TypeError, ZeroDivisionError):
                     continue
             
-            if best_result:
-                # Grade ni hisoblash
-                if best_percentage >= 81:
-                    best_grade = "A'lo"
-                elif best_percentage >= 61:
-                    best_grade = 'Yaxshi'
-                elif best_percentage >= 31:
-                    best_grade = 'Qoniqarli'
-                else:
-                    best_grade = 'Qoniqarsiz'
-                    
-                context['best_result'] = {
-                    'test_name': best_result.attempt.test.title,
-                    'score': best_result.attempt.score,
-                    'max_score': best_result.attempt.total_points,
-                    'percentage': best_percentage,
-                    'grade': best_grade
-                }
+            # Foiz bo'yicha tartiblash (eng yaxshisi birinchi)
+            all_results_list.sort(key=lambda x: x['percentage'], reverse=True)
+            context['all_student_results'] = all_results_list
+            
+            # Eng yaxshi natija
+            if all_results_list:
+                context['best_result'] = all_results_list[0]
             else:
                 context['best_result'] = {
                     'test_name': 'No tests completed',

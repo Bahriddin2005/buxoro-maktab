@@ -5,6 +5,51 @@
 {% if user.role == 'student' %}Testlar{% else %}Mening Testlarim{% endif %} - Buxoro Bilimdonlar Maktabi
 {% endblock %}
 
+{% block extra_css %}
+<style>
+/* Test action buttons styling */
+.edit-test-btn {
+    background-color: transparent !important;
+    border-color: #ffc107 !important;
+    color: #ffc107 !important;
+}
+
+.edit-test-btn:hover {
+    background-color: #ffc107 !important;
+    border-color: #ffc107 !important;
+    color: #000 !important;
+}
+
+.monitor-btn {
+    background-color: transparent !important;
+    border-color: #28a745 !important;
+    color: #28a745 !important;
+}
+
+.monitor-btn:hover {
+    background-color: #28a745 !important;
+    border-color: #28a745 !important;
+    color: #fff !important;
+}
+
+.delete-test-btn {
+    background-color: transparent !important;
+    border-color: #dc3545 !important;
+    color: #dc3545 !important;
+}
+
+.delete-test-btn:hover {
+    background-color: #dc3545 !important;
+    border-color: #dc3545 !important;
+    color: #fff !important;
+}
+
+.test-actions .btn {
+    transition: all 0.3s ease;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="row">
     <div class="col-12">
@@ -570,11 +615,22 @@ function displayTests(tests, userRole = 'student') {
             // Get the test-actions container
             const testActions = clone.querySelector('.test-actions');
             if (testActions) {
-                const resultsBtn = clone.querySelector('.results-btn');
+                // resultsBtn ni to'g'ri selector bilan topish
+                const resultsBtn = clone.querySelector('.view-results-btn');
+                
+                // resultsBtn'ni ko'rinadigan qilish va onclick qo'shish
                 if (resultsBtn) {
+                    resultsBtn.classList.remove('d-none');
+                    resultsBtn.onclick = function() {
+                        window.location.href = `/tests/${test.id}/results/`;
+                    };
+                    
+                    // Monitoring va Edit tugmalarini Results oldiga qo'shish
                     testActions.insertBefore(monitorBtn, resultsBtn);
                     testActions.insertBefore(editBtn, resultsBtn);
                 }
+                
+                // Delete tugmasini oxiriga qo'shish
                 testActions.appendChild(deleteBtn);
             }
         } else {

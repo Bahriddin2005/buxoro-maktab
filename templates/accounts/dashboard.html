@@ -577,17 +577,52 @@
                 {% if best_result %}
                 <div class="mt-4">
                     <div class="alert alert-success bg-gradient" role="alert">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-shrink-0">
-                                <i class="fas fa-trophy fa-2x text-warning"></i>
-                            </div>
-                            <div class="flex-grow-1 ms-3">
-                                <h5 class="alert-heading text-dark">Eng Yaxshi Natijangiz!</h5>
-                                <p class="mb-0 text-dark">
-                                    <strong>{{ best_result.test_name }}</strong> testida {{ best_result.score }}/{{ best_result.max_score }} ball 
-                                    ({{ best_result.percentage|floatformat:1 }}%) - <strong>{{ best_result.grade }}</strong>
-                                </p>
-                            </div>
+                        <div class="table-responsive">
+                            <h5 class="text-dark mb-3">
+                                <i class="fas fa-list-alt me-2"></i>
+                                Barcha Natijalaringiz ({{ all_student_results|length }} ta)
+                                <a href="{% url 'tests:grade_based_results' %}" class="btn btn-sm btn-success float-end">
+                                    <i class="fas fa-file-excel me-1"></i>Excel'ga Yuklash
+                                </a>
+                            </h5>
+                            <table class="table table-hover table-striped">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Test</th>
+                                        <th>Fan</th>
+                                        <th>Ball</th>
+                                        <th>Foiz</th>
+                                        <th>Baho</th>
+                                        <th>Sana</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for result in all_student_results %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>{{ result.test_name }}</td>
+                                        <td>{{ result.test_subject }}</td>
+                                        <td>{{ result.score }}/{{ result.max_score }}</td>
+                                        <td>
+                                            <span class="badge {% if result.percentage >= 81 %}bg-success{% elif result.percentage >= 61 %}bg-primary{% elif result.percentage >= 31 %}bg-warning{% else %}bg-danger{% endif %}">
+                                                {{ result.percentage|floatformat:1 }}%
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <strong {% if result.percentage >= 81 %}class="text-success"{% elif result.percentage >= 61 %}class="text-primary"{% elif result.percentage >= 31 %}class="text-warning"{% else %}class="text-danger"{% endif %}>
+                                                {{ result.grade }}
+                                            </strong>
+                                        </td>
+                                        <td>{{ result.finished_at|date:"d.m.Y H:i" }}</td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="7" class="text-center text-muted">Hali natijalar yo'q</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
