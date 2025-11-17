@@ -5,7 +5,7 @@ from django.views.decorators.http import require_http_methods
 from django.utils import timezone
 from django.db import transaction
 from django.core.paginator import Paginator
-from django.db.models import Count, Avg, Max, Min
+from django.db.models import Count, Avg, Max, Min, Q
 import json
 import random
 from .models import Test, Question, Choice, TestAttempt, Answer, TestResult, TestRetakeRequest
@@ -28,11 +28,26 @@ def test_list_view(request):
         page = int(request.GET.get('page', 1))
         page_size = int(request.GET.get('page_size', 100))  # 100 ta test/sahifa
         
+        # Filter parametrlari
+        grade_filter = request.GET.get('grade', '')
+        subject_filter = request.GET.get('subject', '')
+        status_filter = request.GET.get('status', '')
+        search_filter = request.GET.get('search', '')
+        
         if request.user.role == 'student':
             tests = Test.objects.filter(
                 is_active=True,
                 grade=request.user.grade
             ).select_related('created_by').prefetch_related('questions').order_by('-created_at')
+            
+            # Qo'shimcha filterlar (o'quvchi o'z sinfidagi testlarni filtrlash uchun)
+            if subject_filter:
+                tests = tests.filter(subject=subject_filter)
+            if search_filter:
+                tests = tests.filter(
+                    Q(title__icontains=search_filter) |
+                    Q(description__icontains=search_filter)
+                )
             
             test_data = []
             for test in tests:
@@ -95,6 +110,21 @@ def test_list_view(request):
             # Teacher sees ALL tests (not just their own) - LIMIT to first 100
             tests = Test.objects.all().select_related('created_by').order_by('-created_at')
             
+            # Filterlar qo'shish
+            if grade_filter:
+                tests = tests.filter(grade=int(grade_filter))
+            if subject_filter:
+                tests = tests.filter(subject=subject_filter)
+            if status_filter == 'active':
+                tests = tests.filter(is_active=True)
+            elif status_filter == 'inactive':
+                tests = tests.filter(is_active=False)
+            if search_filter:
+                tests = tests.filter(
+                    Q(title__icontains=search_filter) |
+                    Q(description__icontains=search_filter)
+                )
+            
             # Get total count first
             total_count = tests.count()
             
@@ -134,6 +164,21 @@ def test_list_view(request):
         elif request.user.role == 'admin':
             # Admin sees ALL tests - LIMIT to first 100
             tests = Test.objects.all().select_related('created_by').order_by('-created_at')
+            
+            # Filterlar qo'shish
+            if grade_filter:
+                tests = tests.filter(grade=int(grade_filter))
+            if subject_filter:
+                tests = tests.filter(subject=subject_filter)
+            if status_filter == 'active':
+                tests = tests.filter(is_active=True)
+            elif status_filter == 'inactive':
+                tests = tests.filter(is_active=False)
+            if search_filter:
+                tests = tests.filter(
+                    Q(title__icontains=search_filter) |
+                    Q(description__icontains=search_filter)
+                )
             
             # Get total count first
             total_count = tests.count()
