@@ -39,4 +39,5 @@ urlpatterns = [
     path('students-monitoring/', monitoring_views.students_monitoring_view, name='students_monitoring'),
     path('export-cross-grade-results/', monitoring_views.export_cross_grade_results, name='export_cross_grade_results'),
     path('export-subject-results/', views.export_subject_results_view, name='export_subject_results'),
+    path('delete-all-tests/', views.delete_all_tests_view, name='delete_all_tests'),
 ]

@@ -2315,3 +2315,51 @@ def export_subject_results_view(request):
         import traceback
         traceback.print_exc()
         return JsonResponse({'error': f'Export xatolik yuz berdi: {str(e)}'}, status=500)
+
+@login_required
+@user_passes_test(lambda u: u.role == 'admin')
+@require_http_methods(["POST"])
+def delete_all_tests_view(request):
+    """Barcha testlarni o'chirish (faqat admin) - O'quvchilar saqlanadi"""
+    try:
+        # Hisob-kitob
+        total_tests = Test.objects.count()
+        total_questions = Question.objects.count()
+        total_choices = Choice.objects.count()
+        total_attempts = TestAttempt.objects.count()
+        total_answers = Answer.objects.count()
+        total_results = TestResult.objects.count()
+        total_retake_requests = TestRetakeRequest.objects.count()
+        total_users = User.objects.count()
+        
+        # Barcha testlarni o'chirish (CASCADE bo'lgani uchun bog'liq obyektlar avtomatik o'chadi)
+        deleted_count = Test.objects.all().delete()[0]
+        
+        # Tekshirish
+        remaining_users = User.objects.count()
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Barcha testlar muvaffaqiyatli o\'chirildi!',
+            'deleted': {
+                'tests': total_tests,
+                'questions': total_questions,
+                'choices': total_choices,
+                'attempts': total_attempts,
+                'answers': total_answers,
+                'results': total_results,
+                'retake_requests': total_retake_requests,
+                'total_deleted': deleted_count
+            },
+            'preserved': {
+                'users': total_users,
+                'users_after': remaining_users
+            }
+        })
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({
+            'success': False,
+            'error': f'Testlarni o\'chirishda xatolik: {str(e)}'
+        }, status=500)
