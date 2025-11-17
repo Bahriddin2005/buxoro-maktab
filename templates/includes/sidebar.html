@@ -78,6 +78,15 @@
         text-align: center;
     }
 
+    .delete-all-tests-btn {
+        background: rgba(220, 53, 69, 0.2) !important;
+    }
+
+    .delete-all-tests-btn:hover {
+        background: rgba(220, 53, 69, 0.4) !important;
+        transform: scale(1.1);
+    }
+
     /* Responsive */
     @media (max-width: 768px) {
         .glass-sidebar {
@@ -170,6 +179,18 @@
     </a>
     {% endif %}
     
+    <!-- Delete All Tests - FAQAT ADMIN uchun -->
+    {% if user.role == 'admin' %}
+    <a href="#" 
+       class="sidebar-nav-icon delete-all-tests-btn" 
+       title="Barcha Testlarni O'chirish"
+       data-bs-toggle="tooltip" 
+       data-bs-placement="right"
+       onclick="deleteAllTests(event); return false;">
+        <i class="fas fa-trash-alt"></i>
+    </a>
+    {% endif %}
+    
     <!-- Settings / Admin Panel -->
     {% if user.role == 'admin' %}
         <a href="/admin/" 
@@ -200,5 +221,109 @@
             return new bootstrap.Tooltip(tooltipTriggerEl);
         });
     });
+
+    // Barcha testlarni o'chirish funksiyasi
+    async function deleteAllTests(event) {
+        event.preventDefault();
+        
+        // Tasdiqlash
+        const confirmMessage = '⚠️ DIQQAT!\n\n' +
+            'Barcha testlar o\'chiriladi!\n' +
+            '• Barcha testlar\n' +
+            '• Barcha savollar\n' +
+            '• Barcha javoblar\n' +
+            '• Barcha natijalar\n' +
+            '• Barcha urinishlar\n\n' +
+            '✅ O\'quvchilar saqlanib qoladi.\n\n' +
+            'Bu amalni qaytarib bo\'lmaydi!\n\n' +
+            'Davom etasizmi?';
+        
+        if (!confirm(confirmMessage)) {
+            return;
+        }
+        
+        // Ikkinchi tasdiqlash
+        const secondConfirm = 'Yana bir bor tasdiqlang:\n\n' +
+            'Barcha testlarni o\'chirishni xohlaysizmi?\n\n' +
+            'Bu amalni qaytarib bo\'lmaydi!';
+        
+        if (!confirm(secondConfirm)) {
+            return;
+        }
+        
+        try {
+            // Loading ko'rsatish
+            const btn = event.target.closest('.delete-all-tests-btn');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            btn.style.pointerEvents = 'none';
+            
+            // CSRF token olish
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+            
+            // API ga so'rov yuborish
+            const response = await fetch('{% url "tests:delete_all_tests" %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            const data = await response.json();
+            
+            // Tugmani tiklash
+            btn.innerHTML = originalHTML;
+            btn.style.pointerEvents = 'auto';
+            
+            if (data.success) {
+                // Muvaffaqiyat xabari
+                const message = '✅ ' + data.message + '\n\n' +
+                    '📊 O\'chirilgan:\n' +
+                    `• ${data.deleted.tests} ta test\n` +
+                    `• ${data.deleted.questions} ta savol\n` +
+                    `• ${data.deleted.choices} ta javob varianti\n` +
+                    `• ${data.deleted.attempts} ta urinish\n` +
+                    `• ${data.deleted.answers} ta javob\n` +
+                    `• ${data.deleted.results} ta natija\n` +
+                    `• ${data.deleted.retake_requests} ta qayta ishlash so'rovi\n\n` +
+                    '✅ Saqlanib qolgan:\n' +
+                    `• ${data.preserved.users} ta o'quvchi\n\n` +
+                    'Sahifa qayta yuklanadi...';
+                
+                alert(message);
+                
+                // Sahifani qayta yuklash
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            } else {
+                alert('❌ Xatolik: ' + (data.error || 'Testlarni o\'chirib bo\'lmadi'));
+            }
+        } catch (error) {
+            console.error('Error deleting all tests:', error);
+            alert('❌ Testlarni o\'chirishda xatolik yuz berdi. Iltimos qayta urinib ko\'ring.');
+            
+            // Tugmani tiklash
+            const btn = event.target.closest('.delete-all-tests-btn');
+            if (btn) {
+                btn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+                btn.style.pointerEvents = 'auto';
+            }
+        }
+    }
 </script>
 
