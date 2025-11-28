@@ -469,11 +469,19 @@ def finish_test(request, attempt_id):
         # Calculate score using the method and get results
         results = attempt.calculate_score()
         
-        # Get the calculated values from the attempt
-        correct_answers = attempt.correct_answers or 0
-        incorrect_answers = attempt.incorrect_answers or 0
-        unanswered = attempt.unanswered or 0
-        
+        # Use calculated values (do not access non-existing TestAttempt DB columns)
+        correct_answers = results.get('correct_answers', 0)
+        incorrect_answers = results.get('incorrect_answers', 0)
+        unanswered = results.get('unanswered', 0)
+        score = results.get('score', 0)
+        total_points = results.get('total_points', 0)
+        percentage = results.get('percentage', 0)
+
+        # Update attempt fields (if model defines them they will be saved; otherwise these are harmless attributes)
+        attempt.score = score
+        attempt.total_points = total_points
+        attempt.percentage = percentage
+
         test_result = TestResult.objects.create(
             attempt=attempt,
             correct_answers=correct_answers,
@@ -2290,8 +2298,8 @@ def export_subject_results_view(request):
                     student_name = attempt.student.username
                 
                 ws.cell(row=row, column=1, value=student_name)
-                ws.cell(row=row, column=2, value=f"{attempt.student.grade}-sinf")
-                ws.cell(row=row, column=3, value=attempt.test.title)
+                ws.cell(row=row, column=2, value=test.subject)
+                ws.cell(row=row, column=3, value=test.title)
                 ws.cell(row=row, column=4, value=attempt.score)
                 ws.cell(row=row, column=5, value=attempt.total_points)
                 ws.cell(row=row, column=6, value=f"{attempt.percentage:.1f}%")
