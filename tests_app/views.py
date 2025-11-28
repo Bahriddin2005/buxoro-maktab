@@ -947,92 +947,229 @@ def test_info_view(request, test_id):
 @login_required
 def all_results_view(request):
     """Barcha test natijalarini ko'rsatish - Admin va Teacher uchun"""
+    from django.db import connection, OperationalError
+    from django.conf import settings
+    
     if request.user.role not in ['admin', 'teacher']:
         return JsonResponse({'error': 'Access denied'}, status=403)
     
     if request.method == 'GET' and request.headers.get('Accept') == 'application/json':
-        # BARCHA natijalarni olish (faqat oxirgi emas, HAMMASI!)
-        if request.user.role == 'admin':
-            attempts = TestAttempt.objects.filter(is_completed=True).select_related(
-                'student', 'test', 'result'
-            )
-        else:  # teacher
-            attempts = TestAttempt.objects.filter(
-                test__created_by=request.user, 
-                is_completed=True
-            ).select_related('student', 'test', 'result')
-        
-        # Filters
-        grade = request.GET.get('grade')
-        subject = request.GET.get('subject')
-        test_id = request.GET.get('test')
-        
-        if grade:
-            attempts = attempts.filter(student__grade=grade)
-        if subject:
-            attempts = attempts.filter(test__subject=subject)
-        if test_id:
-            attempts = attempts.filter(test_id=test_id)
-        
-        # Order - Sinf bo'yicha, keyin sana bo'yicha
-        attempts = attempts.order_by('student__grade', 'student__last_name', 'student__first_name', '-finished_at')
-        
-        results_data = []
-        for attempt in attempts:
-            # Calculate grade based on percentage
-            percentage = attempt.percentage or 0
-            if percentage >= 81:
-                grade = "A'lo"
-            elif percentage >= 61:
-                grade = "Yaxshi"
-            elif percentage >= 31:
-                grade = "Qoniqarli"
+        try:
+            # Database engine aniqlash
+            db_engine = settings.DATABASES['default']['ENGINE']
+            if 'sqlite' in db_engine.lower():
+                param_style = '?'
             else:
-                grade = "Qoniqarsiz"
-            results_data.append({
-                'test': {
-                    'id': attempt.test.id,
-                    'title': attempt.test.title,
-                    'subject': attempt.test.subject,
-                    'grade': attempt.test.grade,
-                    'created_by': attempt.test.created_by.get_full_name() or attempt.test.created_by.username
-                },
-                'student': {
-                    'id': attempt.student.id,
-                    'username': attempt.student.username,
-                    'first_name': attempt.student.first_name,
-                    'last_name': attempt.student.last_name,
-                    'student_id': attempt.student.student_id,
-                    'class_name': attempt.student.class_name,
-                    'grade': attempt.student.grade
-                },
-                'score': attempt.score,
-                'total_points': attempt.total_points,
-                'percentage': attempt.percentage,
-                'grade': grade,
-                'time_taken': str(attempt.time_taken),
-                'finished_at': attempt.finished_at.isoformat(),
-                'correct_answers': attempt.result.correct_answers if hasattr(attempt, 'result') else 0,
-                'incorrect_answers': attempt.result.incorrect_answers if hasattr(attempt, 'result') else 0,
-                'unanswered': attempt.result.unanswered if hasattr(attempt, 'result') else 0,
-                'student_name': f"{attempt.student.first_name} {attempt.student.last_name}",
-                'username': attempt.student.username,
-                'test_title': attempt.test.title,
+                param_style = '%s'
+            
+            # BARCHA natijalarni olish - RAW SQL ishlatamiz
+            # Bu usul correct_answers maydoni yo'q bo'lsa ham xatolik bermaydi
+            base_sql = """
+                SELECT 
+                    ta.id,
+                    ta.score,
+                    ta.total_points,
+                    ta.percentage,
+                    ta.finished_at,
+                    ta.time_taken,
+                    u.id as student_id,
+                    u.username as student_username,
+                    u.first_name as student_first_name,
+                    u.last_name as student_last_name,
+                    u.student_id as student_student_id,
+                    u.class_name as student_class_name,
+                    u.grade as student_grade,
+                    t.id as test_id,
+                    t.title as test_title,
+                    t.subject as test_subject,
+                    t.grade as test_grade,
+                    teacher.username as teacher_username,
+                    teacher.first_name as teacher_first_name,
+                    teacher.last_name as teacher_last_name,
+                    tr.correct_answers,
+                    tr.incorrect_answers,
+                    tr.unanswered
+                FROM tests_app_testattempt ta
+                INNER JOIN accounts_user u ON ta.student_id = u.id
+                INNER JOIN tests_app_test t ON ta.test_id = t.id
+                INNER JOIN accounts_user teacher ON t.created_by_id = teacher.id
+                LEFT JOIN tests_app_testresult tr ON ta.id = tr.attempt_id
+                WHERE ta.is_completed = 1
+            """ if param_style == '?' else """
+                SELECT 
+                    ta.id,
+                    ta.score,
+                    ta.total_points,
+                    ta.percentage,
+                    ta.finished_at,
+                    ta.time_taken,
+                    u.id as student_id,
+                    u.username as student_username,
+                    u.first_name as student_first_name,
+                    u.last_name as student_last_name,
+                    u.student_id as student_student_id,
+                    u.class_name as student_class_name,
+                    u.grade as student_grade,
+                    t.id as test_id,
+                    t.title as test_title,
+                    t.subject as test_subject,
+                    t.grade as test_grade,
+                    teacher.username as teacher_username,
+                    teacher.first_name as teacher_first_name,
+                    teacher.last_name as teacher_last_name,
+                    tr.correct_answers,
+                    tr.incorrect_answers,
+                    tr.unanswered
+                FROM tests_app_testattempt ta
+                INNER JOIN accounts_user u ON ta.student_id = u.id
+                INNER JOIN tests_app_test t ON ta.test_id = t.id
+                INNER JOIN accounts_user teacher ON t.created_by_id = teacher.id
+                LEFT JOIN tests_app_testresult tr ON ta.id = tr.attempt_id
+                WHERE ta.is_completed = 1
+            """
+            
+            # Teacher uchun filter qo'shish
+            where_clauses = []
+            params = []
+            
+            if request.user.role == 'teacher':
+                where_clauses.append(f"t.created_by_id = {param_style}")
+                params.append(request.user.id)
+            
+            # Filters
+            grade = request.GET.get('grade')
+            subject = request.GET.get('subject')
+            test_id = request.GET.get('test')
+            
+            if grade:
+                where_clauses.append(f"u.grade = {param_style}")
+                params.append(grade)
+            if subject:
+                where_clauses.append(f"t.subject = {param_style}")
+                params.append(subject)
+            if test_id:
+                where_clauses.append(f"t.id = {param_style}")
+                params.append(test_id)
+            
+            # SQL query tuzish
+            if where_clauses:
+                sql_query = base_sql + " AND " + " AND ".join(where_clauses)
+            else:
+                sql_query = base_sql
+            
+            sql_query += " ORDER BY u.grade, u.last_name, u.first_name, ta.finished_at DESC"
+            
+            # Ma'lumotlarni olish
+            with connection.cursor() as cursor:
+                cursor.execute(sql_query, params)
+                columns = [col[0] for col in cursor.description]
+                
+                results_data = []
+                for row in cursor.fetchall():
+                    row_dict = dict(zip(columns, row))
+                    
+                    # Calculate grade based on percentage
+                    percentage = row_dict['percentage'] or 0
+                    if percentage >= 81:
+                        grade_text = "A'lo"
+                    elif percentage >= 61:
+                        grade_text = "Yaxshi"
+                    elif percentage >= 31:
+                        grade_text = "Qoniqarli"
+                    else:
+                        grade_text = "Qoniqarsiz"
+                    
+                    teacher_name = f"{row_dict.get('teacher_first_name', '') or ''} {row_dict.get('teacher_last_name', '') or ''}".strip()
+                    if not teacher_name:
+                        teacher_name = row_dict.get('teacher_username', '')
+                    
+                    results_data.append({
+                        'test': {
+                            'id': row_dict['test_id'],
+                            'title': row_dict['test_title'],
+                            'subject': row_dict['test_subject'],
+                            'grade': row_dict['test_grade'],
+                            'created_by': teacher_name
+                        },
+                        'student': {
+                            'id': row_dict['student_id'],
+                            'username': row_dict['student_username'],
+                            'first_name': row_dict['student_first_name'],
+                            'last_name': row_dict['student_last_name'],
+                            'student_id': row_dict['student_student_id'],
+                            'class_name': row_dict['student_class_name'],
+                            'grade': row_dict['student_grade']
+                        },
+                        'score': row_dict['score'],
+                        'total_points': row_dict['total_points'],
+                        'percentage': row_dict['percentage'],
+                        'grade': grade_text,
+                        'time_taken': str(row_dict['time_taken']) if row_dict['time_taken'] else '',
+                        'finished_at': row_dict['finished_at'].isoformat() if row_dict['finished_at'] else None,
+                        'correct_answers': row_dict.get('correct_answers') or 0,
+                        'incorrect_answers': row_dict.get('incorrect_answers') or 0,
+                        'unanswered': row_dict.get('unanswered') or 0,
+                        'student_name': f"{row_dict['student_first_name'] or ''} {row_dict['student_last_name'] or ''}".strip() or row_dict['student_username'],
+                        'username': row_dict['student_username'],
+                        'test_title': row_dict['test_title'],
+                    })
+            
+            # Statistics
+            stats_sql = "SELECT COUNT(*) FROM tests_app_testattempt WHERE is_completed = 1"
+            stats_params = []
+            
+            if request.user.role == 'teacher':
+                stats_sql = """
+                    SELECT COUNT(*) 
+                    FROM tests_app_testattempt ta
+                    INNER JOIN tests_app_test t ON ta.test_id = t.id
+                    WHERE ta.is_completed = 1 AND t.created_by_id = ?
+                """ if param_style == '?' else """
+                    SELECT COUNT(*) 
+                    FROM tests_app_testattempt ta
+                    INNER JOIN tests_app_test t ON ta.test_id = t.id
+                    WHERE ta.is_completed = 1 AND t.created_by_id = %s
+                """
+                stats_params = [request.user.id]
+            
+            with connection.cursor() as cursor:
+                cursor.execute(stats_sql, stats_params)
+                total_results = cursor.fetchone()[0]
+                
+                cursor.execute("SELECT COUNT(*) FROM accounts_user WHERE role = 'student' AND is_verified = 1")
+                total_students = cursor.fetchone()[0]
+            
+            # Average percentage hisoblash
+            avg_percentage = 0
+            excellent_count = 0
+            if results_data:
+                percentages = [r['percentage'] for r in results_data if r['percentage']]
+                if percentages:
+                    avg_percentage = sum(percentages) / len(percentages)
+                    excellent_count = len([p for p in percentages if p >= 81])
+            
+            stats = {
+                'total_students': total_students,
+                'total_results': total_results,
+                'avg_percentage': round(avg_percentage, 2),
+                'excellent_count': excellent_count,
+            }
+            
+            return JsonResponse({
+                'results': results_data,
+                'stats': stats
             })
         
-        # Statistics
-        from django.db.models import Avg, Count
-        stats = {
-            'total_students': User.objects.filter(role='student', is_verified=True).count(),
-            'total_results': attempts.count(),
-            'avg_percentage': attempts.aggregate(Avg('percentage'))['percentage__avg'] or 0,
-            'excellent_count': attempts.filter(percentage__gte=81).count(),
-        }
-        
-        return JsonResponse({
-            'results': results_data,
-            'stats': stats
-        })
+        except OperationalError as e:
+            error_message = str(e)
+            if 'correct_answers' in error_message or 'no such column' in error_message.lower():
+                return JsonResponse({
+                    'results': [],
+                    'stats': {'total_students': 0, 'total_results': 0, 'avg_percentage': 0, 'excellent_count': 0},
+                    'error': 'Database schema mismatch'
+                })
+            else:
+                raise
     
     return render(request, 'tests_app/all_students_results.html', {
         'user_role': request.user.role
@@ -2308,8 +2445,8 @@ def export_subject_results_view(request):
                     student_name = attempt.student.username
                 
                 ws.cell(row=row, column=1, value=student_name)
-                ws.cell(row=row, column=2, value=test.subject)
-                ws.cell(row=row, column=3, value=test.title)
+                ws.cell(row=row, column=2, value=attempt.student.grade or '')
+                ws.cell(row=row, column=3, value=attempt.test.title)
                 ws.cell(row=row, column=4, value=attempt.score)
                 ws.cell(row=row, column=5, value=attempt.total_points)
                 ws.cell(row=row, column=6, value=f"{attempt.percentage:.1f}%")
