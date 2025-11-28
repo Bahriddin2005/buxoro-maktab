@@ -1684,26 +1684,58 @@ def grade_based_results_view(request):
         ).values_list('latest_attempt_id', flat=True)
         
         # Faqat oxirgi attempt'larni olish
-        attempts = TestAttempt.objects.filter(
+        attempts = list(TestAttempt.objects.filter(
             id__in=latest_attempts
-        ).select_related('student', 'test', 'result')
+        ).select_related('student', 'test').prefetch_related('result'))
         
-        # Statistika hisoblash
+        # Collect percentages safely (prefer TestResult, fallback to stored attempt field if exists, else calculate)
+        percentages = []
+        attempt_data_map = {}
+        for attempt in attempts:
+            pct = None
+            # try related TestResult first
+            if hasattr(attempt, 'result') and getattr(attempt, 'result') is not None:
+                pct = getattr(attempt.result, 'percentage', None)
+                score = getattr(attempt.result, 'score', None)
+                total_points = getattr(attempt.result, 'total_points', None)
+            else:
+                # fallback to attempt fields if present
+                pct = getattr(attempt, 'percentage', None)
+                score = getattr(attempt, 'score', None)
+                total_points = getattr(attempt, 'total_points', None)
+                # last fallback: call calculate_score() if available (may be expensive)
+                if pct is None:
+                    try:
+                        calc = attempt.calculate_score()
+                        pct = calc.get('percentage', 0)
+                        score = calc.get('score', score)
+                        total_points = calc.get('total_points', total_points)
+                    except Exception:
+                        pct = 0
+            pct = 0 if pct is None else pct
+            percentages.append(pct)
+            attempt_data_map[attempt.id] = {
+                'attempt': attempt,
+                'percentage': pct,
+                'score': score,
+                'total_points': total_points
+            }
+        
         total_students = students.count()
         total_tests = tests.count()
-        total_attempts = attempts.count()
+        total_attempts = len(attempts)
         
         if total_attempts > 0:
-            avg_percentage = attempts.aggregate(avg=Avg('percentage'))['avg'] or 0
-            highest_score = attempts.aggregate(max=Max('percentage'))['max'] or 0
-            lowest_score = attempts.aggregate(min=Min('percentage'))['min'] or 0
+            avg_percentage = sum(percentages) / total_attempts
+            highest_score = max(percentages)
+            lowest_score = min(percentages)
         else:
             avg_percentage = 0
             highest_score = 0
             lowest_score = 0
         
         # BARCHA natijalar (faqat top 5 emas!)
-        all_performers = attempts.order_by('-percentage')  # Barcha natijalarni olish
+        sorted_attempts = sorted(attempt_data_map.values(), key=lambda x: x['percentage'], reverse=True)
         
         grade_stats.append({
             'grade': grade,
@@ -1713,17 +1745,17 @@ def grade_based_results_view(request):
             'avg_percentage': round(avg_percentage, 1),
             'highest_score': round(highest_score, 1),
             'lowest_score': round(lowest_score, 1),
-            'all_results': [  # 'top_performers' o'rniga 'all_results'
+            'all_results': [
                 {
-                    'student_name': f"{attempt.student.first_name} {attempt.student.last_name}",
-                    'student_username': attempt.student.username,
-                    'test_title': attempt.test.title,
-                    'percentage': round(attempt.percentage, 1),
-                    'score': attempt.score,
-                    'total_points': attempt.total_points,
-                    'finished_at': attempt.finished_at
+                    'student_name': f"{item['attempt'].student.first_name} {item['attempt'].student.last_name}",
+                    'student_username': item['attempt'].student.username,
+                    'test_title': item['attempt'].test.title,
+                    'percentage': round(item['percentage'], 1),
+                    'score': item.get('score') or item['attempt'].score if hasattr(item['attempt'], 'score') else None,
+                    'total_points': item.get('total_points') or item['attempt'].total_points if hasattr(item['attempt'], 'total_points') else None,
+                    'finished_at': item['attempt'].finished_at
                 }
-                for attempt in all_performers  # Barcha natijalar
+                for item in sorted_attempts
             ]
         })
     
@@ -1840,7 +1872,7 @@ def export_grade_results_view(request):
             ws.cell(row=row, column=3, value=attempt.score)
             ws.cell(row=row, column=4, value=f"{attempt.percentage:.1f}%")
             ws.cell(row=row, column=5, value=str(attempt.time_taken))
-            ws.cell(row=row, column=6, value=attempt.finished_at.strftime('%d.%m.%Y %H:%M'))
+            ws.cell(row=row, column=6, value=attempt.finished_at.strftime('%Y-%m-%d %H:%M:%S'))
             
             # Ball bo'yicha rang berish
             if attempt.percentage >= 81:
@@ -1945,7 +1977,7 @@ def export_single_grade_results_view(request, grade):
         else:
             avg_percentage = 0
             highest_score = 0
-        lowest_score = 0
+            lowest_score = 0
     
         # Ma'lumotlarni yozish
         ws['A4'] = f"Jami O'quvchilar: {total_students}"
@@ -1978,7 +2010,7 @@ def export_single_grade_results_view(request, grade):
             ws.cell(row=row, column=3, value=attempt.score)
             ws.cell(row=row, column=4, value=f"{attempt.percentage:.1f}%")
             ws.cell(row=row, column=5, value=str(attempt.time_taken))
-            ws.cell(row=row, column=6, value=attempt.finished_at.strftime('%d.%m.%Y %H:%M'))
+            ws.cell(row=row, column=6, value=attempt.finished_at.strftime('%Y-%m-%d %H:%M:%S'))
             
             # Ball bo'yicha rang berish
             if attempt.percentage >= 81:
@@ -1986,7 +2018,7 @@ def export_single_grade_results_view(request, grade):
             elif attempt.percentage >= 61:
                 fill_color = "FFEB9C"  # Sariq
             elif attempt.percentage >= 31:
-                fill_color = "BDD7EE"  # Ko'k
+                fill_color = "FFC7CE"  # Qizil
             else:
                 fill_color = "FFC7CE"  # Qizil
             
@@ -2138,7 +2170,7 @@ def export_all_results_view(request):
                     elif attempt.percentage >= 61:
                         fill_color = "FFEB9C"  # Sariq
                     elif attempt.percentage >= 31:
-                        fill_color = "FFC7CE"  # Qizil
+                        fill_color = "BDD7EE"  # Ko'k
                     else:
                         fill_color = "FFC7CE"  # Qizil
                     
@@ -2149,12 +2181,13 @@ def export_all_results_view(request):
             
             # Ustun kengliklarini sozlash
             ws.column_dimensions['A'].width = 25
-            ws.column_dimensions['B'].width = 15
+            ws.column_dimensions['B'].width = 10
             ws.column_dimensions['C'].width = 30
             ws.column_dimensions['D'].width = 10
             ws.column_dimensions['E'].width = 10
-            ws.column_dimensions['F'].width = 15
-            ws.column_dimensions['G'].width = 20
+            ws.column_dimensions['F'].width = 10
+            ws.column_dimensions['G'].width = 12
+            ws.column_dimensions['H'].width = 18
         
         # Response yaratish
         response = HttpResponse(
@@ -2231,7 +2264,7 @@ def export_subject_results_view(request):
             # Statistika qo'shish
             ws['A3'] = "Umumiy Ma'lumotlar:"
             ws['A3'].font = Font(bold=True, size=12)
-            
+    
             ws['A4'] = f"Jami Testlar: {total_tests}"
             ws['A5'] = f"Jami Urinishlar: {total_attempts}"
             ws['A6'] = f"O'rtacha Foiz: {avg_percentage:.1f}%"
