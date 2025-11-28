@@ -1931,6 +1931,8 @@ def export_grade_results_view(request):
 def export_single_grade_results_view(request, grade):
     """Bitta sinf uchun Excel fayl yaratish"""
    
+
+   
     if request.user.role not in ['teacher', 'admin']:
         return redirect('accounts:dashboard')
     
@@ -2198,6 +2200,12 @@ def export_all_results_view(request):
             ws.column_dimensions['F'].width = 10
             ws.column_dimensions['G'].width = 12
             ws.column_dimensions['H'].width = 18
+        
+        # Agar hech qanday fan topilmasa
+        if len(wb.sheetnames) == 0:
+            ws = wb.create_sheet(title="Ma'lumot yo'q")
+            ws['A1'] = "Hozircha natijalar mavjud emas"
+            ws['A1'].font = Font(bold=True, size=14)
         
         # Response yaratish
         response = HttpResponse(

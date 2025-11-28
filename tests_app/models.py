@@ -100,7 +100,9 @@ class TestAttempt(models.Model):
     termination_reason = models.TextField(blank=True)  # To'xtatish sababi
     
     class Meta:
-        ordering = ['-started_at']
+        # Remove reference to non-existing columns to avoid SQLite OperationalError.
+        # Use ID-based ordering (most recent first) or remove ordering entirely.
+        ordering = ['-id']
     
     def can_request_retake(self):
         """O'quvchi qayta ishlash so'rashi mumkinmi?"""
