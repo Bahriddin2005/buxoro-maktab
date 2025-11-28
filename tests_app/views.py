@@ -1692,9 +1692,10 @@ def grade_based_results_view(request):
         ).values_list('latest_attempt_id', flat=True)
         
         # Faqat oxirgi attempt'larni olish
+        # Override model default ordering (which referenced a removed column) by ordering by id
         attempts = list(TestAttempt.objects.filter(
             id__in=latest_attempts
-        ).select_related('student', 'test').prefetch_related('result'))
+        ).select_related('student', 'test').prefetch_related('result').order_by('id'))
         
         # Collect percentages safely (prefer TestResult, fallback to stored attempt field if exists, else calculate)
         percentages = []
@@ -1929,6 +1930,7 @@ def export_grade_results_view(request):
 @login_required
 def export_single_grade_results_view(request, grade):
     """Bitta sinf uchun Excel fayl yaratish"""
+   
     if request.user.role not in ['teacher', 'admin']:
         return redirect('accounts:dashboard')
     
@@ -2167,7 +2169,7 @@ def export_all_results_view(request):
                     ws.cell(row=row, column=1, value=student_name)
                     ws.cell(row=row, column=2, value=test.subject)
                     ws.cell(row=row, column=3, value=test.title)
-                    ws.cell(row=row, column=4, value=f"{attempt.percentage:.1f}%")
+                    ws.cell(row=row, column=4, value=attempt.percentage)
                     ws.cell(row=row, column=5, value=attempt.score)
                     ws.cell(row=row, column=6, value=attempt.attempt_number)
                     ws.cell(row=row, column=7, value=attempt.completed_at.strftime('%d.%m.%Y %H:%M') if attempt.completed_at else '')
@@ -2330,8 +2332,6 @@ def export_subject_results_view(request):
             ws.column_dimensions['F'].width = 10
             ws.column_dimensions['G'].width = 12
             ws.column_dimensions['H'].width = 18
-            
-            print(f"Sheet '{subject}' created with {row-12} results")
         
         # Agar hech qanday fan topilmasa
         if len(wb.sheetnames) == 0:
