@@ -1991,6 +1991,10 @@ def export_subject_results_view(request):
         # Bu sinf uchun testlar
         tests = Test.objects.filter(grade=grade, is_active=True)
         
+        # Teacher faqat o'zi yaratgan testlarni ko'radi
+        if request.user.role == 'teacher':
+            tests = tests.filter(created_by=request.user)
+        
         # Bu sinf o'quvchilari
         students = User.objects.filter(role='student', grade=grade, is_verified=True)
         
@@ -1998,10 +2002,18 @@ def export_subject_results_view(request):
         from django.db.models import Max
         
         # Har bir o'quvchi uchun eng so'nggi attempt ID'sini topish
+        latest_attempts_filter = {
+            'test__grade': grade,
+            'student__grade': grade,
+            'is_completed': True
+        }
+        
+        # Teacher faqat o'zi yaratgan testlar natijalarini ko'radi
+        if request.user.role == 'teacher':
+            latest_attempts_filter['test__created_by'] = request.user
+        
         latest_attempts = TestAttempt.objects.filter(
-            test__grade=grade,
-            student__grade=grade,
-            is_completed=True
+            **latest_attempts_filter
         ).values('student').annotate(
             latest_attempt_id=Max('id')
         ).values_list('latest_attempt_id', flat=True)
@@ -2492,11 +2504,15 @@ def export_all_results_view(request):
                 # Bu sinf va fan uchun testlar
                 tests = Test.objects.filter(grade=grade, subject=subject)
                 
+                # Teacher faqat o'zi yaratgan testlarni ko'radi
+                if request.user.role == 'teacher':
+                    tests = tests.filter(created_by=request.user)
+                
                 if tests.exists():
                     # Bu sinf va fan uchun barcha urinishlar
                     attempts = TestAttempt.objects.filter(
                         test__in=tests,
-                        completed_at__isnull=False
+                        is_completed=True
                     ).select_related('student', 'test')
                     
                     if attempts.exists():
@@ -2631,7 +2647,13 @@ def export_subject_results_view(request):
         wb.remove(wb.active)  # Default sheet'ni o'chirish
         
         # Barcha fanlarni olish
-        subjects = Test.objects.values_list('subject', flat=True).distinct().order_by('subject')
+        subjects_query = Test.objects.all()
+        
+        # Teacher faqat o'zi yaratgan testlarni ko'radi
+        if request.user.role == 'teacher':
+            subjects_query = subjects_query.filter(created_by=request.user)
+        
+        subjects = subjects_query.values_list('subject', flat=True).distinct().order_by('subject')
         
         print(f"Found subjects: {list(subjects)}")
         
@@ -2653,12 +2675,21 @@ def export_subject_results_view(request):
             
             # Umumiy statistika
             tests = Test.objects.filter(subject=subject, is_active=True)
+            
+            # Teacher faqat o'zi yaratgan testlarni ko'radi
+            if request.user.role == 'teacher':
+                tests = tests.filter(created_by=request.user)
+            
             total_tests = tests.count()
             
             attempts = TestAttempt.objects.filter(
                 test__subject=subject,
                 is_completed=True
             ).select_related('student', 'test')
+            
+            # Teacher faqat o'zi yaratgan testlar natijalarini ko'radi
+            if request.user.role == 'teacher':
+                attempts = attempts.filter(test__created_by=request.user)
             
             total_attempts = attempts.count()
             
