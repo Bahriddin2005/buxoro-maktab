@@ -481,7 +481,7 @@ def finish_test(request, attempt_id):
         attempt.score = score
         attempt.total_points = total_points
         attempt.percentage = percentage
-
+        
         test_result = TestResult.objects.create(
             attempt=attempt,
             correct_answers=correct_answers,
@@ -1033,7 +1033,7 @@ def all_results_view(request):
             params = []
             
             if request.user.role == 'teacher':
-                where_clauses.append(f"t.created_by_id = {param_style}")
+                where_clauses.append("t.created_by_id = " + param_style)
                 params.append(request.user.id)
             
             # Filters
@@ -1042,13 +1042,13 @@ def all_results_view(request):
             test_id = request.GET.get('test')
             
             if grade:
-                where_clauses.append(f"u.grade = {param_style}")
+                where_clauses.append("u.grade = " + param_style)
                 params.append(grade)
             if subject:
-                where_clauses.append(f"t.subject = {param_style}")
+                where_clauses.append("t.subject = " + param_style)
                 params.append(subject)
             if test_id:
-                where_clauses.append(f"t.id = {param_style}")
+                where_clauses.append("t.id = " + param_style)
                 params.append(test_id)
             
             # SQL query tuzish
@@ -1060,11 +1060,11 @@ def all_results_view(request):
             sql_query += " ORDER BY u.grade, u.last_name, u.first_name, ta.finished_at DESC"
             
             # Ma'lumotlarni olish
+            results_data = []
             with connection.cursor() as cursor:
                 cursor.execute(sql_query, params)
                 columns = [col[0] for col in cursor.description]
                 
-                results_data = []
                 for row in cursor.fetchall():
                     row_dict = dict(zip(columns, row))
                     
@@ -1158,7 +1158,7 @@ def all_results_view(request):
             return JsonResponse({
                 'results': results_data,
                 'stats': stats
-            })
+            }, json_dumps_params={'ensure_ascii': False})
         
         except OperationalError as e:
             error_message = str(e)
@@ -1167,9 +1167,17 @@ def all_results_view(request):
                     'results': [],
                     'stats': {'total_students': 0, 'total_results': 0, 'avg_percentage': 0, 'excellent_count': 0},
                     'error': 'Database schema mismatch'
-                })
+                }, json_dumps_params={'ensure_ascii': False})
             else:
                 raise
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return JsonResponse({
+                'results': [],
+                'stats': {'total_students': 0, 'total_results': 0, 'avg_percentage': 0, 'excellent_count': 0},
+                'error': f'Xatolik: {str(e)}'
+            }, status=500, json_dumps_params={'ensure_ascii': False})
     
     return render(request, 'tests_app/all_students_results.html', {
         'user_role': request.user.role
@@ -1231,44 +1239,197 @@ def request_retake_view(request, test_id):
 def retake_requests_view(request):
     """Admin qayta ishlash so'rovlarini ko'rish va boshqarish"""
     if request.user.role != 'admin':
-        return JsonResponse({'error': 'Faqat adminlar kirishi mumkin'}, status=403)
+        return JsonResponse({'error': 'Faqat adminlar kirishi mumkin'}, status=403, json_dumps_params={'ensure_ascii': False})
     
     if request.method == 'GET' and request.headers.get('Accept') == 'application/json':
-        # JSON API so'rovi
-        status_filter = request.GET.get('status', 'all')
-        
-        requests_qs = TestRetakeRequest.objects.select_related(
-            'student', 'test', 'previous_attempt', 'approved_by'
-        ).order_by('-created_at')
-        
-        if status_filter != 'all':
-            requests_qs = requests_qs.filter(status=status_filter)
-        
-        requests_data = []
-        for req in requests_qs:
-            requests_data.append({
-                'id': req.id,
-                'student_name': req.student.get_full_name(),
-                'student_username': req.student.username,
-                'student_grade': req.student.grade,
-                'student_class': req.student.class_name,
-                'test_title': req.test.title,
-                'test_subject': req.test.subject,
-                'previous_score': req.previous_attempt.score,
-                'previous_percentage': req.previous_attempt.percentage,
-                'reason': req.reason,
-                'status': req.status,
-                'status_display': req.get_status_display(),
-                'admin_response': req.admin_response,
-                'approved_by': req.approved_by.get_full_name() if req.approved_by else None,
-                'created_at': req.created_at.isoformat(),
-                'updated_at': req.updated_at.isoformat()
-            })
-        
-        return JsonResponse({
-            'requests': requests_data,
-            'total_count': len(requests_data)
-        })
+        try:
+            # JSON API so'rovi
+            status_filter = request.GET.get('status', 'all')
+            
+            # Raw SQL ishlatish - database'da maydon mavjudligini tekshirmasdan
+            from django.db import connection
+            from django.conf import settings
+            
+            db_engine = settings.DATABASES['default']['ENGINE']
+            param_style = '?' if 'sqlite' in db_engine.lower() else '%s'
+            
+            # SQL query - faqat mavjud maydonlarni olish
+            base_query = """
+                SELECT 
+                    trr.id as request_id,
+                    trr.reason,
+                    trr.status,
+                    trr.admin_response,
+                    trr.created_at,
+                    trr.updated_at,
+                    u.id as student_id,
+                    u.username as student_username,
+                    u.first_name as student_first_name,
+                    u.last_name as student_last_name,
+                    u.grade as student_grade,
+                    u.class_name as student_class_name,
+                    t.id as test_id,
+                    t.title as test_title,
+                    t.subject as test_subject,
+                    ta.id as attempt_id,
+                    ta.score as previous_score,
+                    ta.percentage as previous_percentage,
+                    approved.id as approved_by_id,
+                    approved.first_name as approved_by_first_name,
+                    approved.last_name as approved_by_last_name,
+                    approved.username as approved_by_username
+                FROM tests_app_testretakerequest trr
+                INNER JOIN accounts_user u ON trr.student_id = u.id
+                INNER JOIN tests_app_test t ON trr.test_id = t.id
+                INNER JOIN tests_app_testattempt ta ON trr.previous_attempt_id = ta.id
+                LEFT JOIN accounts_user approved ON trr.approved_by_id = approved.id
+                WHERE 1=1
+            """
+            params = []
+            
+            if status_filter != 'all':
+                base_query += " AND trr.status = " + param_style
+                params.append(status_filter)
+            
+            base_query += " ORDER BY trr.created_at DESC"
+            
+            requests_data = []
+            try:
+                with connection.cursor() as cursor:
+                    cursor.execute(base_query, params)
+                    columns = [col[0] for col in cursor.description]
+                    
+                    for row in cursor.fetchall():
+                        row_dict = dict(zip(columns, row))
+                        
+                        # Student ma'lumotlari
+                        student_name = f"{row_dict.get('student_first_name') or ''} {row_dict.get('student_last_name') or ''}".strip()
+                        if not student_name:
+                            student_name = row_dict.get('student_username') or ''
+                        
+                        # Approved by
+                        approved_by_name = None
+                        if row_dict.get('approved_by_id'):
+                            approved_by_name = f"{row_dict.get('approved_by_first_name') or ''} {row_dict.get('approved_by_last_name') or ''}".strip()
+                            if not approved_by_name:
+                                approved_by_name = row_dict.get('approved_by_username') or ''
+                        
+                        # Status display
+                        status_display_map = {
+                            'pending': 'Kutilmoqda',
+                            'approved': 'Tasdiqlangan',
+                            'rejected': 'Rad etilgan'
+                        }
+                        status_display = status_display_map.get(row_dict.get('status'), row_dict.get('status', ''))
+                        
+                        # Previous attempt ma'lumotlari
+                        previous_score = row_dict.get('previous_score') or 0
+                        previous_percentage = row_dict.get('previous_percentage') or 0
+                        
+                        requests_data.append({
+                            'id': row_dict.get('request_id'),
+                            'student_name': student_name,
+                            'student_username': row_dict.get('student_username') or '',
+                            'student_grade': row_dict.get('student_grade'),
+                            'student_class': row_dict.get('student_class_name') or '',
+                            'test_title': row_dict.get('test_title') or '',
+                            'test_subject': row_dict.get('test_subject') or '',
+                            'previous_score': previous_score,
+                            'previous_percentage': previous_percentage,
+                            'reason': row_dict.get('reason') or '',
+                            'status': row_dict.get('status') or 'pending',
+                            'status_display': status_display,
+                            'admin_response': row_dict.get('admin_response') or '',
+                            'approved_by': approved_by_name,
+                            'created_at': row_dict.get('created_at').isoformat() if row_dict.get('created_at') else '',
+                            'updated_at': row_dict.get('updated_at').isoformat() if row_dict.get('updated_at') else ''
+                        })
+            except Exception as query_error:
+                import traceback
+                print(f"SQL Query Error: {str(query_error)}")
+                traceback.print_exc()
+                # Fallback - Django ORM ishlatish (agar SQL xatolik bersa)
+                requests_qs = TestRetakeRequest.objects.select_related(
+                    'student', 'test', 'approved_by'
+                ).order_by('-created_at')
+                
+                if status_filter != 'all':
+                    requests_qs = requests_qs.filter(status=status_filter)
+                
+                for req in requests_qs:
+                    try:
+                        # Student ma'lumotlari
+                        student_name = req.student.get_full_name() if req.student else ''
+                        if not student_name:
+                            student_name = f"{req.student.first_name or ''} {req.student.last_name or ''}".strip() or req.student.username if req.student else ''
+                        
+                        # Previous attempt ma'lumotlari - xavfsiz olish
+                        previous_score = 0
+                        previous_percentage = 0
+                        if req.previous_attempt_id:
+                            try:
+                                # Direct values query
+                                attempt_values = TestAttempt.objects.filter(
+                                    id=req.previous_attempt_id
+                                ).values('score', 'percentage').first()
+                                if attempt_values:
+                                    previous_score = attempt_values.get('score') or 0
+                                    previous_percentage = attempt_values.get('percentage') or 0
+                            except Exception as e:
+                                print(f"Error loading attempt {req.previous_attempt_id}: {str(e)}")
+                        
+                        # Status display
+                        status_display_map = {
+                            'pending': 'Kutilmoqda',
+                            'approved': 'Tasdiqlangan',
+                            'rejected': 'Rad etilgan'
+                        }
+                        status_display = status_display_map.get(req.status, req.status)
+                        
+                        # Approved by
+                        approved_by_name = None
+                        if req.approved_by:
+                            approved_by_name = req.approved_by.get_full_name()
+                            if not approved_by_name:
+                                approved_by_name = f"{req.approved_by.first_name or ''} {req.approved_by.last_name or ''}".strip() or req.approved_by.username
+                        
+                        requests_data.append({
+                            'id': req.id,
+                            'student_name': student_name,
+                            'student_username': req.student.username if req.student else '',
+                            'student_grade': req.student.grade if req.student and req.student.grade else None,
+                            'student_class': req.student.class_name if req.student else '',
+                            'test_title': req.test.title if req.test else '',
+                            'test_subject': req.test.subject if req.test else '',
+                            'previous_score': previous_score,
+                            'previous_percentage': previous_percentage,
+                            'reason': req.reason or '',
+                            'status': req.status,
+                            'status_display': status_display,
+                            'admin_response': req.admin_response or '',
+                            'approved_by': approved_by_name,
+                            'created_at': req.created_at.isoformat() if req.created_at else '',
+                            'updated_at': req.updated_at.isoformat() if req.updated_at else ''
+                        })
+                    except Exception as e:
+                        import traceback
+                        print(f"Error processing retake request {req.id if hasattr(req, 'id') else 'unknown'}: {str(e)}")
+                        traceback.print_exc()
+                        continue
+            
+            return JsonResponse({
+                'requests': requests_data,
+                'total_count': len(requests_data)
+            }, json_dumps_params={'ensure_ascii': False})
+            
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return JsonResponse({
+                'error': f'Ma\'lumotlarni yuklashda xatolik: {str(e)}',
+                'requests': [],
+                'total_count': 0
+            }, status=500, json_dumps_params={'ensure_ascii': False})
     
     # HTML template
     return render(request, 'tests_app/retake_requests.html')
@@ -1942,6 +2103,358 @@ def export_subject_results_view(request):
         return JsonResponse({'error': f'Export xatolik yuz berdi: {str(e)}'}, status=500)
 
 @login_required
+def students_test_results_view(request):
+    """O'quvchilar yechgan testlarning natijalarini ko'rsatish"""
+    from django.db import connection
+    from django.conf import settings
+    
+    if request.user.role not in ['admin', 'teacher']:
+        return redirect('accounts:dashboard')
+    
+    # Database backend detection
+    db_engine = settings.DATABASES['default']['ENGINE']
+    param_style = '?' if 'sqlite' in db_engine.lower() else '%s'
+    
+    if request.method == 'GET' and request.headers.get('Accept') == 'application/json':
+        try:
+            # Filter parametrlari
+            grade_filter = request.GET.get('grade', '')
+            subject_filter = request.GET.get('subject', '')
+            test_id_filter = request.GET.get('test', '')
+            student_filter = request.GET.get('student', '')
+            
+            # SQL query - faqat mavjud ustunlarni ishlatish
+            query = """
+                SELECT
+                    ta.id, ta.percentage, ta.score, ta.total_points,
+                    ta.finished_at, ta.started_at, ta.attempt_number, ta.time_taken,
+                    ta.is_completed,
+                    u.id as student_id, u.first_name, u.last_name, u.username, 
+                    u.student_id as student_unique_id, u.class_name, u.grade as student_grade,
+                    t.id as test_id, t.title as test_title, t.subject, t.grade as test_grade
+                FROM tests_app_testattempt ta
+                INNER JOIN accounts_user u ON ta.student_id = u.id
+                INNER JOIN tests_app_test t ON ta.test_id = t.id
+                WHERE ta.is_completed = 1
+            """
+            params = []
+            
+            # Teacher faqat o'z testlarini ko'radi
+            if request.user.role == 'teacher':
+                query += " AND t.created_by_id = " + param_style
+                params.append(request.user.id)
+            
+            # Filterlar
+            if grade_filter:
+                query += " AND u.grade = " + param_style
+                params.append(grade_filter)
+            if subject_filter:
+                query += " AND t.subject = " + param_style
+                params.append(subject_filter)
+            if test_id_filter:
+                query += " AND t.id = " + param_style
+                params.append(test_id_filter)
+            if student_filter:
+                query += " AND (u.first_name LIKE " + param_style + " OR u.last_name LIKE " + param_style + " OR u.username LIKE " + param_style + ")"
+                search_term = f'%{student_filter}%'
+                params.extend([search_term, search_term, search_term])
+            
+            query += " ORDER BY ta.finished_at DESC, u.grade, u.last_name, u.first_name"
+            
+            with connection.cursor() as cursor:
+                cursor.execute(query, params)
+                columns = [col[0] for col in cursor.description]
+                results_data = []
+                
+                for row in cursor.fetchall():
+                    row_dict = dict(zip(columns, row))
+                    percentage = row_dict['percentage'] or 0
+                    
+                    # Baholash
+                    if percentage >= 81:
+                        grade_text = "A'lo"
+                    elif percentage >= 61:
+                        grade_text = "Yaxshi"
+                    elif percentage >= 31:
+                        grade_text = "Qoniqarli"
+                    else:
+                        grade_text = "Qoniqarsiz"
+                    
+                    results_data.append({
+                        'id': row_dict['id'],
+                        'test': {
+                            'id': row_dict['test_id'],
+                            'title': row_dict['test_title'],
+                            'subject': row_dict['subject'],
+                            'grade': row_dict['test_grade']
+                        },
+                        'student': {
+                            'id': row_dict['student_id'],
+                            'username': row_dict['username'],
+                            'first_name': row_dict['first_name'],
+                            'last_name': row_dict['last_name'],
+                            'student_id': row_dict['student_unique_id'],
+                            'class_name': row_dict['class_name'],
+                            'grade': row_dict['student_grade'],
+                            'full_name': f"{row_dict['first_name'] or ''} {row_dict['last_name'] or ''}".strip() or row_dict['username']
+                        },
+                        'score': row_dict['score'],
+                        'total_points': row_dict['total_points'],
+                        'percentage': percentage,
+                        'grade': grade_text,
+                        'time_taken': str(row_dict['time_taken']) if row_dict['time_taken'] else '',
+                        'finished_at': row_dict['finished_at'].isoformat() if row_dict['finished_at'] else None,
+                        'started_at': row_dict['started_at'].isoformat() if row_dict['started_at'] else None,
+                        'attempt_number': row_dict['attempt_number'],
+                    })
+            
+            # Statistika
+            stats = {
+                'total_results': len(results_data),
+                'avg_percentage': sum([r['percentage'] for r in results_data]) / len(results_data) if results_data else 0,
+                'excellent_count': sum(1 for r in results_data if r['percentage'] >= 81),
+                'good_count': sum(1 for r in results_data if 61 <= r['percentage'] < 81),
+                'satisfactory_count': sum(1 for r in results_data if 31 <= r['percentage'] < 61),
+                'poor_count': sum(1 for r in results_data if r['percentage'] < 31),
+            }
+            
+            return JsonResponse({
+                'results': results_data,
+                'stats': stats
+            }, json_dumps_params={'ensure_ascii': False})
+        
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return JsonResponse({
+                'error': f'Xatolik: {str(e)}',
+                'results': [],
+                'stats': {
+                    'total_results': 0,
+                    'avg_percentage': 0,
+                    'excellent_count': 0,
+                    'poor_count': 0
+                }
+            }, status=500, json_dumps_params={'ensure_ascii': False})
+    
+    # HTML render
+    return render(request, 'tests_app/students_test_results.html', {
+        'user_role': request.user.role
+    })
+
+@login_required
+def export_students_test_results_view(request):
+    """O'quvchilar test natijalarini Excel formatida export qilish - Sinflar aro"""
+    if request.user.role not in ['admin', 'teacher']:
+        return JsonResponse({'error': 'Faqat admin va o\'qituvchilar kirishi mumkin'}, status=403)
+    
+    if not OPENPYXL_AVAILABLE:
+        return JsonResponse({'error': 'Excel export funksiyasi mavjud emas. Iltimos openpyxl kutubxonasini o\'rnating.'}, status=500)
+    
+    try:
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+        from openpyxl.utils import get_column_letter
+        from django.db import connection
+        from django.conf import settings
+        
+        # Database backend detection
+        db_engine = settings.DATABASES['default']['ENGINE']
+        param_style = '?' if 'sqlite' in db_engine.lower() else '%s'
+        
+        # Filter parametrlari
+        grade_filter = request.GET.get('grade', '')
+        subject_filter = request.GET.get('subject', '')
+        test_id_filter = request.GET.get('test', '')
+        
+        # Excel workbook yaratish
+        wb = Workbook()
+        
+        # Barcha sinflar uchun (1-11)
+        grades = list(range(1, 12))
+        
+        # Har bir sinf uchun alohida sheet yaratish
+        for grade in grades:
+            if grade_filter and int(grade_filter) != grade:
+                continue
+                
+            # SQL query - parametrlarni to'g'ri ishlatish
+            # Barcha parametrlarni Django'ning parametrlar tizimi orqali berish
+            base_query = """
+                SELECT
+                    ta.id, ta.percentage, ta.score, ta.total_points,
+                    ta.finished_at, ta.started_at, ta.attempt_number, ta.time_taken,
+                    u.first_name, u.last_name, u.username, 
+                    u.student_id as student_unique_id, u.class_name,
+                    t.title as test_title, t.subject
+                FROM tests_app_testattempt ta
+                INNER JOIN accounts_user u ON ta.student_id = u.id
+                INNER JOIN tests_app_test t ON ta.test_id = t.id
+                WHERE ta.is_completed = 1 AND u.grade = """ + param_style
+            
+            params = [int(grade)]
+            
+            # Teacher faqat o'z testlarini ko'radi
+            if request.user.role == 'teacher':
+                base_query += " AND t.created_by_id = " + param_style
+                params.append(request.user.id)
+            
+            # Filterlar
+            if subject_filter:
+                base_query += " AND t.subject = " + param_style
+                params.append(subject_filter)
+            if test_id_filter:
+                base_query += " AND t.id = " + param_style
+                params.append(int(test_id_filter))
+            
+            query = base_query
+            
+            query += " ORDER BY t.subject, t.title, u.last_name, u.first_name, ta.finished_at DESC"
+            
+            try:
+                with connection.cursor() as cursor:
+                    # Params ni tuple ga o'zgartirish (Django uchun yaxshiroq)
+                    params_tuple = tuple(params)
+                    cursor.execute(query, params_tuple)
+                    columns = [col[0] for col in cursor.description]
+                    attempts_data = []
+                    
+                    for row in cursor.fetchall():
+                        row_dict = dict(zip(columns, row))
+                        attempts_data.append(row_dict)
+            except Exception as e:
+                # Debug uchun error qaytarish
+                import traceback
+                traceback.print_exc()
+                raise Exception(f"SQL query xatosi: {str(e)}\nQuery: {query}\nParams: {params}\nParams count: {len(params)}")
+            
+            # Agar bu sinf uchun natijalar bo'lmasa, sheet yaratma
+            if not attempts_data:
+                continue
+            
+            # Sheet yaratish
+            ws = wb.create_sheet(title=f"{grade}-sinf")
+            
+            # Header
+            ws['A1'] = f"{grade}-sinf O'quvchilar Test Natijalari"
+            ws['A1'].font = Font(bold=True, size=16, color="FFFFFF")
+            ws['A1'].fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
+            ws['A1'].alignment = Alignment(horizontal='center', vertical='center')
+            ws.merge_cells('A1:K1')
+            
+            # Statistika
+            ws['A3'] = "Statistika:"
+            ws['A3'].font = Font(bold=True)
+            ws['A4'] = f"Jami Natijalar: {len(attempts_data)}"
+            if attempts_data:
+                avg_percentage = sum([r['percentage'] or 0 for r in attempts_data]) / len(attempts_data)
+                excellent_count = sum(1 for r in attempts_data if (r['percentage'] or 0) >= 81)
+                ws['A5'] = f"O'rtacha Foiz: {avg_percentage:.1f}%"
+                ws['A6'] = f"A'lo Natijalar (≥81%): {excellent_count}"
+            
+            # Jadval header
+            headers = ['№', 'O\'quvchi', 'Student ID', 'Sinf', 'Test', 'Fan', 'Ball', 'Foiz', 'Baholash', 'Urinish', 'Sana']
+            header_row = 8
+            
+            for col, header in enumerate(headers, 1):
+                cell = ws.cell(row=header_row, column=col, value=header)
+                cell.font = Font(bold=True, color="FFFFFF")
+                cell.fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
+                cell.alignment = Alignment(horizontal='center', vertical='center')
+                cell.border = Border(
+                    left=Side(style='thin'),
+                    right=Side(style='thin'),
+                    top=Side(style='thin'),
+                    bottom=Side(style='thin')
+                )
+            
+            # Ma'lumotlarni yozish
+            row = header_row + 1
+            for idx, attempt in enumerate(attempts_data, 1):
+                percentage = attempt['percentage'] or 0
+
+                # Baholash
+                if percentage >= 81:
+                    grade_text = "A'lo"
+                    fill_color = "C6EFCE"
+                elif percentage >= 61:
+                    grade_text = "Yaxshi"
+                    fill_color = "FFEB9C"
+                elif percentage >= 31:
+                    grade_text = "Qoniqarli"
+                    fill_color = "FFC7CE"
+                else:
+                    grade_text = "Qoniqarsiz"
+                    fill_color = "FFC7CE"
+                
+                student_name = f"{attempt['first_name'] or ''} {attempt['last_name'] or ''}".strip()
+                if not student_name:
+                    student_name = attempt['username']
+                
+                finished_date = attempt['finished_at'].strftime('%Y-%m-%d %H:%M:%S') if attempt['finished_at'] else ''
+                
+                data = [
+                    idx,
+                    student_name,
+                    attempt['student_unique_id'] or '',
+                    attempt['class_name'] or '',
+                    attempt['test_title'] or '',
+                    attempt['subject'] or '',
+                    attempt['score'] or 0,
+                    percentage,
+                    grade_text,
+                    attempt['attempt_number'] or 1,
+                    finished_date
+                ]
+                
+                for col, value in enumerate(data, 1):
+                    cell = ws.cell(row=row, column=col, value=value)
+                    
+                    # Baholash ustuniga rang berish
+                    if col == 9:  # Baholash ustuni
+                        cell.fill = PatternFill(start_color=fill_color, end_color=fill_color, fill_type="solid")
+                    
+                    # Alignment
+                    if col in [1, 7, 8, 10]:  # Raqamli ustunlar
+                        cell.alignment = Alignment(horizontal='center')
+                    else:
+                        cell.alignment = Alignment(horizontal='left')
+                    
+                    cell.border = Border(
+                        left=Side(style='thin'),
+                        right=Side(style='thin'),
+                        top=Side(style='thin'),
+                        bottom=Side(style='thin')
+                    )
+                
+                row += 1
+            
+            # Ustun kengliklarini sozlash
+            column_widths = [5, 25, 12, 10, 30, 15, 10, 10, 12, 8, 20]
+            for col, width in enumerate(column_widths, 1):
+                ws.column_dimensions[get_column_letter(col)].width = width
+        
+        # Default sheet'ni o'chirish
+        if 'Sheet' in wb.sheetnames:
+            wb.remove(wb['Sheet'])
+        
+        # Response yaratish
+        response = HttpResponse(
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = 'attachment; filename="oquvchilar_test_natijalari.xlsx"'
+        
+        # Excel faylni saqlash
+        wb.save(response)
+        
+        return response
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'error': f'Export xatolik yuz berdi: {str(e)}'}, status=500)
+
+@login_required
 def export_all_results_view(request):
     """Barcha sinflar va fanlar bo'yicha natijalarni Excel formatida export qilish"""
     if request.user.role not in ['admin', 'teacher']:
@@ -2159,7 +2672,7 @@ def export_subject_results_view(request):
             # Statistika qo'shish
             ws['A3'] = "Umumiy Ma'lumotlar:"
             ws['A3'].font = Font(bold=True, size=12)
-    
+            
             ws['A4'] = f"Jami Testlar: {total_tests}"
             ws['A5'] = f"Jami Urinishlar: {total_attempts}"
             ws['A6'] = f"O'rtacha Foiz: {avg_percentage:.1f}%"

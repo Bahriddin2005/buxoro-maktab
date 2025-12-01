@@ -1,0 +1,1382 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}O'quvchilar Natijalari - Buxoro Bilimdonlar Maktabi{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ============================================
+       PROFESSIONAL & MODERN DESIGN SYSTEM
+       ============================================ */
+    
+    :root {
+        /* Web-saytning asosiy ranglari bilan moslashtirilgan */
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --success-gradient: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+        --warning-gradient: linear-gradient(135deg, #FF9800 0%, #f57c00 100%);
+        --danger-gradient: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+        --info-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --dark-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --glass-bg: rgba(255, 255, 255, 0.1);
+        --glass-border: rgba(255, 255, 255, 0.2);
+        --shadow-soft: 0 4px 15px rgba(0, 0, 0, 0.1);
+        --shadow-medium: 0 8px 25px rgba(0, 0, 0, 0.15);
+        --shadow-strong: 0 15px 35px rgba(0, 0, 0, 0.2);
+    }
+    
+    /* Main container - web-sayt background bilan mos */
+    .container-fluid {
+        background: transparent;
+        min-height: 100vh;
+        padding: 2rem 1rem;
+    }
+    
+    /* Header section - Professional and elegant */
+    .page-header {
+        background: var(--primary-gradient);
+        padding: 2.5rem 2rem;
+        border-radius: 24px;
+        margin-bottom: 2rem;
+        box-shadow: var(--shadow-strong);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .page-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        animation: rotate 20s linear infinite;
+    }
+    
+    @keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    
+    .page-header h2 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        text-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        position: relative;
+        z-index: 1;
+    }
+    
+    .page-header p {
+        font-size: 1.1rem;
+        opacity: 0.95;
+        position: relative;
+        z-index: 1;
+    }
+    
+    /* Export button - Premium design */
+    .btn-export {
+        background: var(--success-gradient);
+        border: none;
+        padding: 14px 32px;
+        border-radius: 16px;
+        font-weight: 700;
+        font-size: 1rem;
+        letter-spacing: 0.3px;
+        box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative;
+        z-index: 1;
+        overflow: hidden;
+    }
+    
+    .btn-export::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        transform: translate(-50%, -50%);
+        transition: width 0.6s, height 0.6s;
+    }
+    
+    .btn-export:hover::before {
+        width: 300px;
+        height: 300px;
+    }
+    
+    .btn-export:hover {
+        transform: translateY(-4px) scale(1.05);
+        box-shadow: 0 12px 35px rgba(76, 175, 80, 0.6);
+    }
+    
+    .btn-export:active {
+        transform: translateY(-2px) scale(1.02);
+    }
+    
+    /* Grade export menu - Professional pill design */
+    .grade-export-menu {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+        justify-content: flex-end;
+        align-items: center;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        box-shadow: var(--shadow-soft);
+        position: relative;
+        z-index: 1;
+    }
+    
+    .grade-export-item {
+        padding: 10px 20px;
+        border-radius: 25px;
+        border: 2px solid rgba(255, 255, 255, 0.25);
+        background: rgba(255, 255, 255, 0.12);
+        backdrop-filter: blur(10px);
+        color: white;
+        font-size: 0.9rem;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+        cursor: pointer;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        white-space: nowrap;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .grade-export-item::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: var(--secondary-gradient);
+        transition: left 0.4s ease;
+        z-index: -1;
+    }
+    
+    .grade-export-item:hover::after {
+        left: 0;
+        background: var(--primary-gradient);
+    }
+    
+    .grade-export-item:hover {
+        transform: translateY(-3px) scale(1.05);
+        border-color: rgba(255, 255, 255, 0.5);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+        color: white;
+    }
+    
+    .grade-export-item:active {
+        transform: translateY(-1px) scale(1.02);
+    }
+    
+    /* Statistics cards - Premium design */
+    .stat-card {
+        background: rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 2rem 1.5rem;
+        text-align: center;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        height: 100%;
+        box-shadow: var(--shadow-soft);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--primary-gradient);
+        transform: scaleX(0);
+        transition: transform 0.4s ease;
+    }
+    
+    .stat-card:hover::before {
+        transform: scaleX(1);
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-10px) scale(1.03);
+        box-shadow: var(--shadow-strong);
+        border-color: rgba(255, 255, 255, 0.3);
+    }
+    
+    .stat-card .icon-wrapper {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        transition: all 0.4s ease;
+    }
+    
+    .stat-card:hover .icon-wrapper {
+        transform: rotate(10deg) scale(1.1);
+    }
+    
+    .stat-card.primary .icon-wrapper {
+        background: var(--primary-gradient);
+    }
+    
+    .stat-card.success .icon-wrapper {
+        background: var(--success-gradient);
+    }
+    
+    .stat-card.warning .icon-wrapper {
+        background: var(--warning-gradient);
+    }
+    
+    .stat-card.danger .icon-wrapper {
+        background: var(--danger-gradient);
+    }
+    
+    .stat-card h3 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin: 0.5rem 0;
+        background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        letter-spacing: -1px;
+    }
+    
+    .stat-card p {
+        font-size: 1rem;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.8);
+        letter-spacing: 0.3px;
+    }
+    
+    /* Filter section - Modern glass design */
+    .filter-section {
+        background: rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 2rem;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        box-shadow: var(--shadow-medium);
+        margin-bottom: 2rem;
+    }
+    
+    .filter-section h4 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        letter-spacing: -0.3px;
+        margin-bottom: 1.5rem;
+        background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .filter-section label {
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.9rem;
+        letter-spacing: 0.2px;
+        margin-bottom: 0.5rem;
+    }
+    
+    .form-select, .form-control {
+        background: rgba(255, 255, 255, 0.12);
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        color: white;
+        padding: 12px 16px;
+        border-radius: 12px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .form-select:focus, .form-control:focus {
+        background: rgba(255, 255, 255, 0.18);
+        border-color: rgba(99, 102, 241, 0.6);
+        color: white;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2), 0 4px 15px rgba(0, 0, 0, 0.2);
+        outline: none;
+    }
+    
+    .form-select option {
+        background: #1e293b;
+        color: white;
+        padding: 10px;
+    }
+    
+    .form-control::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+    }
+    
+    /* Table container - Professional design */
+    .results-table-container {
+        background: rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 2rem;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        box-shadow: var(--shadow-medium);
+        overflow: hidden;
+    }
+    
+    .table-dark {
+        background: transparent;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+    
+    .table-dark thead th {
+        background: var(--primary-gradient);
+        border: none;
+        color: white;
+        font-weight: 700;
+        padding: 1.25rem 1rem;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 1px;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+    
+    .table-dark thead th:first-child {
+        border-top-left-radius: 16px;
+    }
+    
+    .table-dark thead th:last-child {
+        border-top-right-radius: 16px;
+    }
+    
+    .table-dark tbody tr {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.02);
+    }
+    
+    .table-dark tbody tr:hover {
+        background: rgba(255, 255, 255, 0.12);
+        transform: scale(1.01);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    }
+    
+    .table-dark tbody td {
+        padding: 1.25rem 1rem;
+        vertical-align: middle;
+        border: none;
+        color: rgba(255, 255, 255, 0.9);
+        font-weight: 500;
+    }
+    
+    /* Badge styling - Premium gradients */
+    .badge-grade {
+        padding: 10px 18px;
+        border-radius: 20px;
+        font-weight: 700;
+        font-size: 0.8rem;
+        display: inline-block;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .badge-excellent {
+        background: var(--success-gradient);
+        color: white;
+    }
+    
+    .badge-good {
+        background: var(--info-gradient);
+        color: white;
+    }
+    
+    .badge-satisfactory {
+        background: var(--warning-gradient);
+        color: white;
+    }
+    
+    .badge-poor {
+        background: var(--danger-gradient);
+        color: white;
+    }
+    
+    /* Student link - Elegant hover effect */
+    .student-link {
+        color: #60a5fa;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    
+    .student-link::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background: #60a5fa;
+        transition: width 0.3s ease;
+    }
+    
+    .student-link:hover {
+        color: #93c5fd;
+    }
+    
+    .student-link:hover::after {
+        width: 100%;
+    }
+    
+    /* Loading animation - Smooth pulse */
+    @keyframes pulse {
+        0%, 100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+        50% {
+            opacity: 0.6;
+            transform: scale(1.05);
+        }
+    }
+    
+    .loading {
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    
+    /* Empty state - Professional styling */
+    .empty-state {
+        padding: 5rem 2rem;
+        text-align: center;
+    }
+    
+    .empty-state i {
+        font-size: 5rem;
+        opacity: 0.4;
+        margin-bottom: 1.5rem;
+        color: rgba(255, 255, 255, 0.5);
+    }
+    
+    .empty-state h5 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .page-header {
+            padding: 1.5rem;
+        }
+        
+        .page-header h2 {
+            font-size: 1.8rem;
+        }
+        
+        .page-header .d-flex {
+            flex-direction: column;
+            align-items: flex-start !important;
+        }
+        
+        .grade-export-menu {
+            justify-content: flex-start;
+            width: 100%;
+        }
+        
+        .btn-export {
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+        
+        .stat-card h3 {
+            font-size: 2rem;
+        }
+    }
+    
+    /* Smooth scroll */
+    html {
+        scroll-behavior: smooth;
+    }
+    
+    /* Grade Section - Alohida sinf natijalari */
+    .grade-section {
+        margin-bottom: 2.5rem;
+        animation: fadeInUp 0.6s ease-out;
+    }
+    
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .grade-section-header {
+        background: var(--primary-gradient);
+        padding: 1.5rem 2rem;
+        border-radius: 20px 20px 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+        box-shadow: var(--shadow-medium);
+    }
+    
+    .grade-section-header h3 {
+        font-size: 1.8rem;
+        font-weight: 800;
+        margin: 0;
+        color: white;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .grade-section-header .grade-badge {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 8px 20px;
+        border-radius: 25px;
+        font-size: 1.2rem;
+        font-weight: 700;
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .grade-stats {
+        display: flex;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .grade-stat-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(255, 255, 255, 0.15);
+        padding: 8px 16px;
+        border-radius: 15px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .grade-stat-item i {
+        font-size: 1.1rem;
+    }
+    
+    .grade-stat-item span {
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+    
+    .grade-section-body {
+        background: rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 0 0 20px 20px;
+        padding: 2rem;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-top: none;
+        box-shadow: var(--shadow-medium);
+    }
+    
+    .grade-table-container {
+        overflow-x: auto;
+    }
+    
+    .grade-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        background: transparent;
+    }
+    
+    .grade-table thead th {
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        color: white;
+        font-weight: 700;
+        padding: 1rem;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 1px;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .grade-table tbody tr {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.02);
+    }
+    
+    .grade-table tbody tr:hover {
+        background: rgba(255, 255, 255, 0.12);
+        transform: scale(1.005);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .grade-table tbody td {
+        padding: 1rem;
+        vertical-align: middle;
+        border: none;
+        color: rgba(255, 255, 255, 0.9);
+        font-weight: 500;
+    }
+    
+    .no-grade-results {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: rgba(255, 255, 255, 0.6);
+    }
+    
+    .no-grade-results i {
+        font-size: 4rem;
+        opacity: 0.4;
+        margin-bottom: 1rem;
+    }
+    
+    /* Students Grid - O'quvchilar ro'yxati */
+    .students-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+        padding: 1rem 0;
+    }
+    
+    .student-card {
+        background: rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border-radius: 16px;
+        padding: 1.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .student-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: var(--primary-gradient);
+        transform: scaleY(0);
+        transition: transform 0.3s ease;
+    }
+    
+    .student-card:hover {
+        transform: translateY(-5px) scale(1.02);
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        border-color: rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.12);
+    }
+    
+    .student-card:hover::before {
+        transform: scaleY(1);
+    }
+    
+    .student-number {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--primary-gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: white;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    .student-info {
+        flex: 1;
+    }
+    
+    .student-name {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: white;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .student-name i {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 1.1rem;
+    }
+    
+    .student-id {
+        margin-top: 0.25rem;
+    }
+    
+    .student-percentage {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .percentage-value {
+        font-size: 2rem;
+        font-weight: 800;
+        padding: 0.5rem 1.5rem;
+        border-radius: 12px;
+        color: white;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        min-width: 100px;
+        text-align: center;
+    }
+    
+    .badge-percentage.bg-success {
+        background: var(--success-gradient) !important;
+    }
+    
+    .badge-percentage.bg-primary {
+        background: var(--info-gradient) !important;
+    }
+    
+    .badge-percentage.bg-warning {
+        background: var(--warning-gradient) !important;
+    }
+    
+    .badge-percentage.bg-danger {
+        background: var(--danger-gradient) !important;
+    }
+    
+    .percentage-grade {
+        flex: 1;
+        text-align: right;
+    }
+    
+    .badge-grade-small {
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-weight: 700;
+        font-size: 0.75rem;
+        display: inline-block;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+    
+    .student-results-count {
+        text-align: center;
+        padding-top: 0.5rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    /* Responsive adjustments for students grid */
+    @media (max-width: 768px) {
+        .students-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        
+        .student-card {
+            padding: 1.25rem;
+        }
+        
+        .percentage-value {
+            font-size: 1.5rem;
+            padding: 0.4rem 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="page-header" data-aos="fade-down">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+                <h2 class="text-white mb-2">
+                    <i class="fas fa-graduation-cap me-2"></i>
+                    O'quvchilar Natijalari
+                </h2>
+                <p class="text-white mb-0 opacity-75">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Barcha o'quvchilarning yechgan testlari va batafsil natijalari
+                </p>
+            </div>
+            <div class="mt-3 mt-md-0 d-flex flex-column align-items-md-end gap-2">
+                <button class="btn btn-export text-white" onclick="exportToExcel()">
+                    <i class="fas fa-file-excel me-2"></i>
+                    Barcha Sinflar Excel'ga
+                </button>
+                <div class="grade-export-menu mt-1">
+                    {% for i in "12345678901"|make_list %}
+                    <button type="button"
+                            class="grade-export-item"
+                            data-grade="{{ forloop.counter }}"
+                            onclick="exportGradeExcel(this.dataset.grade); return false;">
+                        {{ forloop.counter }}-sinf
+                    </button>
+                    {% endfor %}
+                </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-section mb-4" data-aos="fade-up">
+        <h4 class="text-white mb-3">
+            <i class="fas fa-filter me-2"></i>
+            Filterlash
+        </h4>
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="text-white-50 small mb-2 d-block">
+                    <i class="fas fa-layer-group me-1"></i>Sinf
+                </label>
+                <select class="form-select" id="filterGrade" onchange="loadResults()">
+                    <option value="">Barcha sinflar</option>
+                    {% for i in "12345678901"|make_list %}
+                    <option value="{{ forloop.counter }}">{{ forloop.counter }}-sinf</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="text-white-50 small mb-2 d-block">
+                    <i class="fas fa-book me-1"></i>Fan
+                </label>
+                <select class="form-select" id="filterSubject" onchange="loadResults()">
+                    <option value="">Barcha fanlar</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="text-white-50 small mb-2 d-block">
+                    <i class="fas fa-file-alt me-1"></i>Test
+                </label>
+                <select class="form-select" id="filterTest" onchange="loadResults()">
+                    <option value="">Barcha testlar</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="text-white-50 small mb-2 d-block">
+                    <i class="fas fa-search me-1"></i>O'quvchi qidirish
+                </label>
+                <input type="text" class="form-control" id="searchStudent" 
+                       placeholder="Ism, familiya yoki username..." 
+                       onkeyup="debounceSearch()">
+            </div>
+        </div>
+    </div>
+
+    <!-- Overall Statistics -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="100">
+            <div class="stat-card primary">
+                <div class="icon-wrapper">
+                    <i class="fas fa-check-circle fa-2x text-white"></i>
+                </div>
+                <h3 class="text-white" id="totalResults">--</h3>
+                <p class="text-white-50 mb-0">Jami Natijalar</p>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="200">
+            <div class="stat-card warning">
+                <div class="icon-wrapper">
+                    <i class="fas fa-percentage fa-2x text-white"></i>
+                </div>
+                <h3 class="text-white" id="avgPercentage">--%</h3>
+                <p class="text-white-50 mb-0">O'rtacha Natija</p>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="300">
+            <div class="stat-card success">
+                <div class="icon-wrapper">
+                    <i class="fas fa-star fa-2x text-white"></i>
+                </div>
+                <h3 class="text-white" id="excellentCount">--</h3>
+                <p class="text-white-50 mb-0">A'lo Natijalar (≥81%)</p>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="400">
+            <div class="stat-card danger">
+                <div class="icon-wrapper">
+                    <i class="fas fa-exclamation-circle fa-2x text-white"></i>
+                </div>
+                <h3 class="text-white" id="poorCount">--</h3>
+                <p class="text-white-50 mb-0">Qoniqarsiz (<31%)</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grade-based Results Sections -->
+    <div id="gradeResultsContainer">
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary loading" role="status">
+                <span class="visually-hidden">Yuklanmoqda...</span>
+            </div>
+            <p class="text-white-50 mt-3">Ma'lumotlar yuklanmoqda...</p>
+        </div>
+    </div>
+</div>
+
+<script>
+let searchTimeout;
+let allResults = [];
+
+function debounceSearch() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        loadResults();
+    }, 500);
+}
+
+async function loadResults() {
+    try {
+        const grade = document.getElementById('filterGrade').value;
+        const subject = document.getElementById('filterSubject').value;
+        const test = document.getElementById('filterTest').value;
+        const student = document.getElementById('searchStudent').value;
+        
+        const params = new URLSearchParams();
+        if (grade) params.append('grade', grade);
+        if (subject) params.append('subject', subject);
+        if (test) params.append('test', test);
+        if (student) params.append('student', student);
+        
+        const response = await fetch(`/tests/students-test-results/?${params.toString()}`, {
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+        
+        // Response'ni bir marta o'qib olish
+        const contentType = response.headers.get('content-type');
+        let responseData;
+        
+        try {
+            if (!contentType || !contentType.includes('application/json')) {
+                const text = await response.text();
+                console.error('Non-JSON response:', text.substring(0, 200));
+                throw new Error('Serverdan JSON javob kelmadi. Sahifani yangilab ko\'ring.');
+            }
+            
+            responseData = await response.json();
+        } catch (parseError) {
+            if (parseError.message && parseError.message.includes('Serverdan JSON javob kelmadi')) {
+                throw parseError;
+            }
+            console.error('JSON parse error:', parseError);
+            throw new Error('Server javobini tahlil qilishda xatolik. Sahifani yangilab ko\'ring.');
+        }
+        
+        if (!response.ok) {
+            const errorMessage = responseData.error || `HTTP xatolik: ${response.status}`;
+            throw new Error(errorMessage);
+        }
+        
+        if (!responseData || typeof responseData !== 'object') {
+            throw new Error('Noto\'g\'ri ma\'lumot formati');
+        }
+        
+        allResults = responseData.results || [];
+        
+        console.log('Loaded results:', allResults.length, 'items');
+        
+        // Update statistics
+        updateStatistics(responseData.stats || {});
+        
+        // Display results
+        displayResults(allResults);
+        
+        // Load filter options
+        loadFilterOptions();
+        
+    } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('gradeResultsContainer').innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-exclamation-triangle text-danger"></i>
+                <h5 class="text-white mt-3">Xatolik yuz berdi</h5>
+                <p class="text-white-50">${error.message}</p>
+                <button class="btn btn-primary mt-3" onclick="loadResults()">
+                    <i class="fas fa-redo me-2"></i>Qayta urinish
+                </button>
+            </div>
+        `;
+    }
+}
+
+function updateStatistics(stats) {
+    document.getElementById('totalResults').textContent = stats.total_results || 0;
+    document.getElementById('avgPercentage').textContent = (stats.avg_percentage || 0).toFixed(1) + '%';
+    document.getElementById('excellentCount').textContent = stats.excellent_count || 0;
+    document.getElementById('poorCount').textContent = stats.poor_count || 0;
+}
+
+function displayResults(results) {
+    const container = document.getElementById('gradeResultsContainer');
+    
+    if (!container) {
+        console.error('Container not found: gradeResultsContainer');
+        return;
+    }
+    
+    if (!results || results.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-inbox"></i>
+                <h5 class="text-white mt-3">Natijalar topilmadi</h5>
+                <p class="text-white-50">Filtrlarni o'zgartirib qayta urinib ko'ring</p>
+            </div>
+        `;
+        return;
+    }
+    
+    try {
+        // Avval sinf bo'yicha guruhlash
+        const groupedByGrade = {};
+        results.forEach(result => {
+            if (!result || !result.student) return;
+            
+            // Grade ni olish - turli formatlarda kelishi mumkin
+            let grade = result.student.grade || result.student_grade || 'Noma\'lum';
+            
+            // Agar grade string bo'lsa, raqam qismini olish
+            if (typeof grade === 'string' && grade.includes('-')) {
+                grade = grade.split('-')[0];
+            }
+            
+            // Agar grade number bo'lsa, stringga o'tkazish
+            if (typeof grade === 'number') {
+                grade = grade.toString();
+            }
+            
+            if (!groupedByGrade[grade]) {
+                groupedByGrade[grade] = [];
+            }
+            groupedByGrade[grade].push(result);
+        });
+        
+        // Har bir sinf uchun o'quvchilarni guruhlash va eng yaxshi natijani olish
+        const studentsByGrade = {};
+        Object.keys(groupedByGrade).forEach(grade => {
+            const gradeResults = groupedByGrade[grade];
+            const studentsMap = {};
+            
+            // Har bir o'quvchi uchun eng yaxshi natijani topish
+            gradeResults.forEach(result => {
+                if (!result.student) return;
+                
+                const studentId = result.student.id || result.student_id;
+                // Ismni turli formatlarda olish
+                const studentName = result.student.full_name || 
+                                   (result.student.first_name && result.student.last_name ? 
+                                    `${result.student.first_name} ${result.student.last_name}` : 
+                                    result.student.username || result.student.first_name || 'Noma\'lum');
+                
+                if (!studentId || !studentName) return;
+                
+                if (!studentsMap[studentId]) {
+                    studentsMap[studentId] = {
+                        name: studentName,
+                        percentage: result.percentage || 0,
+                        studentId: result.student.student_id || result.student.student_unique_id || '',
+                        results: []
+                    };
+                }
+                
+                studentsMap[studentId].results.push(result);
+                // Eng yaxshi foizni saqlash
+                const currentPercentage = result.percentage || 0;
+                if (currentPercentage > studentsMap[studentId].percentage) {
+                    studentsMap[studentId].percentage = currentPercentage;
+                }
+            });
+            
+            // O'quvchilarni foiz bo'yicha tartiblash (yuqoridan pastga)
+            const studentsList = Object.values(studentsMap).sort((a, b) => b.percentage - a.percentage);
+            studentsByGrade[grade] = studentsList;
+        });
+        
+        // 1-sinfdan 11-sinfgacha barcha sinflar uchun oynalar yaratish
+        let html = '';
+        for (let grade = 1; grade <= 11; grade++) {
+            const gradeStr = grade.toString();
+            const gradeStudents = studentsByGrade[gradeStr] || [];
+            const gradeResults = groupedByGrade[gradeStr] || [];
+            const gradeStats = calculateGradeStats(gradeResults);
+            
+            html += `
+                <div class="grade-section" style="animation-delay: ${(grade - 1) * 0.1}s">
+                    <div class="grade-section-header">
+                        <h3>
+                            <i class="fas fa-users"></i>
+                            <span class="grade-badge">${grade}-sinf O'quvchilari</span>
+                            <span style="font-size: 1rem; opacity: 0.9; font-weight: 500;">
+                                (${gradeStudents.length} ta o'quvchi)
+                            </span>
+                        </h3>
+                        <div class="grade-stats">
+                            <div class="grade-stat-item">
+                                <i class="fas fa-percentage text-white"></i>
+                                <span class="text-white">O'rtacha: ${gradeStats.avgPercentage.toFixed(1)}%</span>
+                            </div>
+                            <div class="grade-stat-item">
+                                <i class="fas fa-star text-warning"></i>
+                                <span class="text-white">A'lo: ${gradeStats.excellent}</span>
+                            </div>
+                            <div class="grade-stat-item">
+                                <i class="fas fa-check-circle text-success"></i>
+                                <span class="text-white">Yaxshi: ${gradeStats.good}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="grade-section-body">
+                        ${gradeStudents.length > 0 ? `
+                            <div class="students-grid">
+                                ${gradeStudents.map((student, index) => {
+                                    const percentage = student.percentage || 0;
+                                    const gradeClass = getGradeClass(percentage);
+                                    const percentageColor = getPercentageColorClass(percentage);
+                                    
+                                    // Xavfsiz HTML escape
+                                    const studentName = String(student.name || 'Noma\'lum').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                                    const studentId = student.studentId ? String(student.studentId).replace(/</g, '&lt;').replace(/>/g, '&gt;') : '';
+                                    
+                                    return `
+                                        <div class="student-card">
+                                            <div class="student-number">${index + 1}</div>
+                                            <div class="student-info">
+                                                <div class="student-name">
+                                                    <i class="fas fa-user-circle me-2"></i>
+                                                    <strong>${studentName}</strong>
+                                                </div>
+                                                ${studentId ? `
+                                                    <div class="student-id">
+                                                        <small class="text-white-50">ID: ${studentId}</small>
+                                                    </div>
+                                                ` : ''}
+                                            </div>
+                                            <div class="student-percentage">
+                                                <div class="percentage-value badge-percentage bg-${percentageColor}">
+                                                    ${percentage.toFixed(1)}%
+                                                </div>
+                                                <div class="percentage-grade">
+                                                    <span class="badge-grade-small ${gradeClass}">${getGradeText(percentage)}</span>
+                                                </div>
+                                            </div>
+                                            <div class="student-results-count">
+                                                <small class="text-white-50">
+                                                    <i class="fas fa-list me-1"></i>
+                                                    ${student.results.length} ta natija
+                                                </small>
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        ` : `
+                            <div class="no-grade-results">
+                                <i class="fas fa-inbox"></i>
+                                <p class="text-white-50">${grade}-sinf uchun o'quvchilar topilmadi</p>
+                            </div>
+                        `}
+                    </div>
+                </div>
+            `;
+        }
+        
+        container.innerHTML = html;
+    } catch (error) {
+        console.error('Error in displayResults:', error);
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-exclamation-triangle text-danger"></i>
+                <h5 class="text-white mt-3">Xatolik yuz berdi</h5>
+                <p class="text-white-50">${error.message}</p>
+                <button class="btn btn-primary mt-3" onclick="loadResults()">
+                    <i class="fas fa-redo me-2"></i>Qayta urinish
+                </button>
+            </div>
+        `;
+    }
+}
+
+function getGradeText(percentage) {
+    if (percentage >= 81) return "A'lo";
+    if (percentage >= 61) return "Yaxshi";
+    if (percentage >= 31) return "Qoniqarli";
+    return "Qoniqarsiz";
+}
+
+function calculateGradeStats(results) {
+    if (results.length === 0) {
+        return {
+            avgPercentage: 0,
+            excellent: 0,
+            good: 0,
+            poor: 0
+        };
+    }
+    
+    const totalPercentage = results.reduce((sum, r) => sum + (r.percentage || 0), 0);
+    const avgPercentage = totalPercentage / results.length;
+    
+    const excellent = results.filter(r => (r.percentage || 0) >= 81).length;
+    const good = results.filter(r => (r.percentage || 0) >= 61 && (r.percentage || 0) < 81).length;
+    const poor = results.filter(r => (r.percentage || 0) < 31).length;
+    
+    return {
+        avgPercentage,
+        excellent,
+        good,
+        poor
+    };
+}
+
+function getGradeClass(percentage) {
+    if (percentage >= 81) return 'badge-excellent';
+    if (percentage >= 61) return 'badge-good';
+    if (percentage >= 31) return 'badge-satisfactory';
+    return 'badge-poor';
+}
+
+function getPercentageColorClass(percentage) {
+    if (percentage >= 81) return 'success';
+    if (percentage >= 61) return 'primary';
+    if (percentage >= 31) return 'warning';
+    return 'danger';
+}
+
+async function loadFilterOptions() {
+    try {
+        // Load subjects and tests from current results
+        const subjects = [...new Set(allResults.map(r => r.test.subject).filter(Boolean))].sort();
+        const subjectSelect = document.getElementById('filterSubject');
+        const currentSubject = subjectSelect.value;
+        subjectSelect.innerHTML = '<option value="">Barcha fanlar</option>' + 
+            subjects.map(s => `<option value="${s}" ${s === currentSubject ? 'selected' : ''}>${s}</option>`).join('');
+        
+        // Get unique tests
+        const testsMap = new Map();
+        allResults.forEach(r => {
+            if (r.test && r.test.id) {
+                testsMap.set(r.test.id, {id: r.test.id, title: r.test.title});
+            }
+        });
+        const tests = Array.from(testsMap.values());
+        const testSelect = document.getElementById('filterTest');
+        const currentTest = testSelect.value;
+        let testOptions = '<option value="">Barcha testlar</option>';
+        tests.forEach(t => {
+            const selected = t.id.toString() === currentTest ? 'selected' : '';
+            testOptions += `<option value="${t.id}" ${selected}>${t.title}</option>`;
+        });
+        testSelect.innerHTML = testOptions;
+            
+        // Fallback: Load from all-results if needed
+        if (subjects.length === 0 || tests.length === 0) {
+            try {
+                const response = await fetch('/tests/all-results/', {
+                    headers: {'Accept': 'application/json'}
+                });
+                
+                if (response.ok) {
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        const data = await response.json();
+                        const results = data.results || [];
+                        
+                        if (subjects.length === 0) {
+                            const allSubjects = [...new Set(results.map(r => r.test.subject).filter(Boolean))].sort();
+                            subjectSelect.innerHTML = '<option value="">Barcha fanlar</option>' + 
+                                allSubjects.map(s => `<option value="${s}">${s}</option>`).join('');
+                        }
+                        
+                        if (tests.length === 0) {
+                            const allTests = [...new Set(results.map(r => ({id: r.test.id, title: r.test.title})))];
+                            testSelect.innerHTML = '<option value="">Barcha testlar</option>' + 
+                                allTests.map(t => `<option value="${t.id}">${t.title}</option>`).join('');
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error('Error loading filter options from all-results:', err);
+            }
+        }
+    } catch (error) {
+        console.error('Error loading filter options:', error);
+    }
+}
+
+function exportToExcel() {
+    const grade = document.getElementById('filterGrade').value;
+    const subject = document.getElementById('filterSubject').value;
+    const test = document.getElementById('filterTest').value;
+    
+    const params = new URLSearchParams();
+    if (grade) params.append('grade', grade);
+    if (subject) params.append('subject', subject);
+    if (test) params.append('test', test);
+    
+    window.location.href = `/tests/students-test-results/export/?${params.toString()}`;
+}
+
+function exportGradeExcel(grade) {
+    const subject = document.getElementById('filterSubject').value;
+    const test = document.getElementById('filterTest').value;
+    
+    const params = new URLSearchParams();
+    params.append('grade', String(grade));
+    if (subject) params.append('subject', subject);
+    if (test) params.append('test', test);
+    
+    window.location.href = '/tests/students-test-results/export/?' + params.toString();
+}
+
+// Load results on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadResults();
+});
+</script>
+{% endblock %}

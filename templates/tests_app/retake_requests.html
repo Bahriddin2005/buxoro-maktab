@@ -139,17 +139,51 @@ async function loadRetakeRequests() {
             }
         });
         
-        if (response.ok) {
-            const data = await response.json();
-            currentRequests = data.requests;
-            updateTotalCount(data.total_count);
-            displayRequests(currentRequests);
-        } else {
-            showError('Ma\'lumotlarni yuklashda xatolik');
+        if (!response.ok) {
+            // Error response'ni o'qishga harakat qilamiz
+            let errorMessage = 'Ma\'lumotlarni yuklashda xatolik';
+            try {
+                const errorData = await response.json();
+                errorMessage = errorData.error || errorMessage;
+            } catch (e) {
+                // JSON parse qila olmasa, status text ishlatamiz
+                errorMessage = `Xatolik: ${response.status} ${response.statusText}`;
+            }
+            showError(errorMessage);
+            displayRequests([]);
+            updateTotalCount(0);
+            return;
         }
+        
+        // JSON response'ni o'qish
+        let data;
+        try {
+            data = await response.json();
+        } catch (e) {
+            console.error('JSON parse error:', e);
+            showError('Javob formatini tushunib bo\'lmadi');
+            displayRequests([]);
+            updateTotalCount(0);
+            return;
+        }
+        
+        // Ma'lumotlarni tekshirish
+        if (!data || typeof data !== 'object') {
+            showError('Noto\'g\'ri javob formati');
+            displayRequests([]);
+            updateTotalCount(0);
+            return;
+        }
+        
+        currentRequests = data.requests || [];
+        updateTotalCount(data.total_count || 0);
+        displayRequests(currentRequests);
+        
     } catch (error) {
         console.error('Error loading retake requests:', error);
-        showError('Server bilan bog\'lanishda xatolik');
+        showError('Server bilan bog\'lanishda xatolik: ' + error.message);
+        displayRequests([]);
+        updateTotalCount(0);
     } finally {
         showLoading(false);
     }
@@ -158,7 +192,7 @@ async function loadRetakeRequests() {
 function displayRequests(requests) {
     const tbody = document.getElementById('requestsTableBody');
     
-    if (requests.length === 0) {
+    if (!requests || requests.length === 0) {
         tbody.innerHTML = `
             <tr>
                 <td colspan="7" class="text-center py-4 text-white-50">
@@ -170,48 +204,55 @@ function displayRequests(requests) {
         return;
     }
     
-    tbody.innerHTML = requests.map(request => `
+    tbody.innerHTML = requests.map(request => {
+        // Safe values
+        const percentage = request.previous_percentage || 0;
+        const score = request.previous_score || 0;
+        const badgeClass = percentage >= 80 ? 'success' : percentage >= 60 ? 'warning' : 'danger';
+        const reason = request.reason || '';
+        const reasonDisplay = reason.length > 50 ? reason.substring(0, 50) + '...' : reason;
+        const createdDate = request.created_at ? new Date(request.created_at).toLocaleDateString('uz-UZ', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        }) : '';
+        
+        return `
         <tr>
             <td>
                 <div>
-                    <strong class="text-white">${request.student_name}</strong><br>
-                    <small class="text-white-50">${request.student_grade}-sinf ${request.student_class || ''}</small>
+                    <strong class="text-white">${request.student_name || ''}</strong><br>
+                    <small class="text-white-50">${request.student_grade || ''}-sinf ${request.student_class || ''}</small>
                 </div>
             </td>
             <td>
                 <div>
-                    <strong class="text-white">${request.test_title}</strong><br>
-                    <small class="text-white-50">${request.test_subject}</small>
+                    <strong class="text-white">${request.test_title || ''}</strong><br>
+                    <small class="text-white-50">${request.test_subject || ''}</small>
                 </div>
             </td>
             <td>
                 <div class="d-flex align-items-center">
-                    <span class="badge bg-${request.previous_percentage >= 80 ? 'success' : request.previous_percentage >= 60 ? 'warning' : 'danger'} me-2">
-                        ${request.previous_percentage.toFixed(1)}%
+                    <span class="badge bg-${badgeClass} me-2">
+                        ${percentage.toFixed(1)}%
                     </span>
-                    <small class="text-white-50">${request.previous_score} ball</small>
+                    <small class="text-white-50">${score} ball</small>
                 </div>
             </td>
             <td>
-                <span class="text-white" title="${request.reason}">
-                    ${request.reason.length > 50 ? request.reason.substring(0, 50) + '...' : request.reason}
+                <span class="text-white" title="${reason}">
+                    ${reasonDisplay}
                 </span>
             </td>
             <td>
                 <span class="badge bg-${getStatusColor(request.status)}">
-                    ${request.status_display}
+                    ${request.status_display || request.status || ''}
                 </span>
             </td>
             <td>
-                <small class="text-white-50">
-                    ${new Date(request.created_at).toLocaleDateString('uz-UZ', {
-                        day: '2-digit',
-                        month: '2-digit',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    })}
-                </small>
+                <small class="text-white-50">${createdDate}</small>
             </td>
             <td class="text-center">
                 <button class="btn btn-outline-primary btn-sm" onclick="showRequestDetails(${request.id})">
@@ -219,7 +260,8 @@ function displayRequests(requests) {
                 </button>
             </td>
         </tr>
-    `).join('');
+        `;
+    }).join('');
 }
 
 function getStatusColor(status) {
@@ -237,21 +279,26 @@ function showRequestDetails(requestId) {
     
     currentRequestId = requestId;
     
+    // Safe values
+    const percentage = request.previous_percentage || 0;
+    const score = request.previous_score || 0;
+    const badgeClass = percentage >= 80 ? 'success' : percentage >= 60 ? 'warning' : 'danger';
+    
     const detailsHtml = `
         <div class="row">
             <div class="col-md-6">
                 <h6 class="text-white">O'quvchi Ma'lumotlari</h6>
-                <p class="mb-1"><strong>Ism-familiya:</strong> <span class="text-white-50">${request.student_name}</span></p>
-                <p class="mb-1"><strong>Sinf:</strong> <span class="text-white-50">${request.student_grade}-sinf ${request.student_class || ''}</span></p>
-                <p class="mb-3"><strong>Username:</strong> <span class="text-white-50">${request.student_username}</span></p>
+                <p class="mb-1"><strong>Ism-familiya:</strong> <span class="text-white-50">${request.student_name || ''}</span></p>
+                <p class="mb-1"><strong>Sinf:</strong> <span class="text-white-50">${request.student_grade || ''}-sinf ${request.student_class || ''}</span></p>
+                <p class="mb-3"><strong>Username:</strong> <span class="text-white-50">${request.student_username || ''}</span></p>
             </div>
             <div class="col-md-6">
                 <h6 class="text-white">Test Ma'lumotlari</h6>
-                <p class="mb-1"><strong>Test:</strong> <span class="text-white-50">${request.test_title}</span></p>
-                <p class="mb-1"><strong>Fan:</strong> <span class="text-white-50">${request.test_subject}</span></p>
+                <p class="mb-1"><strong>Test:</strong> <span class="text-white-50">${request.test_title || ''}</span></p>
+                <p class="mb-1"><strong>Fan:</strong> <span class="text-white-50">${request.test_subject || ''}</span></p>
                 <p class="mb-3"><strong>Oldingi natija:</strong> 
-                    <span class="badge bg-${request.previous_percentage >= 80 ? 'success' : request.previous_percentage >= 60 ? 'warning' : 'danger'}">
-                        ${request.previous_score} ball (${request.previous_percentage.toFixed(1)}%)
+                    <span class="badge bg-${badgeClass}">
+                        ${score} ball (${percentage.toFixed(1)}%)
                     </span>
                 </p>
             </div>
@@ -296,12 +343,29 @@ async function handleRequest(action) {
     
     const adminResponse = document.getElementById('adminResponse').value.trim();
     
+    // CSRF token olish
+    let csrfToken = '';
+    const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+    if (csrfInput) {
+        csrfToken = csrfInput.value;
+    } else {
+        // Cookie'dan olish
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            const [name, value] = cookie.trim().split('=');
+            if (name === 'csrftoken') {
+                csrfToken = value;
+                break;
+            }
+        }
+    }
+    
     try {
         const response = await fetch(`/tests/retake-requests/${currentRequestId}/handle/`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                'X-CSRFToken': csrfToken
             },
             body: JSON.stringify({
                 action: action,
@@ -309,15 +373,16 @@ async function handleRequest(action) {
             })
         });
         
-        const data = await response.json();
-        
-        if (response.ok) {
-            showSuccess(data.message);
-            bootstrap.Modal.getInstance(document.getElementById('requestModal')).hide();
-            loadRetakeRequests(); // Refresh the list
-        } else {
-            showError(data.error || 'Xatolik yuz berdi');
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ error: 'Noma\'lum xatolik' }));
+            showError(errorData.error || 'Xatolik yuz berdi');
+            return;
         }
+        
+        const data = await response.json();
+        showSuccess(data.message || 'Muvaffaqiyatli!');
+        bootstrap.Modal.getInstance(document.getElementById('requestModal')).hide();
+        loadRetakeRequests(); // Refresh the list
     } catch (error) {
         console.error('Error handling request:', error);
         showError('Server bilan bog\'lanishda xatolik');
