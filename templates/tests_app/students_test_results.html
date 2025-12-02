@@ -1314,36 +1314,7 @@ async function loadFilterOptions() {
         });
         testSelect.innerHTML = testOptions;
             
-        // Fallback: Load from all-results if needed
-        if (subjects.length === 0 || tests.length === 0) {
-            try {
-                const response = await fetch('/tests/all-results/', {
-                    headers: {'Accept': 'application/json'}
-                });
-                
-                if (response.ok) {
-                    const contentType = response.headers.get('content-type');
-                    if (contentType && contentType.includes('application/json')) {
-                        const data = await response.json();
-                        const results = data.results || [];
-                        
-                        if (subjects.length === 0) {
-                            const allSubjects = [...new Set(results.map(r => r.test.subject).filter(Boolean))].sort();
-                            subjectSelect.innerHTML = '<option value="">Barcha fanlar</option>' + 
-                                allSubjects.map(s => `<option value="${s}">${s}</option>`).join('');
-                        }
-                        
-                        if (tests.length === 0) {
-                            const allTests = [...new Set(results.map(r => ({id: r.test.id, title: r.test.title})))];
-                            testSelect.innerHTML = '<option value="">Barcha testlar</option>' + 
-                                allTests.map(t => `<option value="${t.id}">${t.title}</option>`).join('');
-                        }
-                    }
-                }
-            } catch (err) {
-                console.error('Error loading filter options from all-results:', err);
-            }
-        }
+        // Fallback removed - all-results endpoint no longer exists
     } catch (error) {
         console.error('Error loading filter options:', error);
     }

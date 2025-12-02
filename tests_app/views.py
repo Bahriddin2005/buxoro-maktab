@@ -944,244 +944,7 @@ def test_info_view(request, test_id):
         'end_time': test.end_time.isoformat() if test.end_time else None,
     })
 
-@login_required
-def all_results_view(request):
-    """Barcha test natijalarini ko'rsatish - Admin va Teacher uchun"""
-    from django.db import connection, OperationalError
-    from django.conf import settings
-    
-    if request.user.role not in ['admin', 'teacher']:
-        return JsonResponse({'error': 'Access denied'}, status=403)
-    
-    if request.method == 'GET' and request.headers.get('Accept') == 'application/json':
-        try:
-            # Database engine aniqlash
-            db_engine = settings.DATABASES['default']['ENGINE']
-            if 'sqlite' in db_engine.lower():
-                param_style = '?'
-            else:
-                param_style = '%s'
-            
-            # BARCHA natijalarni olish - RAW SQL ishlatamiz
-            # Bu usul correct_answers maydoni yo'q bo'lsa ham xatolik bermaydi
-            base_sql = """
-                SELECT 
-                    ta.id,
-                    ta.score,
-                    ta.total_points,
-                    ta.percentage,
-                    ta.finished_at,
-                    ta.time_taken,
-                    u.id as student_id,
-                    u.username as student_username,
-                    u.first_name as student_first_name,
-                    u.last_name as student_last_name,
-                    u.student_id as student_student_id,
-                    u.class_name as student_class_name,
-                    u.grade as student_grade,
-                    t.id as test_id,
-                    t.title as test_title,
-                    t.subject as test_subject,
-                    t.grade as test_grade,
-                    teacher.username as teacher_username,
-                    teacher.first_name as teacher_first_name,
-                    teacher.last_name as teacher_last_name,
-                    tr.correct_answers,
-                    tr.incorrect_answers,
-                    tr.unanswered
-                FROM tests_app_testattempt ta
-                INNER JOIN accounts_user u ON ta.student_id = u.id
-                INNER JOIN tests_app_test t ON ta.test_id = t.id
-                INNER JOIN accounts_user teacher ON t.created_by_id = teacher.id
-                LEFT JOIN tests_app_testresult tr ON ta.id = tr.attempt_id
-                WHERE ta.is_completed = 1
-            """ if param_style == '?' else """
-                SELECT 
-                    ta.id,
-                    ta.score,
-                    ta.total_points,
-                    ta.percentage,
-                    ta.finished_at,
-                    ta.time_taken,
-                    u.id as student_id,
-                    u.username as student_username,
-                    u.first_name as student_first_name,
-                    u.last_name as student_last_name,
-                    u.student_id as student_student_id,
-                    u.class_name as student_class_name,
-                    u.grade as student_grade,
-                    t.id as test_id,
-                    t.title as test_title,
-                    t.subject as test_subject,
-                    t.grade as test_grade,
-                    teacher.username as teacher_username,
-                    teacher.first_name as teacher_first_name,
-                    teacher.last_name as teacher_last_name,
-                    tr.correct_answers,
-                    tr.incorrect_answers,
-                    tr.unanswered
-                FROM tests_app_testattempt ta
-                INNER JOIN accounts_user u ON ta.student_id = u.id
-                INNER JOIN tests_app_test t ON ta.test_id = t.id
-                INNER JOIN accounts_user teacher ON t.created_by_id = teacher.id
-                LEFT JOIN tests_app_testresult tr ON ta.id = tr.attempt_id
-                WHERE ta.is_completed = 1
-            """
-            
-            # Teacher uchun filter qo'shish
-            where_clauses = []
-            params = []
-            
-            if request.user.role == 'teacher':
-                where_clauses.append("t.created_by_id = " + param_style)
-                params.append(request.user.id)
-            
-            # Filters
-            grade = request.GET.get('grade')
-            subject = request.GET.get('subject')
-            test_id = request.GET.get('test')
-            
-            if grade:
-                where_clauses.append("u.grade = " + param_style)
-                params.append(grade)
-            if subject:
-                where_clauses.append("t.subject = " + param_style)
-                params.append(subject)
-            if test_id:
-                where_clauses.append("t.id = " + param_style)
-                params.append(test_id)
-            
-            # SQL query tuzish
-            if where_clauses:
-                sql_query = base_sql + " AND " + " AND ".join(where_clauses)
-            else:
-                sql_query = base_sql
-            
-            sql_query += " ORDER BY u.grade, u.last_name, u.first_name, ta.finished_at DESC"
-            
-            # Ma'lumotlarni olish
-            results_data = []
-            with connection.cursor() as cursor:
-                cursor.execute(sql_query, params)
-                columns = [col[0] for col in cursor.description]
-                
-                for row in cursor.fetchall():
-                    row_dict = dict(zip(columns, row))
-                    
-                    # Calculate grade based on percentage
-                    percentage = row_dict['percentage'] or 0
-                    if percentage >= 81:
-                        grade_text = "A'lo"
-                    elif percentage >= 61:
-                        grade_text = "Yaxshi"
-                    elif percentage >= 31:
-                        grade_text = "Qoniqarli"
-                    else:
-                        grade_text = "Qoniqarsiz"
-                    
-                    teacher_name = f"{row_dict.get('teacher_first_name', '') or ''} {row_dict.get('teacher_last_name', '') or ''}".strip()
-                    if not teacher_name:
-                        teacher_name = row_dict.get('teacher_username', '')
-                    
-                    results_data.append({
-                        'test': {
-                            'id': row_dict['test_id'],
-                            'title': row_dict['test_title'],
-                            'subject': row_dict['test_subject'],
-                            'grade': row_dict['test_grade'],
-                            'created_by': teacher_name
-                        },
-                        'student': {
-                            'id': row_dict['student_id'],
-                            'username': row_dict['student_username'],
-                            'first_name': row_dict['student_first_name'],
-                            'last_name': row_dict['student_last_name'],
-                            'student_id': row_dict['student_student_id'],
-                            'class_name': row_dict['student_class_name'],
-                            'grade': row_dict['student_grade']
-                        },
-                        'score': row_dict['score'],
-                        'total_points': row_dict['total_points'],
-                        'percentage': row_dict['percentage'],
-                        'grade': grade_text,
-                        'time_taken': str(row_dict['time_taken']) if row_dict['time_taken'] else '',
-                        'finished_at': row_dict['finished_at'].isoformat() if row_dict['finished_at'] else None,
-                        'correct_answers': row_dict.get('correct_answers') or 0,
-                        'incorrect_answers': row_dict.get('incorrect_answers') or 0,
-                        'unanswered': row_dict.get('unanswered') or 0,
-                        'student_name': f"{row_dict['student_first_name'] or ''} {row_dict['student_last_name'] or ''}".strip() or row_dict['student_username'],
-                        'username': row_dict['student_username'],
-                        'test_title': row_dict['test_title'],
-                    })
-            
-            # Statistics
-            stats_sql = "SELECT COUNT(*) FROM tests_app_testattempt WHERE is_completed = 1"
-            stats_params = []
-            
-            if request.user.role == 'teacher':
-                stats_sql = """
-                    SELECT COUNT(*) 
-                    FROM tests_app_testattempt ta
-                    INNER JOIN tests_app_test t ON ta.test_id = t.id
-                    WHERE ta.is_completed = 1 AND t.created_by_id = ?
-                """ if param_style == '?' else """
-                    SELECT COUNT(*) 
-                    FROM tests_app_testattempt ta
-                    INNER JOIN tests_app_test t ON ta.test_id = t.id
-                    WHERE ta.is_completed = 1 AND t.created_by_id = %s
-                """
-                stats_params = [request.user.id]
-            
-            with connection.cursor() as cursor:
-                cursor.execute(stats_sql, stats_params)
-                total_results = cursor.fetchone()[0]
-                
-                cursor.execute("SELECT COUNT(*) FROM accounts_user WHERE role = 'student' AND is_verified = 1")
-                total_students = cursor.fetchone()[0]
-            
-            # Average percentage hisoblash
-            avg_percentage = 0
-            excellent_count = 0
-            if results_data:
-                percentages = [r['percentage'] for r in results_data if r['percentage']]
-                if percentages:
-                    avg_percentage = sum(percentages) / len(percentages)
-                    excellent_count = len([p for p in percentages if p >= 81])
-            
-            stats = {
-                'total_students': total_students,
-                'total_results': total_results,
-                'avg_percentage': round(avg_percentage, 2),
-                'excellent_count': excellent_count,
-            }
-            
-            return JsonResponse({
-                'results': results_data,
-                'stats': stats
-            }, json_dumps_params={'ensure_ascii': False})
-        
-        except OperationalError as e:
-            error_message = str(e)
-            if 'correct_answers' in error_message or 'no such column' in error_message.lower():
-                return JsonResponse({
-                    'results': [],
-                    'stats': {'total_students': 0, 'total_results': 0, 'avg_percentage': 0, 'excellent_count': 0},
-                    'error': 'Database schema mismatch'
-                }, json_dumps_params={'ensure_ascii': False})
-            else:
-                raise
-        except Exception as e:
-            import traceback
-            traceback.print_exc()
-            return JsonResponse({
-                'results': [],
-                'stats': {'total_students': 0, 'total_results': 0, 'avg_percentage': 0, 'excellent_count': 0},
-                'error': f'Xatolik: {str(e)}'
-            }, status=500, json_dumps_params={'ensure_ascii': False})
-    
-    return render(request, 'tests_app/all_students_results.html', {
-        'user_role': request.user.role
-    })
+# all_results_view funksiyasi olib tashlandi - /tests/all-results/ bo'limi kerak emas edi
 
 @login_required
 @require_http_methods(["POST"])
@@ -1951,7 +1714,7 @@ def admin_teacher_tests(request):
         Test.objects
         .all()  # Barcha testlar
         .select_related('created_by')
-        .prefetch_related('attempts')
+        .annotate(attempts_count=Count('attempts', filter=Q(attempts__is_completed=True)))
         .order_by('-created_at')
     )
 
@@ -2116,11 +1879,11 @@ def export_subject_results_view(request):
 
 @login_required
 def students_test_results_view(request):
-    """O'quvchilar yechgan testlarning natijalarini ko'rsatish"""
+    """O'quvchilar yechgan testlarning natijalarini ko'rsatish - Faqat Admin uchun"""
     from django.db import connection
     from django.conf import settings
     
-    if request.user.role not in ['admin', 'teacher']:
+    if request.user.role != 'admin':
         return redirect('accounts:dashboard')
     
     # Database backend detection
@@ -2150,11 +1913,6 @@ def students_test_results_view(request):
                 WHERE ta.is_completed = 1
             """
             params = []
-            
-            # Teacher faqat o'z testlarini ko'radi
-            if request.user.role == 'teacher':
-                query += " AND t.created_by_id = " + param_style
-                params.append(request.user.id)
             
             # Filterlar
             if grade_filter:
@@ -2256,9 +2014,9 @@ def students_test_results_view(request):
 
 @login_required
 def export_students_test_results_view(request):
-    """O'quvchilar test natijalarini Excel formatida export qilish - Sinflar aro"""
-    if request.user.role not in ['admin', 'teacher']:
-        return JsonResponse({'error': 'Faqat admin va o\'qituvchilar kirishi mumkin'}, status=403)
+    """O'quvchilar test natijalarini Excel formatida export qilish - Sinflar aro - Faqat Admin uchun"""
+    if request.user.role != 'admin':
+        return JsonResponse({'error': 'Faqat adminlar kirishi mumkin'}, status=403)
     
     if not OPENPYXL_AVAILABLE:
         return JsonResponse({'error': 'Excel export funksiyasi mavjud emas. Iltimos openpyxl kutubxonasini o\'rnating.'}, status=500)
@@ -2267,12 +2025,6 @@ def export_students_test_results_view(request):
         from openpyxl import Workbook
         from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
         from openpyxl.utils import get_column_letter
-        from django.db import connection
-        from django.conf import settings
-        
-        # Database backend detection
-        db_engine = settings.DATABASES['default']['ENGINE']
-        param_style = '?' if 'sqlite' in db_engine.lower() else '%s'
         
         # Filter parametrlari
         grade_filter = request.GET.get('grade', '')
@@ -2291,54 +2043,39 @@ def export_students_test_results_view(request):
                 continue
                 
             # SQL query - parametrlarni to'g'ri ishlatish
-            # Barcha parametrlarni Django'ning parametrlar tizimi orqali berish
-            base_query = """
-                SELECT
-                    ta.id, ta.percentage, ta.score, ta.total_points,
-                    ta.finished_at, ta.started_at, ta.attempt_number, ta.time_taken,
-                    u.first_name, u.last_name, u.username, 
-                    u.student_id as student_unique_id, u.class_name,
-                    t.title as test_title, t.subject
-                FROM tests_app_testattempt ta
-                INNER JOIN accounts_user u ON ta.student_id = u.id
-                INNER JOIN tests_app_test t ON ta.test_id = t.id
-                WHERE ta.is_completed = 1 AND u.grade = """ + param_style
-            
-            params = [int(grade)]
-            
-            # Teacher faqat o'z testlarini ko'radi
-            if request.user.role == 'teacher':
-                base_query += " AND t.created_by_id = " + param_style
-                params.append(request.user.id)
+            # Django ORM ishlatish - xavfsiz va to'g'ri
+            attempts_query = TestAttempt.objects.filter(
+                is_completed=True,
+                student__grade=grade
+            ).select_related('student', 'test')
             
             # Filterlar
             if subject_filter:
-                base_query += " AND t.subject = " + param_style
-                params.append(subject_filter)
+                attempts_query = attempts_query.filter(test__subject=subject_filter)
             if test_id_filter:
-                base_query += " AND t.id = " + param_style
-                params.append(int(test_id_filter))
+                attempts_query = attempts_query.filter(test_id=int(test_id_filter))
             
-            query = base_query
+            attempts_query = attempts_query.order_by('test__subject', 'test__title', 'student__last_name', 'student__first_name', '-finished_at')
             
-            query += " ORDER BY t.subject, t.title, u.last_name, u.first_name, ta.finished_at DESC"
-            
-            try:
-                with connection.cursor() as cursor:
-                    # Params ni tuple ga o'zgartirish (Django uchun yaxshiroq)
-                    params_tuple = tuple(params)
-                    cursor.execute(query, params_tuple)
-                    columns = [col[0] for col in cursor.description]
-                    attempts_data = []
-                    
-                    for row in cursor.fetchall():
-                        row_dict = dict(zip(columns, row))
-                        attempts_data.append(row_dict)
-            except Exception as e:
-                # Debug uchun error qaytarish
-                import traceback
-                traceback.print_exc()
-                raise Exception(f"SQL query xatosi: {str(e)}\nQuery: {query}\nParams: {params}\nParams count: {len(params)}")
+            attempts_data = []
+            for attempt in attempts_query:
+                attempts_data.append({
+                    'id': attempt.id,
+                    'percentage': attempt.percentage,
+                    'score': attempt.score,
+                    'total_points': attempt.total_points,
+                    'finished_at': attempt.finished_at,
+                    'started_at': attempt.started_at,
+                    'attempt_number': attempt.attempt_number,
+                    'time_taken': attempt.time_taken,
+                    'first_name': attempt.student.first_name if attempt.student else '',
+                    'last_name': attempt.student.last_name if attempt.student else '',
+                    'username': attempt.student.username if attempt.student else '',
+                    'student_unique_id': attempt.student.student_id if attempt.student else '',
+                    'class_name': attempt.student.class_name if attempt.student else '',
+                    'test_title': attempt.test.title if attempt.test else '',
+                    'subject': attempt.test.subject if attempt.test else ''
+                })
             
             # Agar bu sinf uchun natijalar bo'lmasa, sheet yaratma
             if not attempts_data:
@@ -2440,8 +2177,8 @@ def export_students_test_results_view(request):
                     )
                 
                 row += 1
-            
-            # Ustun kengliklarini sozlash
+    
+        # Ustun kengliklarini sozlash
             column_widths = [5, 25, 12, 10, 30, 15, 10, 10, 12, 8, 20]
             for col, width in enumerate(column_widths, 1):
                 ws.column_dimensions[get_column_letter(col)].width = width
@@ -2466,170 +2203,7 @@ def export_students_test_results_view(request):
         traceback.print_exc()
         return JsonResponse({'error': f'Export xatolik yuz berdi: {str(e)}'}, status=500)
 
-@login_required
-def export_all_results_view(request):
-    """Barcha sinflar va fanlar bo'yicha natijalarni Excel formatida export qilish"""
-    if request.user.role not in ['admin', 'teacher']:
-        return JsonResponse({'error': 'Faqat admin va o\'qituvchilar kirishi mumkin'}, status=403)
-    
-    try:
-        from openpyxl import Workbook
-        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
-        from openpyxl.utils import get_column_letter
-        from django.db.models import Avg, Count, Max, Min
-        
-        # Yangi workbook yaratish
-        wb = Workbook()
-        
-        # Barcha sinflar uchun umumiy statistikalar
-        ws_summary = wb.active
-        ws_summary.title = "Umumiy Statistika"
-        
-        # Header qo'shish
-        headers = ['Sinf', 'Fan', 'Testlar Soni', 'Jami Urinishlar', 'O\'rtacha Foiz', 'Eng Yaxshi Natija', 'Eng Past Natija']
-        for col, header in enumerate(headers, 1):
-            cell = ws_summary.cell(row=1, column=col, value=header)
-            cell.font = Font(bold=True, color="FFFFFF")
-            cell.fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
-            cell.alignment = Alignment(horizontal="center")
-        
-        row = 2
-        
-        # Har bir sinf uchun
-        for grade in range(1, 12):  # 1-11 sinflar
-            # Har bir fan uchun
-            subjects = ['Matematika', 'Fizika', 'Kimyo', 'Biologiya', 'Ona tili', 'Ingliz tili', 'Tarix', 'Geografiya']
-            
-            for subject in subjects:
-                # Bu sinf va fan uchun testlar
-                tests = Test.objects.filter(grade=grade, subject=subject)
-                
-                # Teacher faqat o'zi yaratgan testlarni ko'radi
-                if request.user.role == 'teacher':
-                    tests = tests.filter(created_by=request.user)
-                
-                if tests.exists():
-                    # Bu sinf va fan uchun barcha urinishlar
-                    attempts = TestAttempt.objects.filter(
-                        test__in=tests,
-                        is_completed=True
-                    ).select_related('student', 'test')
-                    
-                    if attempts.exists():
-                        # Statistikalarni hisoblash
-                        total_tests = tests.count()
-                        total_attempts = attempts.count()
-                        avg_percentage = attempts.aggregate(avg=Avg('percentage'))['avg'] or 0
-                        max_percentage = attempts.aggregate(max=Max('percentage'))['max'] or 0
-                        min_percentage = attempts.aggregate(min=Min('percentage'))['min'] or 0
-                        
-                        # Ma'lumotlarni qo'shish
-                        ws_summary.cell(row=row, column=1, value=f"{grade}-sinf")
-                        ws_summary.cell(row=row, column=2, value=subject)
-                        ws_summary.cell(row=row, column=3, value=total_tests)
-                        ws_summary.cell(row=row, column=4, value=total_attempts)
-                        ws_summary.cell(row=row, column=5, value=f"{avg_percentage:.1f}%")
-                        ws_summary.cell(row=row, column=6, value=f"{max_percentage:.1f}%")
-                        ws_summary.cell(row=row, column=7, value=f"{min_percentage:.1f}%")
-                        
-                        row += 1
-        
-        # Ustun kengliklarini sozlash
-        for col in range(1, 8):
-            ws_summary.column_dimensions[get_column_letter(col)].width = 15
-        
-        # Har bir sinf uchun alohida worksheet yaratish
-        for grade in range(1, 12):
-            ws = wb.create_sheet(title=f"{grade}-sinf")
-            
-            # Header qo'shish
-            headers = ['O\'quvchi', 'Fan', 'Test', 'Foiz', 'Ball', 'Urinishlar Soni', 'Oxirgi Urinish']
-            for col, header in enumerate(headers, 1):
-                cell = ws.cell(row=1, column=col, value=header)
-                cell.font = Font(bold=True, color="FFFFFF")
-                cell.fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
-                cell.alignment = Alignment(horizontal="center")
-            
-            row = 2
-            
-            # Bu sinf uchun barcha testlar
-            tests = Test.objects.filter(grade=grade)
-            
-            for test in tests:
-                # Bu test uchun barcha urinishlar
-                attempts = TestAttempt.objects.filter(
-                    test=test,
-                    completed_at__isnull=False
-                ).select_related('student').order_by('-completed_at')
-                
-                for attempt in attempts:
-                    student_name = f"{attempt.student.first_name} {attempt.student.last_name}"
-                    if not student_name.strip():
-                        student_name = attempt.student.username
-                    
-                    # Eng oxirgi urinishni topish
-                    latest_attempt = TestAttempt.objects.filter(
-                        student=attempt.student,
-                        test=test,
-                        completed_at__isnull=False
-                    ).order_by('-completed_at').first()
-                    
-                    ws.cell(row=row, column=1, value=student_name)
-                    ws.cell(row=row, column=2, value=test.subject)
-                    ws.cell(row=row, column=3, value=test.title)
-                    ws.cell(row=row, column=4, value=attempt.percentage)
-                    ws.cell(row=row, column=5, value=attempt.score)
-                    ws.cell(row=row, column=6, value=attempt.attempt_number)
-                    ws.cell(row=row, column=7, value=attempt.completed_at.strftime('%d.%m.%Y %H:%M') if attempt.completed_at else '')
-                    
-                    # Rang berish
-                    if attempt.percentage >= 81:
-                        fill_color = "C6EFCE"  # Yashil
-                    elif attempt.percentage >= 61:
-                        fill_color = "FFEB9C"  # Sariq
-                    elif attempt.percentage >= 31:
-                        fill_color = "BDD7EE"  # Ko'k
-                    else:
-                        fill_color = "FFC7CE"  # Qizil
-                    
-                    for col in range(1, 8):
-                        ws.cell(row=row, column=col).fill = PatternFill(start_color=fill_color, end_color=fill_color, fill_type="solid")
-                    
-                    row += 1
-            
-            # Ustun kengliklarini sozlash
-            ws.column_dimensions['A'].width = 25
-            ws.column_dimensions['B'].width = 10
-            ws.column_dimensions['C'].width = 30
-            ws.column_dimensions['D'].width = 10
-            ws.column_dimensions['E'].width = 10
-            ws.column_dimensions['F'].width = 10
-            ws.column_dimensions['G'].width = 12
-            ws.column_dimensions['H'].width = 18
-        
-        # Agar hech qanday fan topilmasa
-        if len(wb.sheetnames) == 0:
-            ws = wb.create_sheet(title="Ma'lumot yo'q")
-            ws['A1'] = "Hozircha natijalar mavjud emas"
-            ws['A1'].font = Font(bold=True, size=14)
-        
-        # Response yaratish
-        response = HttpResponse(
-            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        )
-        response['Content-Disposition'] = 'attachment; filename="barcha_sinflar_natijalari.xlsx"'
-        
-        # Excel faylni saqlash
-        wb.save(response)
-        
-        return response
-        
-    except Exception as e:
-        print(f"Export all results error: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        return JsonResponse({'error': f'Export xatolik yuz berdi: {str(e)}'}, status=500)
-
+# export_all_results_view funksiyasi olib tashlandi - /tests/export-all-results/ bo'limi kerak emas edi
 
 @login_required
 @user_passes_test(lambda u: u.role in ['teacher', 'admin'])

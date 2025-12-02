@@ -3,22 +3,286 @@
 
 {% block title %}Dashboard - Buxoro Bilimdonlar Maktabi{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Enhanced Dashboard Styles */
+    .dashboard-welcome-card {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.3) 100%);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 25px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 35px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .dashboard-welcome-card::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+        animation: pulse 4s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 0.5; }
+        50% { transform: scale(1.1); opacity: 0.8; }
+    }
+    
+    .dashboard-welcome-card h2 {
+        font-size: 32px;
+        font-weight: 700;
+        background: linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 8px;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .dashboard-welcome-card h2 i {
+        background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        filter: drop-shadow(0 2px 8px rgba(255, 215, 0, 0.4));
+    }
+    
+    .stat-card-enhanced {
+        background: rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        padding: 30px 20px;
+        text-align: center;
+        height: 100%;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+    }
+    
+    .stat-card-enhanced::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+        transform: translateX(-100%);
+        transition: transform 0.6s;
+    }
+    
+    .stat-card-enhanced:hover::before {
+        transform: translateX(100%);
+    }
+    
+    .stat-card-enhanced:hover {
+        transform: translateY(-12px) scale(1.02);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        border-color: rgba(255, 255, 255, 0.3);
+    }
+    
+    .stat-card-enhanced .stat-icon {
+        font-size: 48px;
+        margin-bottom: 15px;
+        display: inline-block;
+        transition: all 0.3s ease;
+        filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+    }
+    
+    .stat-card-enhanced:hover .stat-icon {
+        transform: scale(1.2) rotate(5deg);
+    }
+    
+    .stat-card-enhanced.primary .stat-icon {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    
+    .stat-card-enhanced.success .stat-icon {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    
+    .stat-card-enhanced.warning .stat-icon {
+        background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    
+    .stat-card-enhanced.info .stat-icon {
+        background: linear-gradient(135deg, #17a2b8 0%, #00d4ff 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    
+    .stat-card-enhanced h4 {
+        font-size: 36px;
+        font-weight: 700;
+        color: #ffffff;
+        margin: 10px 0;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    }
+    
+    .stat-card-enhanced p {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 14px;
+        font-weight: 500;
+        margin: 0;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .status-badge-modern {
+        padding: 12px 24px;
+        border-radius: 50px;
+        font-size: 15px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        position: relative;
+        z-index: 1;
+        backdrop-filter: blur(10px);
+    }
+    
+    .status-badge-modern.success {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+    }
+    
+    .status-badge-modern.warning {
+        background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+        color: #000;
+    }
+    
+    .profile-card-enhanced {
+        background: rgba(255, 255, 255, 0.08) !important;
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s ease;
+    }
+    
+    .profile-card-enhanced:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+    }
+    
+    .profile-avatar {
+        animation: float 3s ease-in-out infinite;
+        transition: all 0.3s ease;
+    }
+    
+    .profile-avatar:hover {
+        transform: scale(1.1) rotate(5deg);
+        box-shadow: 0 12px 30px rgba(102, 126, 234, 0.5) !important;
+    }
+    
+    @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+    }
+    
+    @keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    
+    /* Enhanced action buttons */
+    .action-btn-gradient {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+    
+    .action-btn-gradient:hover {
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.6);
+    }
+    
+    .action-btn-yellow {
+        background: linear-gradient(135deg, #FFC107 0%, #FFD700 100%);
+        color: #000 !important;
+        box-shadow: 0 6px 20px rgba(255, 193, 7, 0.4);
+    }
+    
+    .action-btn-yellow:hover {
+        background: linear-gradient(135deg, #FFD700 0%, #FFC107 100%);
+        box-shadow: 0 10px 30px rgba(255, 193, 7, 0.6);
+    }
+    
+    .action-btn-green {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+    }
+    
+    .action-btn-green:hover {
+        background: linear-gradient(135deg, #34ce57 0%, #28a745 100%);
+        box-shadow: 0 10px 30px rgba(40, 167, 69, 0.6);
+    }
+    
+    .action-btn-cyan {
+        background: linear-gradient(135deg, #17a2b8 0%, #00d4ff 100%);
+        box-shadow: 0 6px 20px rgba(23, 162, 184, 0.4);
+    }
+    
+    .action-btn-cyan:hover {
+        background: linear-gradient(135deg, #1fc8e3 0%, #17a2b8 100%);
+        box-shadow: 0 10px 30px rgba(23, 162, 184, 0.6);
+    }
+    
+    .action-btn-icon {
+        transition: all 0.3s ease;
+    }
+    
+    .action-btn:hover .action-btn-icon {
+        transform: scale(1.2) rotate(5deg);
+    }
+    
+    /* Responsive improvements */
+    @media (max-width: 768px) {
+        .dashboard-welcome-card h2 {
+            font-size: 24px;
+        }
+        
+        .stat-card-enhanced h4 {
+            font-size: 28px;
+        }
+        
+        .stat-card-enhanced .stat-icon {
+            font-size: 36px;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="row">
     <div class="col-12">
         <!-- Welcome Section -->
-        <div class="glass-card p-4 mb-4" data-aos="fade-down">
+        <div class="dashboard-welcome-card mb-4" data-aos="fade-down">
             <div class="row align-items-center">
                 <div class="col-md-8">
-                    <h2 class="text-white mb-1">
-                        <i class="fas fa-tachometer-alt me-2"></i>
+                    <h2>
+                        <i class="fas fa-sparkles me-2"></i>
                         Xush kelibsiz, {{ user.get_full_name|default:user.username }}!
                     </h2>
-                    <p class="text-white-50 mb-0">{{ user.get_role_display }} paneli</p>
+                    <p class="text-white-50 mb-0" style="position: relative; z-index: 1;">{{ user.get_role_display }} paneli</p>
                 </div>
                 <div class="col-md-4 text-md-end">
-                    <span class="badge bg-{% if user.is_verified %}success{% else %}warning{% endif %} fs-6">
-                        <i class="fas fa-{% if user.is_verified %}check-circle{% else %}clock{% endif %} me-1"></i>
+                    <span class="status-badge-modern {% if user.is_verified %}success{% else %}warning{% endif %}">
+                        <i class="fas fa-{% if user.is_verified %}check-circle{% else %}clock{% endif %}"></i>
                         {% if user.is_verified %}Tasdiqlangan{% else %}Kutilmoqda...{% endif %}
                     </span>
                 </div>
@@ -47,124 +311,124 @@
         <div class="row g-4 mb-4">
             {% if user.role == 'student' %}
             <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="100">
-                <div class="glass-card p-4 h-100 text-center">
-                    <div class="text-primary mb-3">
-                        <i class="fas fa-tasks fa-2x"></i>
+                <div class="stat-card-enhanced primary">
+                    <div class="stat-icon">
+                        <i class="fas fa-tasks"></i>
                     </div>
-                    <h4 class="text-white" id="availableTests">--</h4>
-                    <p class="text-white-50 mb-0">Mavjud Testlar</p>
+                    <h4 id="availableTests">--</h4>
+                    <p>Mavjud Testlar</p>
                 </div>
             </div>
             
             <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="200">
-                <div class="glass-card p-4 h-100 text-center">
-                    <div class="text-success mb-3">
-                        <i class="fas fa-check-circle fa-2x"></i>
+                <div class="stat-card-enhanced success">
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
                     </div>
-                    <h4 class="text-white" id="completedTests">--</h4>
-                    <p class="text-white-50 mb-0">Yakunlangan Testlar</p>
+                    <h4 id="completedTests">--</h4>
+                    <p>Yakunlangan Testlar</p>
                 </div>
             </div>
             
             <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="300">
-                <div class="glass-card p-4 h-100 text-center">
-                    <div class="text-warning mb-3">
-                        <i class="fas fa-percentage fa-2x"></i>
+                <div class="stat-card-enhanced warning">
+                    <div class="stat-icon">
+                        <i class="fas fa-percentage"></i>
                     </div>
-                    <h4 class="text-white" id="averageScore">--%</h4>
-                    <p class="text-white-50 mb-0">O'rtacha Ball</p>
+                    <h4 id="averageScore">--%</h4>
+                    <p>O'rtacha Ball</p>
                 </div>
             </div>
             
             <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="400">
-                <div class="glass-card p-4 h-100 text-center">
-                    <div class="text-info mb-3">
-                        <i class="fas fa-medal fa-2x"></i>
+                <div class="stat-card-enhanced info">
+                    <div class="stat-icon">
+                        <i class="fas fa-medal"></i>
                     </div>
-                    <h4 class="text-white" id="bestScore">--%</h4>
-                    <p class="text-white-50 mb-0">Eng Yaxshi Natija</p>
+                    <h4 id="bestScore">--%</h4>
+                    <p>Eng Yaxshi Natija</p>
                 </div>
             </div>
             
             {% elif user.role == 'teacher' %}
             <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="100">
-                <div class="glass-card p-4 h-100 text-center">
-                    <div class="text-primary mb-3">
-                        <i class="fas fa-file-alt fa-2x"></i>
+                <div class="stat-card-enhanced primary">
+                    <div class="stat-icon">
+                        <i class="fas fa-file-alt"></i>
                     </div>
-                    <h4 class="text-white" id="createdTests">--</h4>
-                    <p class="text-white-50 mb-0">Yaratilgan Testlar</p>
+                    <h4 id="createdTests">--</h4>
+                    <p>Yaratilgan Testlar</p>
                 </div>
             </div>
             
             <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="200">
-                <div class="glass-card p-4 h-100 text-center">
-                    <div class="text-success mb-3">
-                        <i class="fas fa-users fa-2x"></i>
+                <div class="stat-card-enhanced success">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
                     </div>
-                    <h4 class="text-white" id="totalAttempts">--</h4>
-                    <p class="text-white-50 mb-0">Jami Urinishlar</p>
+                    <h4 id="totalAttempts">--</h4>
+                    <p>Jami Urinishlar</p>
                 </div>
             </div>
             
             <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="300">
-                <div class="glass-card p-4 h-100 text-center">
-                    <div class="text-warning mb-3">
-                        <i class="fas fa-chart-line fa-2x"></i>
+                <div class="stat-card-enhanced warning">
+                    <div class="stat-icon">
+                        <i class="fas fa-chart-line"></i>
                     </div>
-                    <h4 class="text-white" id="avgStudentScore">--%</h4>
-                    <p class="text-white-50 mb-0">O'quvchilar O'rtachasi</p>
+                    <h4 id="avgStudentScore">--%</h4>
+                    <p>O'quvchilar O'rtachasi</p>
                 </div>
             </div>
             
             <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="400">
-                <div class="glass-card p-4 h-100 text-center">
-                    <div class="text-info mb-3">
-                        <i class="fas fa-question-circle fa-2x"></i>
+                <div class="stat-card-enhanced info">
+                    <div class="stat-icon">
+                        <i class="fas fa-question-circle"></i>
                     </div>
-                    <h4 class="text-white" id="totalQuestions">--</h4>
-                    <p class="text-white-50 mb-0">Jami Savollar</p>
+                    <h4 id="totalQuestions">--</h4>
+                    <p>Jami Savollar</p>
                 </div>
             </div>
             
             {% elif user.role == 'admin' %}
             <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="100">
-                <div class="glass-card p-4 h-100 text-center">
-                    <div class="text-primary mb-3">
-                        <i class="fas fa-user-graduate fa-2x"></i>
+                <div class="stat-card-enhanced primary">
+                    <div class="stat-icon">
+                        <i class="fas fa-user-graduate"></i>
                     </div>
-                    <h4 class="text-white" id="totalStudents">--</h4>
-                    <p class="text-white-50 mb-0">Jami O'quvchilar</p>
+                    <h4 id="totalStudents">--</h4>
+                    <p>Jami O'quvchilar</p>
                 </div>
             </div>
             
             <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="200">
-                <div class="glass-card p-4 h-100 text-center">
-                    <div class="text-success mb-3">
-                        <i class="fas fa-chalkboard-teacher fa-2x"></i>
+                <div class="stat-card-enhanced success">
+                    <div class="stat-icon">
+                        <i class="fas fa-chalkboard-teacher"></i>
                     </div>
-                    <h4 class="text-white" id="totalTeachers">--</h4>
-                    <p class="text-white-50 mb-0">Jami O'qituvchilar</p>
+                    <h4 id="totalTeachers">--</h4>
+                    <p>Jami O'qituvchilar</p>
                 </div>
             </div>
             
             <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="300">
-                <div class="glass-card p-4 h-100 text-center">
-                    <div class="text-warning mb-3">
-                        <i class="fas fa-clock fa-2x"></i>
+                <div class="stat-card-enhanced warning">
+                    <div class="stat-icon">
+                        <i class="fas fa-clock"></i>
                     </div>
-                    <h4 class="text-white">{{ verification_requests_count }}</h4>
-                    <p class="text-white-50 mb-0">Tasdiq Kutilmoqda</p>
+                    <h4>{{ verification_requests_count }}</h4>
+                    <p>Tasdiq Kutilmoqda</p>
                 </div>
             </div>
             
             <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="400">
-                <div class="glass-card p-4 h-100 text-center">
-                    <div class="text-info mb-3">
-                        <i class="fas fa-file-alt fa-2x"></i>
+                <div class="stat-card-enhanced info">
+                    <div class="stat-icon">
+                        <i class="fas fa-file-alt"></i>
                     </div>
-                    <h4 class="text-white" id="totalTests">--</h4>
-                    <p class="text-white-50 mb-0">Jami Testlar</p>
+                    <h4 id="totalTests">--</h4>
+                    <p>Jami Testlar</p>
                 </div>
             </div>
             {% endif %}
@@ -205,17 +469,41 @@
                 padding: 25px 15px;
                 border-radius: 20px;
                 text-decoration: none;
-                transition: all 0.3s ease;
+                transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
                 position: relative;
                 overflow: hidden;
                 min-height: 130px;
                 height: 130px;
                 border: none;
             }
+            
+            .action-btn::before {
+                content: '';
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                width: 0;
+                height: 0;
+                border-radius: 50%;
+                background: rgba(255, 255, 255, 0.3);
+                transform: translate(-50%, -50%);
+                transition: width 0.6s, height 0.6s;
+            }
+            
+            .action-btn:hover::before {
+                width: 300px;
+                height: 300px;
+            }
 
             .action-btn:hover {
-                transform: translateY(-5px);
-                box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+                transform: translateY(-8px) scale(1.05);
+                box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+            }
+            
+            .action-btn .action-btn-icon,
+            .action-btn .action-btn-text {
+                position: relative;
+                z-index: 1;
             }
 
             .action-btn-gradient {
@@ -224,33 +512,43 @@
             }
 
             .action-btn-yellow {
-                background: #FFC107;
+                background: linear-gradient(135deg, #FFC107 0%, #FFD700 100%);
                 color: #000 !important;
+                box-shadow: 0 6px 20px rgba(255, 193, 7, 0.4);
             }
 
             .action-btn-yellow:hover {
-                background: #FFD700;
+                background: linear-gradient(135deg, #FFD700 0%, #FFC107 100%);
+                box-shadow: 0 10px 30px rgba(255, 193, 7, 0.6);
             }
 
             .action-btn-green {
-                background: #28a745;
+                background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+                box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
             }
 
             .action-btn-green:hover {
-                background: #34ce57;
+                background: linear-gradient(135deg, #34ce57 0%, #28a745 100%);
+                box-shadow: 0 10px 30px rgba(40, 167, 69, 0.6);
             }
 
             .action-btn-cyan {
-                background: #17a2b8;
+                background: linear-gradient(135deg, #17a2b8 0%, #00d4ff 100%);
+                box-shadow: 0 6px 20px rgba(23, 162, 184, 0.4);
             }
 
             .action-btn-cyan:hover {
-                background: #1fc8e3;
+                background: linear-gradient(135deg, #1fc8e3 0%, #17a2b8 100%);
+                box-shadow: 0 10px 30px rgba(23, 162, 184, 0.6);
             }
 
             .action-btn-primary {
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+                box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            }
+            
+            .action-btn-primary:hover {
+                box-shadow: 0 10px 30px rgba(102, 126, 234, 0.6);
             }
 
             .action-btn-outline {
@@ -363,14 +661,6 @@
                             </a>
                         </div>
                         <div class="col-md-4 col-6">
-                            <a href="{% url 'tests:all_results' %}" class="action-btn action-btn-cyan text-white">
-                                <div class="action-btn-icon">
-                                    <i class="fas fa-chart-bar"></i>
-                                </div>
-                                <div class="action-btn-text">Natijalar</div>
-                            </a>
-                        </div>
-                        <div class="col-md-4 col-6">
                             <a href="{% url 'tests:tests' %}" class="action-btn action-btn-outline text-white">
                                 <div class="action-btn-icon">
                                     <i class="fas fa-file-alt"></i>
@@ -386,7 +676,7 @@
                         <div class="col-md-3 col-6">
                             <a href="{% url 'analytics:dashboard' %}" class="action-btn action-btn-gradient text-white">
                                 <div class="action-btn-icon">
-                                    <i class="fas fa-chart-line"></i>
+                                    <i class="fas fa-chart-line" style="margin-right: 4px;"></i>
                                     <i class="fas fa-chart-bar"></i>
                                 </div>
                                 <div class="action-btn-text">Analytics</div>
@@ -419,14 +709,6 @@
                         
                         <!-- Bottom Row -->
                         <div class="col-md-3 col-6">
-                            <a href="{% url 'tests:all_results' %}" class="action-btn action-btn-featured text-white">
-                                <div class="action-btn-icon">
-                                    <i class="fas fa-users"></i>
-                                </div>
-                                <div class="action-btn-text">BARCHA O'QUVCHILAR</div>
-                            </a>
-                        </div>
-                        <div class="col-md-3 col-6">
                             <a href="{% url 'tests:admin_teacher_tests' %}" class="action-btn action-btn-outline text-white">
                                 <div class="action-btn-icon">
                                     <i class="fas fa-file-alt"></i>
@@ -442,25 +724,26 @@
                                 <div class="action-btn-text">Excel Export</div>
                             </a>
                         </div>
-                        </div>
+                    </div>
                         {% endif %}
                 </div>
             </div>
             
             <div class="col-lg-4">
-                <div class="glass-card p-4" data-aos="fade-left">
-                    <h4 class="text-white mb-4">
-                        <i class="fas fa-user-circle me-2"></i>
+                <div class="glass-card p-4 profile-card-enhanced" data-aos="fade-left" style="position: relative; overflow: hidden;">
+                    <h4 class="text-white mb-4" style="font-weight: 700; display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-user-circle" style="font-size: 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
                         Profil Ma'lumoti
                     </h4>
                     
                     <div class="text-center mb-3">
-                        <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
-                             style="width: 80px; height: 80px;">
-                            <i class="fas fa-user fa-2x text-white"></i>
+                        <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3 profile-avatar" 
+                             style="width: 90px; height: 90px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4); position: relative; overflow: hidden;">
+                            <i class="fas fa-user fa-2x text-white" style="position: relative; z-index: 1;"></i>
+                            <div style="position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%); animation: rotate 3s linear infinite;"></div>
                         </div>
-                        <h5 class="text-white mb-1">{{ user.get_full_name|default:user.username }}</h5>
-                        <span class="badge bg-secondary">{{ user.get_role_display }}</span>
+                        <h5 class="text-white mb-2" style="font-weight: 600; font-size: 20px;">{{ user.get_full_name|default:user.username }}</h5>
+                        <span class="badge" style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.8) 0%, rgba(118, 75, 162, 0.8) 100%); padding: 8px 16px; font-size: 13px; font-weight: 600;">{{ user.get_role_display }}</span>
                     </div>
                     
                     <ul class="list-unstyled text-white-50">
@@ -573,9 +856,6 @@
                             <h5 class="text-dark mb-3">
                                 <i class="fas fa-list-alt me-2"></i>
                                 Barcha Natijalaringiz ({{ all_student_results|length }} ta)
-                                <a href="{% url 'tests:all_results' %}" class="btn btn-sm btn-success float-end">
-                                    <i class="fas fa-file-excel me-1"></i>Excel'ga Yuklash
-                                </a>
                             </h5>
                             <table class="table table-hover table-striped">
                                 <thead class="table-dark">

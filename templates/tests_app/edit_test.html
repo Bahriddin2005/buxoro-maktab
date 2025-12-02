@@ -5,131 +5,469 @@
 
 {% block extra_css %}
 <style>
-body {
-    background: linear-gradient(135deg, #6a8dff 0%, #a16ae8 100%);
-    min-height: 100vh;
-}
-.glass-card {
-    background: rgba(255,255,255,0.15);
-    border-radius: 18px;
-    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18);
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(255,255,255,0.18);
-}
-.glass-input, .form-control, .form-select {
-    background: rgba(255,255,255,0.25) !important;
-    color: #222 !important;
-    border: none !important;
-    border-radius: 10px !important;
-}
-.form-label, .text-white {
-    color: #fff !important;
-}
-.btn-success, .btn-primary {
-    background: linear-gradient(90deg, #6a8dff 0%, #a16ae8 100%);
-    border: none;
-    color: #fff;
-}
-.btn-success:hover, .btn-primary:hover {
-    background: linear-gradient(90deg, #a16ae8 0%, #6a8dff 100%);
-    color: #fff;
-}
-.question-item {
-    border-left: 4px solid #6a8dff;
-    background: rgba(255,255,255,0.22);
-}
-.modal-content.glass-card {
-    background: rgba(255,255,255,0.25);
-    border-radius: 18px;
-    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18);
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(255,255,255,0.18);
-}
-.add-choice-modal, .add-choice {
-    background: linear-gradient(90deg, #6a8dff 0%, #a16ae8 100%);
-    color: #fff;
-    border: none;
-}
-.add-choice-modal:hover, .add-choice:hover {
-    background: linear-gradient(90deg, #a16ae8 0%, #6a8dff 100%);
-    color: #fff;
-}
-.remove-choice, .remove-question {
-    background: #ff6a6a;
-    color: #fff;
-    border: none;
-}
-.remove-choice:hover, .remove-question:hover {
-    background: #e84141;
-    color: #fff;
-}
-::-webkit-input-placeholder { color: #888 !important; }
-::-moz-placeholder { color: #888 !important; }
-:-ms-input-placeholder { color: #888 !important; }
-::placeholder { color: #888 !important; }
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        position: relative;
+    }
+
+    .main-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+
+    .glass-card {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .glass-card:hover {
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        transform: translateY(-2px);
+    }
+
+    .glass-input, .form-control, .form-select {
+        background: rgba(255, 255, 255, 0.25) !important;
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        border-radius: 12px !important;
+        color: #fff !important;
+        padding: 12px 16px !important;
+        transition: all 0.3s ease;
+    }
+
+    .glass-input:focus, .form-control:focus, .form-select:focus {
+        background: rgba(255, 255, 255, 0.35) !important;
+        border-color: rgba(255, 255, 255, 0.5) !important;
+        box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.25) !important;
+        color: #fff !important;
+    }
+
+    .glass-input::placeholder, .form-control::placeholder, .form-select::placeholder {
+        color: rgba(255, 255, 255, 0.6) !important;
+    }
+
+    .form-label, .text-white {
+        color: #fff !important;
+        font-weight: 600;
+        margin-bottom: 8px;
+        font-size: 14px;
+    }
+
+    .question-item {
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(15px);
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        padding: 24px !important;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .question-item::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+        border-radius: 16px 0 0 16px;
+    }
+
+    .question-item:hover {
+        transform: translateX(5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .question-number-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 50%;
+        color: #fff;
+        font-weight: bold;
+        font-size: 14px;
+        margin-right: 12px;
+    }
+
+    .question-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .question-title {
+        display: flex;
+        align-items: center;
+        color: #fff;
+        font-weight: 600;
+        font-size: 18px;
+        margin: 0;
+    }
+
+    .btn-delete-question, .remove-question {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+        border: none;
+        border-radius: 10px;
+        color: #fff;
+        padding: 8px 16px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(238, 90, 111, 0.3);
+    }
+
+    .btn-delete-question:hover, .remove-question:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 20px rgba(238, 90, 111, 0.4);
+        color: #fff;
+    }
+
+    .btn-success, .btn-add-question {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        border: none;
+        border-radius: 12px;
+        color: #fff;
+        padding: 12px 24px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-success:hover, .btn-add-question:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        color: #fff;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 12px;
+        padding: 14px 32px;
+        font-weight: 600;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        color: #fff;
+    }
+
+    .add-choice-modal, .add-choice {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        border: none;
+        border-radius: 10px;
+        color: #fff;
+        padding: 8px 16px;
+        font-size: 13px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    .add-choice-modal:hover, .add-choice:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+        color: #fff;
+    }
+
+    .remove-choice {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        border: none;
+        border-radius: 8px;
+        color: #fff;
+        padding: 6px 12px;
+        transition: all 0.3s ease;
+    }
+
+    .remove-choice:hover {
+        transform: scale(1.1);
+        color: #fff;
+    }
+
+    .choice-item {
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 10px;
+        padding: 12px;
+        margin-bottom: 10px;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .choice-item:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateX(5px);
+    }
+
+    .form-check-input {
+        width: 20px;
+        height: 20px;
+        border: 2px solid rgba(255, 255, 255, 0.4);
+        background-color: transparent;
+        cursor: pointer;
+    }
+
+    .form-check-input:checked {
+        background-color: #667eea;
+        border-color: #667eea;
+    }
+
+    .form-check-label {
+        color: #fff !important;
+        cursor: pointer;
+        font-size: 14px;
+        margin-left: 8px;
+    }
+
+    .modal-content.glass-card {
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-header {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 20px 24px;
+    }
+
+    .modal-title {
+        color: #fff !important;
+        font-weight: 700;
+        font-size: 20px;
+    }
+
+    .modal-body {
+        padding: 24px;
+        color: #fff;
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 40px;
+        padding: 30px 0;
+    }
+
+    .page-header-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        font-size: 36px;
+        color: #fff;
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+    }
+
+    .questions-section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 25px;
+        padding: 20px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .questions-section-title {
+        color: #fff;
+        font-size: 24px;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .questions-section-title i {
+        font-size: 28px;
+        color: #10b981;
+    }
+
+    .checkbox-group {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 15px;
+        padding: 20px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        margin-bottom: 30px;
+    }
+
+    .form-check {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 12px 16px;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .form-check:hover {
+        background: rgba(255, 255, 255, 0.15);
+        transform: translateX(5px);
+    }
+
+    .section-divider {
+        height: 2px;
+        background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%);
+        margin: 30px 0;
+        border: none;
+    }
+
+    .btn-close {
+        filter: brightness(0) invert(1);
+        opacity: 0.8;
+    }
+
+    .btn-close:hover {
+        opacity: 1;
+    }
+
+    @media (max-width: 768px) {
+        .main-container {
+            padding: 1rem 0.5rem;
+        }
+        
+        .question-item {
+            padding: 16px !important;
+        }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container py-5">
-    <div class="glass-card p-4">
-        <h2 class="mb-4" style="color:#fff;"><i class="fas fa-edit me-2"></i>Testni Tahrirlash</h2>
+<div class="main-container">
+    <div class="glass-card p-4 p-md-5" data-aos="fade-up">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="page-header-icon">
+                <i class="fas fa-edit"></i>
+            </div>
+            <h2 class="text-white mb-2" style="font-weight: 700; font-size: 32px;">Testni Tahrirlash</h2>
+            <p class="text-white-50" style="font-size: 16px;">Test ma'lumotlarini va savollarni tahrirlash</p>
+        </div>
+
         <form id="editTestForm">
             <input type="hidden" name="test_id" value="{{ test.id }}">
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label class="form-label">Test nomi</label>
-                    <input type="text" class="form-control glass-input" name="title" value="{{ test.title }}" required>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Fan</label>
-                    <input type="text" class="form-control glass-input" name="subject" value="{{ test.subject }}" required>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Sinf</label>
-                    <input type="number" class="form-control glass-input" name="grade" value="{{ test.grade }}" required>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Vaqt chegarasi (daqiqa)</label>
-                    <input type="number" class="form-control glass-input" name="time_limit" value="{{ test.time_limit }}" required>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Maksimal urinishlar</label>
-                    <input type="number" class="form-control glass-input" name="max_attempts" value="{{ test.max_attempts }}" required>
-                </div>
-                <div class="col-12">
-                    <label class="form-label">Test tavsifi</label>
-                    <textarea class="form-control glass-input" name="description" rows="2">{{ test.description }}</textarea>
-                </div>
-            </div>
-            <div class="form-check mt-3">
-                <input class="form-check-input" type="checkbox" name="show_results" {% if test.show_results %}checked{% endif %}>
-                <label class="form-check-label">O'quvchilarga natijalarni ko'rsatish</label>
-            </div>
-            <div class="form-check mt-3">
-                <input class="form-check-input" type="checkbox" name="is_active" {% if test.is_active %}checked{% endif %}>
-                <label class="form-check-label">Testni faollashtirish</label>
-            </div>
-            <div class="form-check mb-3">
-                <input class="form-check-input" type="checkbox" name="shuffle_questions" {% if test.shuffle_questions %}checked{% endif %}>
-                <label class="form-check-label"><i class="fas fa-random"></i> Savollarni random tartibda ko'rsatish</label>
-            </div>
-            <hr class="my-4">
-            <h4 class="mb-3" style="color:#fff;"><i class="fas fa-question-circle"></i> Savollarni Tahrirlash</h4>
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <button type="button" class="btn btn-success btn-sm" id="addQuestionBtn" data-bs-toggle="modal" data-bs-target="#addQuestionModal">
-                    <i class="fas fa-plus"></i> Savol qo'shish
-                </button>
-                <button type="button" class="btn btn-primary btn-lg" id="saveTestBtn">
-                    <i class="fas fa-save"></i> Testni Saqlash
-                </button>
-            </div>
-            <div id="questionsContainer">
-                <div class="text-center py-4">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Savollar yuklanmoqda...</span>
+            
+            <!-- Test asosiy ma'lumotlari -->
+            <div class="glass-card p-4 mb-4" style="background: rgba(255, 255, 255, 0.1);">
+                <h5 class="text-white mb-4" style="font-weight: 600;">
+                    <i class="fas fa-info-circle me-2"></i>Test Asosiy Ma'lumotlari
+                </h5>
+                
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">
+                            <i class="fas fa-heading me-2"></i>Test nomi
+                        </label>
+                        <input type="text" class="form-control glass-input" name="title" value="{{ test.title }}" required>
                     </div>
-                    <p class="text-white-50 mt-3">Savollar yuklanmoqda...</p>
+                    <div class="col-md-6">
+                        <label class="form-label">
+                            <i class="fas fa-book me-2"></i>Fan
+                        </label>
+                        <input type="text" class="form-control glass-input" name="subject" value="{{ test.subject }}" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">
+                            <i class="fas fa-layer-group me-2"></i>Sinf
+                        </label>
+                        <input type="number" class="form-control glass-input" name="grade" value="{{ test.grade }}" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">
+                            <i class="fas fa-clock me-2"></i>Vaqt chegarasi (daqiqa)
+                        </label>
+                        <input type="number" class="form-control glass-input" name="time_limit" value="{{ test.time_limit }}" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">
+                            <i class="fas fa-redo me-2"></i>Maksimal urinishlar
+                        </label>
+                        <input type="number" class="form-control glass-input" name="max_attempts" value="{{ test.max_attempts }}" required>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">
+                            <i class="fas fa-align-left me-2"></i>Test haqida qisqacha ma'lumot
+                        </label>
+                        <textarea class="form-control glass-input" name="description" rows="3">{{ test.description }}</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Checkboxlar -->
+            <div class="checkbox-group">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="show_results" {% if test.show_results %}checked{% endif %}>
+                    <label class="form-check-label">
+                        <i class="fas fa-eye me-2"></i>O'quvchilarga natijalarni ko'rsatish
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="is_active" {% if test.is_active %}checked{% endif %}>
+                    <label class="form-check-label">
+                        <i class="fas fa-power-off me-2"></i>Testni faollashtirish
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="shuffle_questions" {% if test.shuffle_questions %}checked{% endif %}>
+                    <label class="form-check-label">
+                        <i class="fas fa-random me-2"></i>Savollarni random tartibda ko'rsatish
+                    </label>
+                </div>
+            </div>
+
+            <!-- Savollar qismi -->
+            <div class="mb-5">
+                <div class="questions-section-header">
+                    <h4 class="questions-section-title">
+                        <i class="fas fa-question-circle"></i>
+                        <span>Savollarni Tahrirlash</span>
+                    </h4>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-success btn-sm" id="addQuestionBtn" data-bs-toggle="modal" data-bs-target="#addQuestionModal">
+                            <i class="fas fa-plus me-2"></i>Savol qo'shish
+                        </button>
+                        <button type="button" class="btn btn-primary btn-lg" id="saveTestBtn">
+                            <i class="fas fa-save me-2"></i>TESTNI SAQLASH
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="questionsContainer">
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+                            <span class="visually-hidden">Yuklanmoqda...</span>
+                        </div>
+                        <p class="text-white-50">Savollar yuklanmoqda...</p>
+                    </div>
+                </div>
+                
+                <!-- Pastdagi savol qo'shish tugmasi -->
+                <div class="text-center mt-4">
+                    <button type="button" class="btn btn-success btn-lg" id="addQuestionBtnBottom" data-bs-toggle="modal" data-bs-target="#addQuestionModal">
+                        <i class="fas fa-plus me-2"></i>Yana savol qo'shish
+                    </button>
                 </div>
             </div>
         </form>
@@ -138,58 +476,76 @@ body {
 
 <!-- Savol qo'shish modal -->
 <div class="modal fade" id="addQuestionModal" tabindex="-1" aria-labelledby="addQuestionModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content glass-card">
       <div class="modal-header">
-        <h5 class="modal-title" id="addQuestionModalLabel"><i class="fas fa-question-circle"></i> Yangi Savol Qo'shish</h5>
+        <h5 class="modal-title" id="addQuestionModalLabel">
+          <i class="fas fa-question-circle me-2"></i>Yangi Savol Qo'shish
+        </h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Yopish"></button>
       </div>
       <div class="modal-body">
         <form id="addQuestionForm" enctype="multipart/form-data">
           <div class="mb-3">
-            <label class="form-label">Savol matni</label>
-            <textarea class="form-control" name="question_text" rows="2" required></textarea>
+            <label class="form-label">
+              <i class="fas fa-align-left me-2"></i>Savol matni
+            </label>
+            <textarea class="form-control glass-input" name="question_text" rows="3" required></textarea>
           </div>
-          <div class="mb-3">
-            <label class="form-label">Tur</label>
-            <select class="form-select" name="question_type" id="modalQuestionType" required>
-              <option value="single_choice">Bir javob</option>
-              <option value="multiple_choice">Ko'p javob</option>
-              <option value="text_answer">Matnli javob</option>
-            </select>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Ball</label>
-            <input type="number" class="form-control" name="points" min="0.5" max="10" step="0.5" value="1" required>
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label">
+                <i class="fas fa-list me-2"></i>Tur
+              </label>
+              <select class="form-select glass-input" name="question_type" id="modalQuestionType" required>
+                <option value="single_choice">Bir javob</option>
+                <option value="multiple_choice">Ko'p javob</option>
+                <option value="text_answer">Matnli javob</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">
+                <i class="fas fa-star me-2"></i>Ball
+              </label>
+              <input type="number" class="form-control glass-input" name="points" min="0.5" max="10" step="0.5" value="1" required>
+            </div>
           </div>
           <div class="choices-container mb-3" id="modalChoicesContainer">
-            <label class="form-label">Javob variantlari</label>
+            <label class="form-label mb-3">
+              <i class="fas fa-list-ul me-2"></i>Javob variantlari
+            </label>
             <div class="choice-items">
-              <div class="choice-item d-flex align-items-center mb-2">
-                <input type="checkbox" class="form-check-input me-2" name="is_correct_0">
-                <input type="text" class="form-control" name="choice_text_0" placeholder="Variant 1">
+              <div class="choice-item d-flex align-items-center gap-2">
+                <input type="checkbox" class="form-check-input" name="is_correct_0" style="width: 20px; height: 20px;">
+                <input type="text" class="form-control" name="choice_text_0" placeholder="Javob varianti 1" required>
               </div>
-              <div class="choice-item d-flex align-items-center mb-2">
-                <input type="checkbox" class="form-check-input me-2" name="is_correct_1">
-                <input type="text" class="form-control" name="choice_text_1" placeholder="Variant 2">
+              <div class="choice-item d-flex align-items-center gap-2">
+                <input type="checkbox" class="form-check-input" name="is_correct_1" style="width: 20px; height: 20px;">
+                <input type="text" class="form-control" name="choice_text_1" placeholder="Javob varianti 2" required>
               </div>
             </div>
-            <button type="button" class="btn add-choice-modal btn-sm mt-2">
-              <i class="fas fa-plus"></i> Variant qo'shish
+            <button type="button" class="btn btn-add-choice mt-3 add-choice-modal">
+              <i class="fas fa-plus me-2"></i>Variant qo'shish
             </button>
           </div>
           <div class="mb-3">
-            <label class="form-label">Tushuntirish (ixtiyoriy)</label>
-            <textarea class="form-control" name="explanation" rows="1"></textarea>
+            <label class="form-label">
+              <i class="fas fa-comment-dots me-2"></i>Tushuntirish (ixtiyoriy)
+            </label>
+            <textarea class="form-control glass-input" name="explanation" rows="2"></textarea>
           </div>
           
-          <div class="mb-3">
-            <label class="form-label">Savol uchun rasm (ixtiyoriy)</label>
-            <input type="file" class="form-control" name="question_image" accept="image/*">
-            <div class="form-text">JPG, PNG, GIF formatlari qo'llab-quvvatlanadi. Maksimal hajm: 5MB</div>
+          <div class="mb-4">
+            <label class="form-label">
+              <i class="fas fa-image me-2"></i>Savol uchun rasm (ixtiyoriy)
+            </label>
+            <input type="file" class="form-control glass-input" name="question_image" accept="image/*">
+            <div class="form-text text-white-50 mt-2">JPG, PNG, GIF formatlari qo'llab-quvvatlanadi. Maksimal hajm: 5MB</div>
           </div>
           <div class="d-grid gap-2">
-            <button type="submit" class="btn btn-primary btn-lg">SAVOLNI QO'SHISH</button>
+            <button type="submit" class="btn btn-primary btn-lg">
+              <i class="fas fa-plus-circle me-2"></i>SAVOLNI QO'SHISH
+            </button>
           </div>
         </form>
       </div>
@@ -202,6 +558,20 @@ body {
 document.addEventListener('DOMContentLoaded', function() {
     // Load existing questions
     loadExistingQuestions();
+    
+    // Modal yopilgandan keyin pastga scroll qilish
+    const addQuestionModal = document.getElementById('addQuestionModal');
+    if (addQuestionModal) {
+        addQuestionModal.addEventListener('hidden.bs.modal', function() {
+            // Modal yopilgandan keyin bir oz kutib, pastga scroll qilish
+            setTimeout(() => {
+                const bottomBtn = document.getElementById('addQuestionBtnBottom');
+                if (bottomBtn) {
+                    bottomBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 300);
+        });
+    }
     
     // Add choice in modal
     document.querySelector('.add-choice-modal').addEventListener('click', function() {
@@ -749,18 +1119,21 @@ function displayQuestions(questions) {
 function createQuestionHtml(question, index) {
     console.log(`Creating HTML for question ${index + 1}`, question);
     
-    let html = `<div class='question-item glass-card p-3 mb-3' style='border-left: 4px solid #6a8dff;'>`;
+    let html = `<div class='question-item glass-card p-4 mb-4'>`;
     html += `<input type='hidden' name='question_id' value='${question.id || ''}'>`;
-    html += `<div class='d-flex justify-content-between align-items-center mb-3'>`;
-    html += `<div class='d-flex align-items-center'>`;
-    html += `<span class='badge bg-primary me-2'>${index + 1}</span>`;
-    html += `<h6 class='text-white mb-0'>Savol ${index + 1}</h6>`;
-    html += `</div>`;
-    html += `<button type='button' class='btn remove-question btn-sm btn-outline-danger'><i class='fas fa-trash'></i> O'chirish</button>`;
+    html += `<div class='question-header'>`;
+    html += `<h5 class='question-title'>`;
+    html += `<span class='question-number-badge'>${index + 1}</span>`;
+    html += `<span>Savol ${index + 1}</span>`;
+    html += `</h5>`;
+    html += `<button type='button' class='btn btn-delete-question remove-question'><i class='fas fa-trash me-1'></i>O'chirish</button>`;
     html += `</div>`;
     
-    html += `<div class='mb-2'><label class='form-label'>Savol matni</label>`;
-    html += `<textarea class='form-control glass-input' name='question_text' rows='2' required>${question.question_text || ''}</textarea></div>`;
+    html += `<div class='row g-3 mb-3'>`;
+    html += `<div class='col-md-8'>`;
+    html += `<label class='form-label'>Savol matni</label>`;
+    html += `<textarea class='form-control glass-input' name='question_text' rows='3' required>${question.question_text || ''}</textarea>`;
+    html += `</div>`;
     
     // Rasm ko'rsatish
     if (question.image) {
@@ -775,43 +1148,51 @@ function createQuestionHtml(question, index) {
         html += `</div>`;
     }
     
-    html += `<div class='mb-2'><label class='form-label'>Tur</label>`;
+    html += `<div class='col-md-2'>`;
+    html += `<label class='form-label'>Tur</label>`;
     html += `<select class='form-select glass-input' name='question_type' required>`;
     html += `<option value='single_choice'${question.question_type === 'single_choice' ? ' selected' : ''}>Bir javob</option>`;
     html += `<option value='multiple_choice'${question.question_type === 'multiple_choice' ? ' selected' : ''}>Ko'p javob</option>`;
     html += `<option value='text_answer'${question.question_type === 'text_answer' ? ' selected' : ''}>Matnli javob</option>`;
-    html += `</select></div>`;
-    
-    html += `<div class='mb-2'><label class='form-label'>Ball</label>`;
-    html += `<input type='number' class='form-control glass-input' name='points' min='0.5' max='10' step='0.5' value='${question.points || 1}' required></div>`;
+    html += `</select>`;
+    html += `</div>`;
+    html += `<div class='col-md-2'>`;
+    html += `<label class='form-label'>Ball</label>`;
+    html += `<input type='number' class='form-control glass-input' name='points' min='0.5' max='10' step='0.5' value='${question.points || 1}' required>`;
+    html += `</div>`;
+    html += `</div>`;
     
     if (question.question_type !== 'text_answer') {
-        html += `<div class='choices-container mb-2'><label class='form-label'>Javob variantlari</label><div class='choice-items'>`;
+        html += `<div class='choices-container mb-3'>`;
+        html += `<label class='form-label mb-3'><i class='fas fa-list-ul me-2'></i>Javob variantlari</label>`;
+        html += `<div class='choice-items'>`;
         if (question.choices && question.choices.length > 0) {
             question.choices.forEach((choice, idx) => {
-                html += `<div class='choice-item d-flex align-items-center mb-2'>`;
-                html += `<input type='checkbox' class='form-check-input me-2' name='is_correct_${idx}'${choice.is_correct ? ' checked' : ''}>`;
-                html += `<input type='text' class='form-control glass-input' name='choice_text_${idx}' value='${choice.text || ''}' placeholder='Variant ${idx + 1}'>`;
-                html += `<button type='button' class='btn remove-choice btn-sm ms-2'><i class='fas fa-times'></i></button>`;
+                html += `<div class='choice-item d-flex align-items-center gap-2'>`;
+                html += `<input type='checkbox' class='form-check-input' name='is_correct_${idx}'${choice.is_correct ? ' checked' : ''} style='width: 20px; height: 20px;'>`;
+                html += `<input type='text' class='form-control' name='choice_text_${idx}' value='${choice.text || ''}' placeholder='Javob varianti ${idx + 1}' required>`;
+                html += `<button type='button' class='btn btn-remove-choice remove-choice'><i class='fas fa-times'></i></button>`;
                 html += `</div>`;
             });
         } else {
             // Default 2 choices
             for (let i = 0; i < 2; i++) {
-                html += `<div class='choice-item d-flex align-items-center mb-2'>`;
-                html += `<input type='checkbox' class='form-check-input me-2' name='is_correct_${i}'>`;
-                html += `<input type='text' class='form-control glass-input' name='choice_text_${i}' placeholder='Variant ${i + 1}'>`;
-                html += `<button type='button' class='btn remove-choice btn-sm ms-2'><i class='fas fa-times'></i></button>`;
+                html += `<div class='choice-item d-flex align-items-center gap-2'>`;
+                html += `<input type='checkbox' class='form-check-input' name='is_correct_${i}' style='width: 20px; height: 20px;'>`;
+                html += `<input type='text' class='form-control' name='choice_text_${i}' placeholder='Javob varianti ${i + 1}' required>`;
+                html += `<button type='button' class='btn btn-remove-choice remove-choice'><i class='fas fa-times'></i></button>`;
                 html += `</div>`;
             }
         }
         html += `</div>`;
-        html += `<button type='button' class='btn add-choice btn-sm mt-2'><i class='fas fa-plus'></i> Variant qo'shish</button>`;
+        html += `<button type='button' class='btn btn-add-choice mt-3 add-choice'><i class='fas fa-plus me-2'></i>Variant qo'shish</button>`;
         html += `</div>`;
     }
     
-    html += `<div class='mb-2'><label class='form-label'>Tushuntirish (ixtiyoriy)</label>`;
-    html += `<textarea class='form-control glass-input' name='explanation' rows='1'>${question.explanation || ''}</textarea></div>`;
+    html += `<div class='mt-3'>`;
+    html += `<label class='form-label'><i class='fas fa-comment-dots me-2'></i>Tushuntirish (ixtiyoriy)</label>`;
+    html += `<textarea class='form-control glass-input' name='explanation' rows='2'>${question.explanation || ''}</textarea>`;
+    html += `</div>`;
     
     // Add image upload option for existing questions
     if (!question.image) {

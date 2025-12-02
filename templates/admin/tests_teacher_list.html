@@ -104,7 +104,7 @@
                 <span class="badge bg-info">{{ t.total_questions|default:0 }}</span>
               </td>
               <td class="text-center">
-                <span class="badge bg-warning text-dark">{{ t.attempts.count }}</span>
+                <span class="badge bg-warning text-dark">{{ t.attempts_count|default:0 }}</span>
               </td>
               <td class="text-center">
                 <span class="badge {% if t.is_active %}bg-success{% else %}bg-warning text-dark{% endif %}">

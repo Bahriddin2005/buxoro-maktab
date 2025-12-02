@@ -12,9 +12,19 @@
                 <div>
                     <h2 class="text-white mb-1">
                         <i class="fas fa-users me-2"></i>
-                        Barcha O'quvchilar Test Natijalari
+                        {% if user_role == 'teacher' %}
+                            Mening Testlarim Natijalari
+                        {% else %}
+                            Barcha O'quvchilar Test Natijalari
+                        {% endif %}
                     </h2>
-                    <p class="text-white-50 mb-0">Barcha o'quvchilarning test natijalari va statistikasi</p>
+                    <p class="text-white-50 mb-0">
+                        {% if user_role == 'teacher' %}
+                            Siz yaratgan testlarning natijalari va statistikasi
+                        {% else %}
+                            Barcha o'quvchilarning test natijalari va statistikasi
+                        {% endif %}
+                    </p>
                 </div>
                 <div>
                     <button class="btn btn-success" onclick="exportToExcel()">
@@ -173,23 +183,91 @@
     document.addEventListener('DOMContentLoaded', function() {
         loadResults();
         loadFilters();
+        
+        // Fan tanlanganda testlar ro'yxatini yangilash
+        document.getElementById('filterSubject')?.addEventListener('change', function() {
+            const selectedSubject = this.value;
+            const testFilter = document.getElementById('filterTest');
+            const options = testFilter.getElementsByTagName('option');
+            
+            // Barcha testlarni yashirish/y ko'rsatish
+            for (let i = 1; i < options.length; i++) {
+                const option = options[i];
+                if (!selectedSubject || option.dataset.subject === selectedSubject) {
+                    option.style.display = '';
+                } else {
+                    option.style.display = 'none';
+                }
+            }
+            
+            // Agar tanlangan test boshqa fanga tegishli bo'lsa, uni o'chirish
+            if (selectedSubject && testFilter.value) {
+                const selectedOption = testFilter.options[testFilter.selectedIndex];
+                if (selectedOption.dataset.subject !== selectedSubject) {
+                    testFilter.value = '';
+                }
+            }
+        });
     });
 
     async function loadFilters() {
         try {
-            // Load subjects
-            const subjectsResponse = await fetch('/tests/test-api/');
-            const subjectsData = await subjectsResponse.json();
-            
             const subjectFilter = document.getElementById('filterSubject');
-            const subjects = [...new Set(subjectsData.tests?.map(t => t.subject) || [])];
+            const testFilter = document.getElementById('filterTest');
             
-            subjects.forEach(subject => {
-                const option = document.createElement('option');
-                option.value = subject;
-                option.textContent = subject;
-                subjectFilter.appendChild(option);
-            });
+            // O'qituvchi yaratgan fanlar va testlar
+            {% if user_role == 'teacher' %}
+                const teacherSubjects = [
+                    {% for subject in teacher_subjects %}
+                        '{{ subject }}',
+                    {% endfor %}
+                ];
+                
+                const teacherTests = [
+                    {% for test in teacher_tests %}
+                        {id: {{ test.id }}, title: '{{ test.title|escapejs }}', subject: '{{ test.subject|escapejs }}'},
+                    {% endfor %}
+                ];
+                
+                // Fanlar dropdown'ni to'ldirish
+                teacherSubjects.forEach(subject => {
+                    const option = document.createElement('option');
+                    option.value = subject;
+                    option.textContent = subject;
+                    subjectFilter.appendChild(option);
+                });
+                
+                // Testlar dropdown'ni to'ldirish
+                teacherTests.forEach(test => {
+                    const option = document.createElement('option');
+                    option.value = test.id;
+                    option.textContent = test.title;
+                    option.dataset.subject = test.subject;
+                    testFilter.appendChild(option);
+                });
+            {% else %}
+                // Admin uchun barcha fanlar va testlar
+                const subjectsResponse = await fetch('/tests/test-api/');
+                const subjectsData = await subjectsResponse.json();
+                
+                const subjects = [...new Set(subjectsData.tests?.map(t => t.subject) || [])];
+                
+                subjects.forEach(subject => {
+                    const option = document.createElement('option');
+                    option.value = subject;
+                    option.textContent = subject;
+                    subjectFilter.appendChild(option);
+                });
+                
+                // Testlar dropdown'ni to'ldirish
+                subjectsData.tests?.forEach(test => {
+                    const option = document.createElement('option');
+                    option.value = test.id;
+                    option.textContent = test.title;
+                    option.dataset.subject = test.subject;
+                    testFilter.appendChild(option);
+                });
+            {% endif %}
             
         } catch (error) {
             console.error('Filter load error:', error);

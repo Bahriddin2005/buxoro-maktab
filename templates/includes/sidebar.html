@@ -168,19 +168,9 @@
         </a>
     {% endif %}
     
-    <!-- Results - FAQAT O'QITUVCHI VA ADMIN uchun -->
-    {% if user.role == 'teacher' or user.role == 'admin' %}
-    <a href="{% url 'tests:all_results' %}" 
-       class="sidebar-nav-icon {% if 'all-results' in request.path %}active{% endif %}" 
-       title="Natijalar"
-       data-bs-toggle="tooltip" 
-       data-bs-placement="right">
-        <i class="fas fa-chart-bar"></i>
-    </a>
-    {% endif %}
     
-    <!-- O'quvchilar Natijalari - FAQAT O'QITUVCHI VA ADMIN uchun -->
-    {% if user.role == 'teacher' or user.role == 'admin' %}
+    <!-- O'quvchilar Natijalari - FAQAT ADMIN uchun -->
+    {% if user.role == 'admin' %}
     <a href="{% url 'tests:students_test_results' %}" 
        class="sidebar-nav-icon {% if 'students-test-results' in request.path %}active{% endif %}" 
        title="O'quvchilar Natijalari"
