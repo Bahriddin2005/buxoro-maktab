@@ -369,7 +369,7 @@
             <p class="text-white-50" style="font-size: 16px;">O'quvchilar uchun test tuzish</p>
         </div>
 
-        <form id="createTestForm" method="post">
+        <form id="createTestForm" method="post" enctype="multipart/form-data">
             {% csrf_token %}
             
             <!-- Test asosiy ma'lumotlari -->
@@ -548,6 +548,19 @@
             </label>
             <textarea class="form-control" name="explanation[]" rows="2" placeholder="Javob uchun tushuntirish"></textarea>
         </div>
+        
+        <div class="mt-3">
+            <label class="form-label">
+                <i class="fas fa-image me-2"></i>Savol uchun rasm (ixtiyoriy)
+            </label>
+            <input type="file" class="form-control" name="question_image[]" accept="image/*">
+            <div class="form-text text-muted mt-1" style="font-size: 0.85rem;">
+                JPG, PNG, GIF formatlari qo'llab-quvvatlanadi. Maksimal hajm: 5MB
+            </div>
+            <div class="image-preview mt-2" style="display: none;">
+                <img src="" alt="Preview" style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 2px solid rgba(255,255,255,0.2);">
+            </div>
+        </div>
     </div>
 </template>
 
@@ -597,6 +610,42 @@ document.addEventListener('DOMContentLoaded', function() {
                 input.name = 'correct_choice_' + questionCount;
             }
         });
+        
+        // Image preview funksiyasi
+        const imageInput = clone.querySelector('input[type="file"]');
+        const imagePreview = clone.querySelector('.image-preview');
+        const previewImg = clone.querySelector('.image-preview img');
+        
+        if (imageInput && imagePreview && previewImg) {
+            imageInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    // Fayl hajmini tekshirish (5MB)
+                    if (file.size > 5 * 1024 * 1024) {
+                        alert('⚠️ Rasm hajmi 5MB dan katta bo\'lishi mumkin emas!');
+                        e.target.value = '';
+                        return;
+                    }
+                    
+                    // Formatni tekshirish
+                    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+                    if (!validTypes.includes(file.type)) {
+                        alert('⚠️ Faqat JPG, PNG yoki GIF formatidagi rasmlar qo\'llab-quvvatlanadi!');
+                        e.target.value = '';
+                        return;
+                    }
+                    
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        previewImg.src = event.target.result;
+                        imagePreview.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    imagePreview.style.display = 'none';
+                }
+            });
+        }
         
         // Radio button'lar uchun name yangilash
         const radios = clone.querySelectorAll('input[type="radio"]');

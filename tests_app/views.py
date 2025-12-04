@@ -1031,6 +1031,7 @@ def create_test_view(request):
                 question_types = request.POST.getlist('question_type[]')
                 points_list = request.POST.getlist('points[]')
                 explanations = request.POST.getlist('explanation[]')
+                question_images = request.FILES.getlist('question_image[]')
                 
                 for i, question_text in enumerate(question_texts):
                     if not question_text.strip():
@@ -1042,7 +1043,8 @@ def create_test_view(request):
                         question_type=question_types[i],
                         points=float(points_list[i]) if points_list[i] else 1.0,
                         order=i + 1,
-                        explanation=explanations[i] if i < len(explanations) else ''
+                        explanation=explanations[i] if i < len(explanations) else '',
+                        image=question_images[i] if i < len(question_images) and question_images[i] else None
                     )
                     
                     # Javob variantlarini qo'shish
