@@ -37,7 +37,9 @@ def favicon_view(request):
             file_content = f.read()
         # Content'ni BytesIO ga o'rab, FileResponse ga beramiz
         from io import BytesIO
-        return FileResponse(BytesIO(file_content), content_type='image/svg+xml')
+        file_stream = BytesIO(file_content)
+        file_stream.seek(0)  # Cursor'ni boshiga qaytaramiz
+        return FileResponse(file_stream, content_type='image/svg+xml')
     else:
         # Agar favicon topilmasa, 404 qaytaramiz
         return HttpResponse(status=404)
