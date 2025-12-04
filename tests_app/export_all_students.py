@@ -131,7 +131,7 @@ def export_all_students_results(request):
                     if percentage >= 81:
                         grade_text = "A'lo"
                         fill_color = "C6EFCE"  # Yashil
-                    elif percentage >= 61:
+                    elif percentage >= 51:
                         grade_text = "Yaxshi"
                         fill_color = "FFEB9C"  # Sariq
                     elif percentage >= 31:

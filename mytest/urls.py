@@ -31,7 +31,13 @@ def favicon_view(request):
                     break
     
     if favicon_path.exists():
-        return FileResponse(open(favicon_path, 'rb'), content_type='image/svg+xml')
+        # File handle'ni to'g'ri boshqarish uchun context manager ishlatamiz
+        # Favicon kichik fayl bo'lgani uchun, uni xotiraga o'qib olamiz
+        with open(favicon_path, 'rb') as f:
+            file_content = f.read()
+        # Content'ni BytesIO ga o'rab, FileResponse ga beramiz
+        from io import BytesIO
+        return FileResponse(BytesIO(file_content), content_type='image/svg+xml')
     else:
         # Agar favicon topilmasa, 404 qaytaramiz
         return HttpResponse(status=404)

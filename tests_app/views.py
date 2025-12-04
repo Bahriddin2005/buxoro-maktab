@@ -1988,7 +1988,7 @@ def export_subject_results_view(request):
             # Ball bo'yicha rang berish
             if attempt.percentage >= 81:
                 fill_color = "C6EFCE"  # Yashil
-            elif attempt.percentage >= 61:
+            elif attempt.percentage >= 51:
                 fill_color = "FFEB9C"  # Sariq
             elif attempt.percentage >= 31:
                 fill_color = "FFC7CE"  # Qizil
@@ -2090,7 +2090,7 @@ def students_test_results_view(request):
                 # Baholash
                 if percentage >= 81:
                     grade_text = "A'lo"
-                elif percentage >= 61:
+                elif percentage >= 51:
                     grade_text = "Yaxshi"
                 elif percentage >= 31:
                     grade_text = "Qoniqarli"
@@ -2364,7 +2364,7 @@ def export_students_test_results_view(request):
                     grade_text = "A'lo"
                     fill_color = "00FF88"  # Yorqin yashil
                     text_color = "FFFFFF"
-                elif percentage >= 61:
+                elif percentage >= 51:
                     grade_text = "Yaxshi"
                     fill_color = "FFD700"  # Yorqin sariq
                     text_color = "000000"
@@ -2431,7 +2431,7 @@ def export_students_test_results_view(request):
                 percentage_cell = ws.cell(row=row, column=8)
                 if percentage >= 81:
                     percentage_cell.font = Font(bold=True, size=11, color="00C853")
-                elif percentage >= 61:
+                elif percentage >= 51:
                     percentage_cell.font = Font(bold=True, size=11, color="FF9800")
                 elif percentage >= 31:
                     percentage_cell.font = Font(bold=True, size=11, color="FF6F00")
@@ -2602,7 +2602,7 @@ def export_subject_results_view(request):
                 # Rangli formatlar
                 if attempt.percentage >= 81:
                     fill_color = "C6EFCE"  # Yashil
-                elif attempt.percentage >= 61:
+                elif attempt.percentage >= 51:
                     fill_color = "FFEB9C"  # Sariq
                 elif attempt.percentage >= 31:
                     fill_color = "BDD7EE"  # Ko'k

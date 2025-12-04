@@ -1083,7 +1083,7 @@ function createResultCard(result, isStudentView = false) {
     // Get color class based on percentage
     let colorClass = 'poor';
     if (result.percentage >= 81) colorClass = 'excellent';
-    else if (result.percentage >= 61) colorClass = 'good';
+    else if (result.percentage >= 51) colorClass = 'good';
     else if (result.percentage >= 31) colorClass = 'average';
     
     card.className = `result-card ${colorClass}`;

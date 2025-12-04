@@ -359,7 +359,7 @@ def student_export_results_view(request):
         
         if average_percentage >= 81:
             overall_grade = "A'lo"
-        elif average_percentage >= 61:
+        elif average_percentage >= 51:
             overall_grade = "Yaxshi"
         elif average_percentage >= 31:
             overall_grade = "Qoniqarli"
@@ -398,7 +398,7 @@ def student_export_results_view(request):
             if percentage >= 81:
                 result_grade = "A'lo"
                 fill_color = "C6EFCE"  # Yashil
-            elif percentage >= 61:
+            elif percentage >= 51:
                 result_grade = "Yaxshi"
                 fill_color = "FFEB9C"  # Sariq
             elif percentage >= 31:
@@ -474,7 +474,7 @@ def student_export_results_view(request):
             if avg_percentage >= 81:
                 grade = "A'lo"
                 fill_color = "C6EFCE"
-            elif avg_percentage >= 61:
+            elif avg_percentage >= 51:
                 grade = "Yaxshi"
                 fill_color = "FFEB9C"
             elif avg_percentage >= 31:

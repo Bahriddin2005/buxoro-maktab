@@ -1549,7 +1549,7 @@ function displayResults(results) {
 
 function getGradeText(percentage) {
     if (percentage >= 81) return "A'lo";
-    if (percentage >= 61) return "Yaxshi";
+    if (percentage >= 51) return "Yaxshi";
     if (percentage >= 31) return "Qoniqarli";
     return "Qoniqarsiz";
 }
@@ -1568,7 +1568,7 @@ function calculateGradeStats(results) {
     const avgPercentage = totalPercentage / results.length;
     
     const excellent = results.filter(r => (r.percentage || 0) >= 81).length;
-    const good = results.filter(r => (r.percentage || 0) >= 61 && (r.percentage || 0) < 81).length;
+    const good = results.filter(r => (r.percentage || 0) >= 51 && (r.percentage || 0) < 81).length;
     const poor = results.filter(r => (r.percentage || 0) < 31).length;
     
     return {
@@ -1581,14 +1581,14 @@ function calculateGradeStats(results) {
 
 function getGradeClass(percentage) {
     if (percentage >= 81) return 'badge-excellent';
-    if (percentage >= 61) return 'badge-good';
+    if (percentage >= 51) return 'badge-good';
     if (percentage >= 31) return 'badge-satisfactory';
     return 'badge-poor';
 }
 
 function getPercentageColorClass(percentage) {
     if (percentage >= 81) return 'success';
-    if (percentage >= 61) return 'primary';
+    if (percentage >= 51) return 'primary';
     if (percentage >= 31) return 'warning';
     return 'danger';
 }

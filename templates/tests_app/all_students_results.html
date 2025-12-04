@@ -372,7 +372,7 @@
             // O'sha sinfning barcha natijalari
             results.forEach(result => {
                 const gradeClass = result.percentage >= 81 ? 'success' : 
-                                 result.percentage >= 61 ? 'warning' : 
+                                 result.percentage >= 51 ? 'warning' : 
                                  result.percentage >= 31 ? 'info' : 'danger';
                 
                 const finishedDate = new Date(result.finished_at).toLocaleString('uz-UZ', {

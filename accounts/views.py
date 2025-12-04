@@ -204,7 +204,7 @@ def dashboard_view(request):
                 
             if percentage >= 81:
                 grade = "A'lo"
-            elif percentage >= 61:
+            elif percentage >= 51:
                 grade = 'Yaxshi'
             elif percentage >= 31:
                 grade = 'Qoniqarli'
@@ -269,7 +269,7 @@ def dashboard_view(request):
                         # Grade ni hisoblash
                         if current_percentage >= 81:
                             grade = "A'lo"
-                        elif current_percentage >= 61:
+                        elif current_percentage >= 51:
                             grade = 'Yaxshi'
                         elif current_percentage >= 31:
                             grade = 'Qoniqarli'
