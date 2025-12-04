@@ -168,6 +168,16 @@
         </a>
     {% endif %}
     
+    <!-- Natijalarim - FAQAT O'QUVCHI uchun -->
+    {% if user.role == 'student' %}
+    <a href="{% url 'tests:overall_results' %}" 
+       class="sidebar-nav-icon {% if 'overall-results' in request.path %}active{% endif %}" 
+       title="📊 Natijalarim - Yechgan testlaringiz natijalari"
+       data-bs-toggle="tooltip" 
+       data-bs-placement="right">
+        <i class="fas fa-chart-bar"></i>
+    </a>
+    {% endif %}
     
     <!-- O'quvchilar Natijalari - FAQAT ADMIN uchun -->
     {% if user.role == 'admin' %}
@@ -180,8 +190,8 @@
     </a>
     {% endif %}
     
-    <!-- Monitoring - FAQAT O'QITUVCHI VA ADMIN uchun -->
-    {% if user.role == 'teacher' or user.role == 'admin' %}
+    <!-- Monitoring - FAQAT ADMIN uchun -->
+    {% if user.role == 'admin' %}
     <a href="{% url 'tests:students_monitoring' %}" 
        class="sidebar-nav-icon {% if 'students-monitoring' in request.path %}active{% endif %}" 
        title="Monitoring"

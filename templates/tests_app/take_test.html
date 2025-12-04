@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Test - {{ test.title }} - Buxoro Bilimdonlar Maktabi{% endblock %}
+{% block title %}✏️ Test - {{ test.title }} - Buxoro Bilimdonlar Maktabi{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -356,6 +356,7 @@
     let attemptId = null;
     let answeredQuestions = new Set(); // Javob berilgan savollar ro'yxati
     let serverTimeOffset = 0; // Server va client vaqt farqi
+    const testId = {{ test.id }}; // Test ID'ni JavaScript o'zgaruvchisiga olish
 
     document.addEventListener('DOMContentLoaded', function() {
         startTest();
@@ -859,21 +860,13 @@
                 // Remove beforeunload listener
                 window.removeEventListener('beforeunload', function() {});
                 
-                // Show completion message with details
-                let completionMessage = result.message;
-                if (result.results.all_answered) {
-                    completionMessage += `<br><strong>🎉 Barcha javoblar berildi!</strong><br>`;
-                } else {
-                    completionMessage += `<br><strong>ℹ️ ${result.results.answered_count}/${result.results.total_questions} ta savolga javob berildi</strong><br>`;
-                }
-                completionMessage += `<strong>Ball: ${result.results.score}/${result.results.total_points} (${result.results.percentage.toFixed(1)}%)</strong><br>`;
-                completionMessage += `<strong>Bahо: ${result.results.grade}</strong>`;
+                // Hide question container
+                document.getElementById('questionContainer').classList.add('d-none');
+                document.getElementById('navigationPills').classList.add('d-none');
+                document.getElementById('timerCard').classList.add('d-none');
                 
-                showAlert(completionMessage, 'success');
-                
-                setTimeout(() => {
-                    window.location.href = `{% url "tests:test_results" test.id %}`;
-                }, 4000);
+                // Show results immediately
+                showTestResults(result.results);
                 
             } else {
                 const error = await response.json();
@@ -954,42 +947,18 @@
                 // Remove beforeunload listener
                 window.removeEventListener('beforeunload', function() {});
                 
-                // Muvaffaqiyatli xabar
-                autoSubmitAlert.innerHTML = `
-                    <div class="text-center text-white p-5">
-                        <div class="mb-4">
-                            <i class="fas fa-check-circle fa-5x text-success"></i>
-                        </div>
-                        <h1 class="mb-3">✅ Test Yakunlandi!</h1>
-                        <div class="card bg-dark border-success mx-auto" style="max-width: 500px;">
-                            <div class="card-body">
-                                <h4 class="text-success mb-3">Natijalar:</h4>
-                                <div class="d-flex justify-content-between mb-2">
-                                    <span>Javob berilgan:</span>
-                                    <strong class="text-info">${result.results.answered_count}/${result.results.total_questions}</strong>
-                                </div>
-                                <div class="d-flex justify-content-between mb-2">
-                                    <span>Ball:</span>
-                                    <strong class="text-warning">${result.results.score}/${result.results.total_points}</strong>
-                                </div>
-                                <div class="d-flex justify-content-between mb-2">
-                                    <span>Foiz:</span>
-                                    <strong class="text-success">${result.results.percentage.toFixed(1)}%</strong>
-                                </div>
-                                <hr class="border-secondary">
-                                <div class="d-flex justify-content-between">
-                                    <span class="fs-5">Baholash:</span>
-                                    <strong class="fs-4 text-warning">${result.results.grade}</strong>
-                                </div>
-                            </div>
-                        </div>
-                        <p class="mt-4 text-info">Natijalar sahifasiga yo'naltirilmoqda...</p>
-                    </div>
-                `;
+                // Remove auto submit alert
+                if (autoSubmitAlert && autoSubmitAlert.parentNode) {
+                    autoSubmitAlert.parentNode.removeChild(autoSubmitAlert);
+                }
                 
-                setTimeout(() => {
-                    window.location.href = `{% url "tests:test_results" test.id %}`;
-                }, 3000);
+                // Hide question container
+                document.getElementById('questionContainer').classList.add('d-none');
+                document.getElementById('navigationPills').classList.add('d-none');
+                document.getElementById('timerCard').classList.add('d-none');
+                
+                // Show results immediately
+                showTestResults(result.results);
                 
             } else {
                 const error = await response.json();
@@ -1024,6 +993,239 @@
                 `;
             }
         }
+    }
+
+    function showTestResults(results) {
+        // Debug: natijalarni ko'rsatish
+        console.log('Test natijalari:', results);
+        console.log('O\'rin:', results.rank, 'Jami o\'quvchilar:', results.total_students);
+        
+        // Grade message ni olish
+        const gradeMessage = getGradeMessage(results.percentage, results.grade_message);
+        const gradeIcon = getGradeIcon(results.percentage);
+        
+        // Grade rangini aniqlash
+        let gradeColor, gradeBg, gradeBorder;
+        if (results.percentage >= 81) {
+            gradeColor = '#2ed573';
+            gradeBg = 'linear-gradient(135deg, rgba(46, 213, 115, 0.3) 0%, rgba(46, 213, 115, 0.15) 100%)';
+            gradeBorder = '#2ed573';
+        } else if (results.percentage >= 51) {
+            gradeColor = '#ffc107';
+            gradeBg = 'linear-gradient(135deg, rgba(255, 193, 7, 0.3) 0%, rgba(255, 193, 7, 0.15) 100%)';
+            gradeBorder = '#ffc107';
+        } else if (results.percentage >= 31) {
+            gradeColor = '#3498db';
+            gradeBg = 'linear-gradient(135deg, rgba(52, 152, 219, 0.3) 0%, rgba(52, 152, 219, 0.15) 100%)';
+            gradeBorder = '#3498db';
+        } else {
+            gradeColor = '#e74c3c';
+            gradeBg = 'linear-gradient(135deg, rgba(231, 76, 60, 0.3) 0%, rgba(231, 76, 60, 0.15) 100%)';
+            gradeBorder = '#e74c3c';
+        }
+        
+        // Results container yaratish
+        const resultsContainer = document.createElement('div');
+        resultsContainer.id = 'testResultsContainer';
+        resultsContainer.className = 'text-center py-5';
+        resultsContainer.innerHTML = `
+            <div class="glass-card p-5 mb-4" style="max-width: 700px; margin: 0 auto;">
+                <div class="mb-4">
+                    <i class="fas fa-check-circle" style="font-size: 5rem; color: ${gradeColor};"></i>
+                </div>
+                <h2 class="text-white mb-4">✅ Test Yakunlandi!</h2>
+                
+                <!-- Natijalar Card -->
+                <div class="card bg-dark border-success mb-4" style="border-color: ${gradeBorder} !important; border-width: 3px;">
+                    <div class="card-body p-4">
+                        <h4 class="text-white mb-4">
+                            <i class="fas fa-chart-bar me-2" style="color: ${gradeColor};"></i>
+                            Sizning Natijangiz
+                        </h4>
+                        
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <div class="p-3" style="background: rgba(255,255,255,0.1); border-radius: 10px;">
+                                    <div class="text-white-50 small mb-1">Javob berilgan</div>
+                                    <div class="h4 text-white mb-0">
+                                        ${results.answered_count}/${results.total_questions}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-3" style="background: rgba(255,255,255,0.1); border-radius: 10px;">
+                                    <div class="text-white-50 small mb-1">Ball</div>
+                                    <div class="h4 text-white mb-0">
+                                        ${results.score}/${results.total_points}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-3" style="background: rgba(255,255,255,0.1); border-radius: 10px;">
+                                    <div class="text-white-50 small mb-1">Foiz</div>
+                                    <div class="h4 mb-0" style="color: ${gradeColor};">
+                                        ${results.percentage.toFixed(1)}%
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-3" style="background: rgba(255,255,255,0.1); border-radius: 10px;">
+                                    <div class="text-white-50 small mb-1">Baholash</div>
+                                    <div class="h4 mb-0" style="color: ${gradeColor};">
+                                        ${results.grade || getGrade(results.percentage)}
+                                    </div>
+                                </div>
+                            </div>
+                            ${(results.rank !== null && results.rank !== undefined && results.total_students) ? `
+                            <div class="col-12">
+                                <div class="p-3" style="background: rgba(255,255,255,0.15); border-radius: 10px; border: 2px solid ${results.rank <= 3 ? '#ffd700' : '#667eea'};">
+                                    <div class="text-white-50 small mb-2">
+                                        <i class="fas fa-trophy me-1"></i>
+                                        Sinfingizda o'rni
+                                    </div>
+                                    <div class="h3 mb-0" style="color: ${results.rank <= 3 ? '#ffd700' : '#667eea'}; font-weight: 700;">
+                                        ${results.rank}-o'rin / ${results.total_students} ta o'quvchi
+                                    </div>
+                                </div>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- O'rin Ko'rsatgichi (Yirik) -->
+                ${(results.rank !== null && results.rank !== undefined && results.total_students) ? `
+                <div class="rank-card p-5 mb-4" style="
+                    background: ${results.rank <= 3 ? 
+                        'linear-gradient(135deg, rgba(255, 215, 0, 0.4) 0%, rgba(255, 165, 0, 0.3) 100%)' : 
+                        'linear-gradient(135deg, rgba(102, 126, 234, 0.4) 0%, rgba(118, 75, 162, 0.3) 100%)'};
+                    border: 4px solid ${results.rank <= 3 ? '#ffd700' : 'rgba(102, 126, 234, 0.6)'};
+                    border-radius: 20px;
+                    text-align: center;
+                    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.4);
+                    animation: fadeIn 0.8s ease;
+                ">
+                    <div style="font-size: 5rem; margin-bottom: 20px;">
+                        ${results.rank === 1 ? '<i class="fas fa-trophy" style="color: #ffd700;"></i>' :
+                          results.rank === 2 ? '<i class="fas fa-medal" style="color: #c0c0c0;"></i>' :
+                          results.rank === 3 ? '<i class="fas fa-award" style="color: #cd7f32;"></i>' :
+                          '<i class="fas fa-star" style="color: #667eea;"></i>'}
+                    </div>
+                    <h2 style="
+                        color: ${results.rank <= 3 ? '#ffd700' : '#667eea'};
+                        font-weight: 700;
+                        margin-bottom: 15px;
+                        font-size: 4rem;
+                        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+                    ">${results.rank}-o'rin</h2>
+                    <p style="
+                        color: white;
+                        font-size: 1.5rem;
+                        margin: 0 0 15px 0;
+                        font-weight: 700;
+                    ">
+                        <i class="fas fa-users me-2"></i>
+                        Sinfingizda ${results.total_students} ta o'quvchi ichida
+                    </p>
+                    <p style="
+                        color: rgba(255, 255, 255, 0.95);
+                        font-size: 1.2rem;
+                        margin-top: 15px;
+                        margin-bottom: 0;
+                        padding: 10px;
+                        background: rgba(255, 255, 255, 0.1);
+                        border-radius: 10px;
+                    ">
+                        <i class="fas fa-chart-line me-2"></i>
+                        Ball: <strong>${results.score}/${results.total_points}</strong> (${results.percentage.toFixed(1)}%)
+                    </p>
+                </div>
+                ` : ''}
+                
+                <!-- Motivatsion Xabar -->
+                <div class="motivation-message p-4 mb-4" style="
+                    background: ${gradeBg};
+                    border: 3px solid ${gradeBorder};
+                    border-radius: 15px;
+                    text-align: center;
+                ">
+                    <div style="font-size: 3rem; margin-bottom: 15px;">
+                        <i class="fas ${gradeIcon}" style="color: ${gradeColor};"></i>
+                    </div>
+                    <h4 style="
+                        color: ${gradeColor};
+                        font-weight: 700;
+                        margin-bottom: 15px;
+                    ">${results.grade || getGrade(results.percentage)}</h4>
+                    <p style="
+                        color: white;
+                        font-size: 1.2rem;
+                        line-height: 1.6;
+                        margin: 0;
+                        font-weight: 500;
+                    ">${gradeMessage}</p>
+                </div>
+                
+                <!-- Tafsilotli Natijalar va Qayta ishlash so'rovi Tugmalari -->
+                <div class="d-flex gap-3 justify-content-center flex-wrap">
+                    <a href="/tests/${testId}/results/" class="btn btn-primary btn-lg">
+                        <i class="fas fa-eye me-2"></i>
+                        Tafsilotli Natijalar
+                    </a>
+                    <button type="button" class="btn btn-warning btn-lg" onclick="openRetakeRequestModal()">
+                        <i class="fas fa-redo me-2"></i>
+                        Qayta Ishlash So'rovi
+                    </button>
+                    <a href="{% url 'tests:tests' %}" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-list me-2"></i>
+                        Testlar Ro'yxati
+                    </a>
+                </div>
+            </div>
+        `;
+        
+        // Results container'ni sahifaga qo'shish
+        const testContainer = document.querySelector('.test-container');
+        testContainer.appendChild(resultsContainer);
+        
+        // Scroll to results
+        resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    
+    function getGrade(percentage) {
+        if (percentage >= 81) return "A'lo";
+        if (percentage >= 51) return "Yaxshi";
+        if (percentage >= 31) return "Qoniqarli";
+        return "Qoniqarsiz";
+    }
+    
+    function getGradeMessage(percentage, gradeMessageFromServer = null) {
+        if (gradeMessageFromServer) {
+            return gradeMessageFromServer;
+        }
+        if (percentage >= 81) {
+            return "Ilimingiz juda yaxshi ekan. Siz maktab liderlaridan siz!";
+        } else if (percentage >= 51) {
+            return "Ilimingiz juda yaxshi ekan, sal yetmay qol'di.";
+        } else if (percentage >= 31) {
+            return "Ilimingiz yaxshi, harakatingizni yanada ko'paytiring.";
+        } else {
+            return "Ilim olishda to'xtamang.";
+        }
+    }
+    
+    function getGradeIcon(percentage) {
+        if (percentage >= 81) return "fa-trophy";
+        if (percentage >= 51) return "fa-star";
+        if (percentage >= 31) return "fa-thumbs-up";
+        return "fa-arrow-up";
+    }
+    
+    function getRankSuffix(rank) {
+        if (rank === 1) return '-o\'rin';
+        if (rank === 2) return '-o\'rin';
+        if (rank === 3) return '-o\'rin';
+        return '-o\'rin';
     }
 
     function startTimer() {
@@ -1074,6 +1276,175 @@
         
         updateTimer();
         timerInterval = setInterval(updateTimer, 1000);
+    }
+
+    // Qayta ishlash so'rovi modal oynasini ochish
+    function openRetakeRequestModal() {
+        // Modal oynani yaratish yoki ochish
+        const modal = document.getElementById('retakeRequestModal');
+        if (!modal) {
+            createRetakeRequestModal();
+        }
+        document.getElementById('retakeRequestModal').style.display = 'block';
+    }
+
+    // Qayta ishlash so'rovi modal oynasini yaratish
+    function createRetakeRequestModal() {
+        const modalHTML = `
+            <div id="retakeRequestModal" class="modal fade show" style="display: none; background: rgba(0,0,0,0.5); position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999;" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered" style="margin: auto; max-width: 600px; padding: 20px;">
+                    <div class="modal-content" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
+                        <div class="modal-header" style="border-bottom: 2px solid rgba(255,255,255,0.2);">
+                            <h5 class="modal-title text-white">
+                                <i class="fas fa-redo me-2"></i>
+                                Qayta Ishlash So'rovi
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" onclick="closeRetakeRequestModal()" style="filter: brightness(0) invert(1);"></button>
+                        </div>
+                        <div class="modal-body text-white">
+                            <p class="mb-3">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Agar siz testni qayta ishlamoqchi bo'lsangiz, admin uchun sabab yozing. 
+                                Admin sizning so'rovingizni ko'rib chiqadi va javob beradi.
+                            </p>
+                            <div class="mb-3">
+                                <label for="retakeReason" class="form-label">
+                                    <i class="fas fa-comment-alt me-2"></i>
+                                    Qayta ishlash sababi (kamida 10 ta belgi):
+                                </label>
+                                <textarea 
+                                    id="retakeReason" 
+                                    class="form-control" 
+                                    rows="5" 
+                                    placeholder="Masalan: Internet aloqasi uzilgan edi, savollar aniq bo'lmagan, vaqt yetmadi va h.k."
+                                    style="background: rgba(255,255,255,0.9); border: 2px solid rgba(255,255,255,0.3); border-radius: 10px; min-height: 120px; color: #333;"
+                                ></textarea>
+                                <div id="retakeReasonError" class="text-danger mt-2" style="display: none;"></div>
+                            </div>
+                            <div id="retakeRequestStatus" class="alert" style="display: none;"></div>
+                        </div>
+                        <div class="modal-footer" style="border-top: 2px solid rgba(255,255,255,0.2);">
+                            <button type="button" class="btn btn-secondary" onclick="closeRetakeRequestModal()">
+                                <i class="fas fa-times me-2"></i>
+                                Bekor qilish
+                            </button>
+                            <button type="button" class="btn btn-warning" onclick="submitRetakeRequest()">
+                                <i class="fas fa-paper-plane me-2"></i>
+                                So'rov Yuborish
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+    }
+
+    // Modal oynani yopish
+    function closeRetakeRequestModal() {
+        const modal = document.getElementById('retakeRequestModal');
+        if (modal) {
+            modal.style.display = 'none';
+            // Ma'lumotlarni tozalash
+            document.getElementById('retakeReason').value = '';
+            document.getElementById('retakeReasonError').style.display = 'none';
+            document.getElementById('retakeRequestStatus').style.display = 'none';
+        }
+    }
+
+    // Qayta ishlash so'rovini yuborish
+    async function submitRetakeRequest() {
+        const reason = document.getElementById('retakeReason').value.trim();
+        const errorDiv = document.getElementById('retakeReasonError');
+        const statusDiv = document.getElementById('retakeRequestStatus');
+        
+        // Tozalash
+        errorDiv.style.display = 'none';
+        statusDiv.style.display = 'none';
+        
+        // Validatsiya
+        if (!reason || reason.length < 10) {
+            errorDiv.textContent = 'Qayta ishlash sababi kamida 10 ta belgidan iborat bo\'lishi kerak!';
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        try {
+            // Loading holati
+            const submitBtn = event.target;
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Yuborilmoqda...';
+            submitBtn.disabled = true;
+
+            // CSRF token olish (sahifada allaqachon mavjud csrfToken o'zgaruvchisidan)
+            const csrftoken = typeof csrfToken !== 'undefined' ? csrfToken : '';
+
+            // So'rov yuborish
+            const response = await fetch(`/tests/${testId}/request-retake/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({
+                    reason: reason
+                })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                // Muvaffaqiyatli
+                statusDiv.className = 'alert alert-success';
+                statusDiv.innerHTML = `
+                    <i class="fas fa-check-circle me-2"></i>
+                    <strong>Muvaffaqiyatli!</strong> ${result.message || 'Qayta ishlash so\'rovi muvaffaqiyatli yuborildi! Admin javobini kuting.'}
+                `;
+                statusDiv.style.display = 'block';
+                
+                // Textarea'ni tozalash
+                document.getElementById('retakeReason').value = '';
+                
+                // 3 soniyadan keyin modal'ni yopish
+                setTimeout(() => {
+                    closeRetakeRequestModal();
+                }, 3000);
+            } else {
+                // Xatolik
+                statusDiv.className = 'alert alert-danger';
+                statusDiv.innerHTML = `
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <strong>Xatolik!</strong> ${result.error || 'So\'rov yuborishda xatolik yuz berdi.'}
+                `;
+                statusDiv.style.display = 'block';
+            }
+
+            // Button'ni tiklash
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+
+        } catch (error) {
+            console.error('Retake request error:', error);
+            statusDiv.className = 'alert alert-danger';
+            statusDiv.innerHTML = `
+                <i class="fas fa-exclamation-circle me-2"></i>
+                <strong>Xatolik!</strong> So'rov yuborishda xatolik yuz berdi. Iltimos, qayta urinib ko'ring.
+            `;
+            statusDiv.style.display = 'block';
+            
+            // Button'ni tiklash
+            const submitBtn = event.target;
+            submitBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>So\'rov Yuborish';
+            submitBtn.disabled = false;
+        }
+    }
+
+    // Modal oynani tashqariga bosilganda yopish
+    window.onclick = function(event) {
+        const modal = document.getElementById('retakeRequestModal');
+        if (event.target == modal) {
+            closeRetakeRequestModal();
+        }
     }
 </script>
 {% endblock %}

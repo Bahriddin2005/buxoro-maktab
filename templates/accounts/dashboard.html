@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Dashboard - Buxoro Bilimdonlar Maktabi{% endblock %}
+{% block title %}📊 Dashboard - Buxoro Bilimdonlar Maktabi{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -203,43 +203,43 @@
     
     /* Enhanced action buttons */
     .action-btn-gradient {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        background: linear-gradient(135deg, #7C4DFF 0%, #9C27B0 50%, #E91E63 100%);
+        box-shadow: 0 8px 25px rgba(124, 77, 255, 0.6);
     }
     
     .action-btn-gradient:hover {
-        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.6);
+        box-shadow: 0 12px 35px rgba(124, 77, 255, 0.8);
     }
     
     .action-btn-yellow {
-        background: linear-gradient(135deg, #FFC107 0%, #FFD700 100%);
+        background: linear-gradient(135deg, #FFD700 0%, #FFC107 50%, #FFEB3B 100%);
         color: #000 !important;
-        box-shadow: 0 6px 20px rgba(255, 193, 7, 0.4);
+        box-shadow: 0 8px 25px rgba(255, 215, 0, 0.6);
     }
     
     .action-btn-yellow:hover {
-        background: linear-gradient(135deg, #FFD700 0%, #FFC107 100%);
-        box-shadow: 0 10px 30px rgba(255, 193, 7, 0.6);
+        background: linear-gradient(135deg, #FFEB3B 0%, #FFD700 50%, #FFC107 100%);
+        box-shadow: 0 12px 35px rgba(255, 235, 59, 0.8);
     }
     
     .action-btn-green {
-        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-        box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+        background: linear-gradient(135deg, #00E676 0%, #00C853 50%, #00FF88 100%);
+        box-shadow: 0 8px 25px rgba(0, 230, 118, 0.6);
     }
     
     .action-btn-green:hover {
-        background: linear-gradient(135deg, #34ce57 0%, #28a745 100%);
-        box-shadow: 0 10px 30px rgba(40, 167, 69, 0.6);
+        background: linear-gradient(135deg, #00FF88 0%, #00E676 50%, #00C853 100%);
+        box-shadow: 0 12px 35px rgba(0, 255, 136, 0.8);
     }
     
     .action-btn-cyan {
-        background: linear-gradient(135deg, #17a2b8 0%, #00d4ff 100%);
-        box-shadow: 0 6px 20px rgba(23, 162, 184, 0.4);
+        background: linear-gradient(135deg, #00E5FF 0%, #00B0FF 50%, #0091EA 100%);
+        box-shadow: 0 8px 25px rgba(0, 229, 255, 0.6);
     }
     
     .action-btn-cyan:hover {
-        background: linear-gradient(135deg, #1fc8e3 0%, #17a2b8 100%);
-        box-shadow: 0 10px 30px rgba(23, 162, 184, 0.6);
+        background: linear-gradient(135deg, #0091EA 0%, #00E5FF 50%, #00B0FF 100%);
+        box-shadow: 0 12px 35px rgba(0, 229, 255, 0.8);
     }
     
     .action-btn-icon {
@@ -444,6 +444,9 @@
                 border: 1px solid rgba(255, 255, 255, 0.3);
                 padding: 35px;
                 box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+                display: flex;
+                flex-direction: column;
+                height: 100%;
             }
 
             .quick-actions-title {
@@ -507,48 +510,53 @@
             }
 
             .action-btn-gradient {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+                background: linear-gradient(135deg, #7C4DFF 0%, #9C27B0 50%, #E91E63 100%);
+                box-shadow: 0 8px 25px rgba(124, 77, 255, 0.6);
+            }
+            
+            .action-btn-gradient:hover {
+                box-shadow: 0 12px 35px rgba(124, 77, 255, 0.8);
             }
 
             .action-btn-yellow {
-                background: linear-gradient(135deg, #FFC107 0%, #FFD700 100%);
+                background: linear-gradient(135deg, #FFD700 0%, #FFC107 50%, #FFEB3B 100%);
                 color: #000 !important;
-                box-shadow: 0 6px 20px rgba(255, 193, 7, 0.4);
+                box-shadow: 0 8px 25px rgba(255, 215, 0, 0.6);
             }
 
             .action-btn-yellow:hover {
-                background: linear-gradient(135deg, #FFD700 0%, #FFC107 100%);
-                box-shadow: 0 10px 30px rgba(255, 193, 7, 0.6);
+                background: linear-gradient(135deg, #FFEB3B 0%, #FFD700 50%, #FFC107 100%);
+                box-shadow: 0 12px 35px rgba(255, 235, 59, 0.8);
             }
 
             .action-btn-green {
-                background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-                box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+                background: linear-gradient(135deg, #00E676 0%, #00C853 50%, #00FF88 100%);
+                box-shadow: 0 8px 25px rgba(0, 230, 118, 0.6);
             }
 
             .action-btn-green:hover {
-                background: linear-gradient(135deg, #34ce57 0%, #28a745 100%);
-                box-shadow: 0 10px 30px rgba(40, 167, 69, 0.6);
+                background: linear-gradient(135deg, #00FF88 0%, #00E676 50%, #00C853 100%);
+                box-shadow: 0 12px 35px rgba(0, 255, 136, 0.8);
             }
 
             .action-btn-cyan {
-                background: linear-gradient(135deg, #17a2b8 0%, #00d4ff 100%);
-                box-shadow: 0 6px 20px rgba(23, 162, 184, 0.4);
+                background: linear-gradient(135deg, #00E5FF 0%, #00B0FF 50%, #0091EA 100%);
+                box-shadow: 0 8px 25px rgba(0, 229, 255, 0.6);
             }
 
             .action-btn-cyan:hover {
-                background: linear-gradient(135deg, #1fc8e3 0%, #17a2b8 100%);
-                box-shadow: 0 10px 30px rgba(23, 162, 184, 0.6);
+                background: linear-gradient(135deg, #0091EA 0%, #00E5FF 50%, #00B0FF 100%);
+                box-shadow: 0 12px 35px rgba(0, 229, 255, 0.8);
             }
 
             .action-btn-primary {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+                background: linear-gradient(135deg, #7C4DFF 0%, #651FFF 50%, #9C27B0 100%);
+                box-shadow: 0 8px 25px rgba(124, 77, 255, 0.6);
             }
             
             .action-btn-primary:hover {
-                box-shadow: 0 10px 30px rgba(102, 126, 234, 0.6);
+                background: linear-gradient(135deg, #9C27B0 0%, #7C4DFF 50%, #651FFF 100%);
+                box-shadow: 0 12px 35px rgba(124, 77, 255, 0.8);
             }
 
             .action-btn-outline {
@@ -578,8 +586,12 @@
             }
 
             .action-btn-featured {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+                background: linear-gradient(135deg, #7C4DFF 0%, #9C27B0 50%, #E91E63 100%);
+                box-shadow: 0 10px 30px rgba(124, 77, 255, 0.7);
+            }
+            
+            .action-btn-featured:hover {
+                box-shadow: 0 15px 40px rgba(124, 77, 255, 0.9);
             }
 
             .action-btn-featured .action-btn-icon {
@@ -614,9 +626,9 @@
             }
         </style>
 
-        <div class="row g-4">
-            <div class="col-lg-8">
-                <div class="quick-actions-container" data-aos="fade-right">
+        <div class="row g-4" style="display: flex; align-items: stretch;">
+            <div class="col-lg-6" style="display: flex;">
+                <div class="quick-actions-container" data-aos="fade-right" style="width: 100%;">
                     <div class="quick-actions-title">
                         <i class="fas fa-bolt"></i>
                         Tez Harakatlar
@@ -624,7 +636,7 @@
                     
                     {% if user.role == 'student' %}
                     <div class="row g-3">
-                        <div class="col-md-4">
+                        <div class="col-md-4 col-6">
                             <a href="{% url 'tests:tests' %}" class="action-btn action-btn-primary text-white">
                                 <div class="action-btn-icon">
                                     <i class="fas fa-clipboard-list"></i>
@@ -632,15 +644,15 @@
                                 <div class="action-btn-text">Testlarni Ko'rish</div>
                             </a>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-4 col-6">
                             <a href="{% url 'tests:overall_results' %}" class="action-btn action-btn-green text-white">
                                 <div class="action-btn-icon">
-                                    <i class="fas fa-chart-line"></i>
+                                    <i class="fas fa-chart-bar"></i>
                                 </div>
-                                <div class="action-btn-text">Umumiy Natijalarim</div>
+                                <div class="action-btn-text">📊 Natijalarim</div>
                             </a>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-4 col-6">
                             <a href="{% url 'accounts:profile' %}" class="action-btn action-btn-outline text-white">
                                 <div class="action-btn-icon">
                                     <i class="fas fa-user-edit"></i>
@@ -666,6 +678,14 @@
                                     <i class="fas fa-file-alt"></i>
                                 </div>
                                 <div class="action-btn-text">Testlar</div>
+                            </a>
+                        </div>
+                        <div class="col-md-4 col-6">
+                            <a href="{% url 'tests:students_test_results' %}" class="action-btn action-btn-primary text-white">
+                                <div class="action-btn-icon">
+                                    <i class="fas fa-chart-bar"></i>
+                                </div>
+                                <div class="action-btn-text">O'quvchilar Natijalari</div>
                             </a>
                         </div>
                     </div>
@@ -724,13 +744,13 @@
                                 <div class="action-btn-text">Excel Export</div>
                             </a>
                         </div>
-                    </div>
+                        </div>
                         {% endif %}
                 </div>
             </div>
             
-            <div class="col-lg-4">
-                <div class="glass-card p-4 profile-card-enhanced" data-aos="fade-left" style="position: relative; overflow: hidden;">
+            <div class="col-lg-6" style="display: flex;">
+                <div class="glass-card p-4 profile-card-enhanced" data-aos="fade-left" style="position: relative; overflow: hidden; width: 100%;">
                     <h4 class="text-white mb-4" style="font-weight: 700; display: flex; align-items: center; gap: 10px;">
                         <i class="fas fa-user-circle" style="font-size: 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
                         Profil Ma'lumoti
@@ -787,122 +807,7 @@
         </div>
     </div>
     
-    {% if user.role == 'student' and recent_results %}
-    <!-- So'nggi Natijalar -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="glass-card p-4" data-aos="fade-up">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h4 class="text-white mb-0">
-                        <i class="fas fa-chart-line me-2"></i>
-                        So'nggi Natijalarim
-                    </h4>
-                    <a href="{% url 'tests:tests' %}" class="btn btn-outline-light btn-sm">
-                        <i class="fas fa-eye me-1"></i>
-                        Barchasini ko'rish
-                    </a>
-                </div>
-                
-                <div class="table-responsive">
-                    <table class="table table-dark table-hover">
-                        <thead>
-                            <tr>
-                                <th>Test Nomi</th>
-                                <th class="text-center">Ball</th>
-                                <th class="text-center">Foiz</th>
-                                <th class="text-center">Baho</th>
-                                <th class="text-center">Sana</th>
-                                <th class="text-center">Amal</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for result in recent_results %}
-                            <tr>
-                                <td>
-                                    <i class="fas fa-file-alt me-2 text-primary"></i>
-                                    {{ result.test_name }}
-                                </td>
-                                <td class="text-center">
-                                    <strong>{{ result.score }}/{{ result.max_score }}</strong>
-                                </td>
-                                <td class="text-center">
-                                    <span class="badge bg-{% if result.percentage >= 80 %}success{% elif result.percentage >= 60 %}warning{% elif result.percentage >= 30 %}info{% else %}danger{% endif %}">
-                                        {{ result.percentage|floatformat:1 }}%
-                                    </span>
-                                </td>
-                                <td class="text-center">
-                                    <span class="badge bg-{% if result.grade == 'A\'lo' %}success{% elif result.grade == 'Yaxshi' %}warning{% elif result.grade == 'Qoniqarli' %}info{% else %}danger{% endif %}">
-                                        {{ result.grade }}
-                                    </span>
-                                </td>
-                                <td class="text-center text-white-50">
-                                    {{ result.created_at|date:"d.m.Y H:i" }}
-                                </td>
-                                <td class="text-center">
-                                    <a href="{% url 'tests:test_results' result.test_id %}" class="btn btn-outline-primary btn-sm">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                
-                {% if best_result %}
-                <div class="mt-4">
-                    <div class="alert alert-success bg-gradient" role="alert">
-                        <div class="table-responsive">
-                            <h5 class="text-dark mb-3">
-                                <i class="fas fa-list-alt me-2"></i>
-                                Barcha Natijalaringiz ({{ all_student_results|length }} ta)
-                            </h5>
-                            <table class="table table-hover table-striped">
-                                <thead class="table-dark">
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Test</th>
-                                        <th>Fan</th>
-                                        <th>Ball</th>
-                                        <th>Foiz</th>
-                                        <th>Baho</th>
-                                        <th>Sana</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for result in all_student_results %}
-                                    <tr>
-                                        <td>{{ forloop.counter }}</td>
-                                        <td>{{ result.test_name }}</td>
-                                        <td>{{ result.test_subject }}</td>
-                                        <td>{{ result.score }}/{{ result.max_score }}</td>
-                                        <td>
-                                            <span class="badge {% if result.percentage >= 81 %}bg-success{% elif result.percentage >= 61 %}bg-primary{% elif result.percentage >= 31 %}bg-warning{% else %}bg-danger{% endif %}">
-                                                {{ result.percentage|floatformat:1 }}%
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <strong {% if result.percentage >= 81 %}class="text-success"{% elif result.percentage >= 61 %}class="text-primary"{% elif result.percentage >= 31 %}class="text-warning"{% else %}class="text-danger"{% endif %}>
-                                                {{ result.grade }}
-                                            </strong>
-                                        </td>
-                                        <td>{{ result.finished_at|date:"d.m.Y H:i" }}</td>
-                                    </tr>
-                                    {% empty %}
-                                    <tr>
-                                        <td colspan="7" class="text-center text-muted">Hali natijalar yo'q</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-    {% elif user.role == 'student' and total_tests == 0 %}
+    {% if user.role == 'student' and total_tests == 0 %}
     <!-- Natija yo'q holati -->
     <div class="row mb-4">
         <div class="col-12">

@@ -51,7 +51,22 @@ def test_list_view(request):
             
             test_data = []
             for test in tests:
-                attempt = TestAttempt.objects.filter(test=test, student=request.user).first()
+                # correct_answers maydoni database'da yo'qligi uchun values() ishlatamiz
+                attempt_data = TestAttempt.objects.filter(
+                    test=test, 
+                    student=request.user
+                ).values('id', 'is_completed', 'percentage').first()
+                
+                attempt = None
+                if attempt_data:
+                    # Minimal object yaratish
+                    class MinimalAttempt:
+                        def __init__(self, data):
+                            self.id = data['id']
+                            self.is_completed = data['is_completed']
+                            self.percentage = data.get('percentage')
+                    
+                    attempt = MinimalAttempt(attempt_data)
                 
                 # Qayta ishlash ruxsati bormi tekshirish
                 has_retake_permission = False
@@ -80,7 +95,7 @@ def test_list_view(request):
                     'max_attempts': test.max_attempts,
                     'total_questions': test.total_questions,
                     'has_attempted': attempt is not None,
-                    'attempt_score': round(attempt.percentage, 1) if attempt and attempt.is_completed else None,
+                    'attempt_score': round(attempt.percentage, 1) if attempt and attempt.is_completed and attempt.percentage else None,
                     'can_attempt': can_attempt,
                     'has_retake_permission': has_retake_permission,
                     'created_by': test.created_by.get_full_name() or test.created_by.username,
@@ -297,10 +312,20 @@ def take_test_view(request, test_id):
         return JsonResponse({'error': 'Test has ended'}, status=403)
     
     if request.method == 'POST':
-        existing_attempt = TestAttempt.objects.filter(test=test, student=request.user).first()
+        # correct_answers maydoni database'da yo'qligi uchun values() ishlatamiz
+        existing_attempt_data = TestAttempt.objects.filter(
+            test=test, 
+            student=request.user
+        ).values('id', 'is_completed').first()
+        
+        existing_attempt_id = None
+        existing_attempt_completed = False
+        if existing_attempt_data:
+            existing_attempt_id = existing_attempt_data['id']
+            existing_attempt_completed = existing_attempt_data['is_completed']
         
         # Agar test tugallangan bo'lsa, qayta ishlash ruxsati bormi tekshiramiz
-        if existing_attempt and existing_attempt.is_completed:
+        if existing_attempt_id and existing_attempt_completed:
             # Qayta ishlash ruxsati bormi?
             approved_retake = TestRetakeRequest.objects.filter(
                 student=request.user,
@@ -312,18 +337,19 @@ def take_test_view(request, test_id):
             if not approved_retake:
                 return JsonResponse({'error': 'Siz allaqachon bu testni topshirgansiz. Qayta topshirish uchun admin ruxsati kerak.'}, status=400)
             
-            # Qayta ishlash ruxsati bor, yangi attempt yaratamiz
-            attempt = TestAttempt.objects.create(test=test, student=request.user)
-            
-            # Ruxsatni ishlatilgan deb belgilaymiz
-            approved_retake.is_used = True
-            approved_retake.save()
-        elif not existing_attempt:
+            # Qayta ishlash ruxsati bor, yangi attempt yaratamiz (is_retake=True bilan)
+            attempt = TestAttempt.objects.create(test=test, student=request.user, is_retake=True)
+        elif not existing_attempt_id:
             # Birinchi marta test yechmoqda
             attempt = TestAttempt.objects.create(test=test, student=request.user)
         else:
-            # Test tugallanmagan, davom ettirmoqda
-            attempt = existing_attempt
+            # Test tugallanmagan, davom ettirmoqda - to'liq obyektni yuklash
+            attempt = TestAttempt.objects.filter(id=existing_attempt_id).only(
+                'id', 'test', 'student', 'started_at', 'is_completed'
+            ).first()
+            if not attempt:
+                # Agar topilmasa, yangi yaratamiz
+                attempt = TestAttempt.objects.create(test=test, student=request.user)
         
         # Har bir o'quvchiga savollar random tartibda ko'rsatiladi
         # Query optimallashtirish - select_related va prefetch_related
@@ -360,7 +386,21 @@ def take_test_view(request, test_id):
     
     # GET so'rovi - sahifa yuklash
     # Avval tugallangan testni tekshiramiz
-    existing_attempt = TestAttempt.objects.filter(test=test, student=request.user).first()
+    # correct_answers maydoni database'da yo'qligi uchun values() ishlatamiz
+    existing_attempt_data = TestAttempt.objects.filter(
+        test=test, 
+        student=request.user
+    ).values('id', 'is_completed').first()
+    
+    existing_attempt = None
+    if existing_attempt_data:
+        # Minimal object yaratish
+        class MinimalAttempt:
+            def __init__(self, data):
+                self.id = data['id']
+                self.is_completed = data['is_completed']
+        
+        existing_attempt = MinimalAttempt(existing_attempt_data)
     
     if existing_attempt and existing_attempt.is_completed:
         # Test allaqachon tugallangan
@@ -493,6 +533,19 @@ def finish_test(request, attempt_id):
         
         attempt.save()
         
+        # Agar bu qayta ishlash bo'lsa, retake request'ni ishlatilgan deb belgilaymiz
+        if attempt.is_retake:
+            retake_request = TestRetakeRequest.objects.filter(
+                student=request.user,
+                test=attempt.test,
+                status='approved',
+                is_used=False
+            ).first()
+            
+            if retake_request:
+                retake_request.is_used = True
+                retake_request.save()
+        
         # Create completion message
         total_questions = attempt.test.questions.count()
         answered_count = attempt.answers.count()
@@ -504,6 +557,64 @@ def finish_test(request, attempt_id):
         else:
             completion_message = f"Test yakunlandi. {answered_count}/{total_questions} ta savolga javob berildi."
         
+        # Grade message ni olish
+        grade_message = test_result.get_grade_message() if test_result else ''
+        
+        # O'quvchining sinfidagi o'rinni hisoblash (ball bo'yicha)
+        student_rank = None
+        total_students_in_class = 0
+        try:
+            # Bir xil sinf va test bo'yicha barcha tugallangan attempt'larni olish
+            # Har bir o'quvchining eng yaxshi natijasini olish
+            from django.db.models import Max, Q
+            # Har bir o'quvchi uchun eng yaxshi percentage va score ni topish
+            best_attempts = TestAttempt.objects.filter(
+                test=test,
+                is_completed=True,
+                student__grade=request.user.grade
+            ).values('student_id').annotate(
+                best_percentage=Max('percentage'),
+                best_score=Max('score')
+            ).order_by('-best_percentage', '-best_score')
+            
+            # O'quvchilarni list'ga o'tkazish
+            attempts_list = list(best_attempts)
+            total_students_in_class = len(attempts_list)
+            
+            # Joriy o'quvchining natijasini yangilash (agar yangi bo'lsa yoki yaxshiroq bo'lsa)
+            current_student_found = False
+            for attempt_data in attempts_list:
+                if attempt_data['student_id'] == request.user.id:
+                    current_student_found = True
+                    # Agar joriy natija yaxshiroq bo'lsa, yangilash
+                    if percentage > (attempt_data['best_percentage'] or 0):
+                        attempt_data['best_percentage'] = percentage
+                        attempt_data['best_score'] = score
+                    break
+            
+            # Agar o'quvchi ro'yxatda yo'q bo'lsa, qo'shish
+            if not current_student_found:
+                attempts_list.append({
+                    'student_id': request.user.id,
+                    'best_percentage': percentage,
+                    'best_score': score
+                })
+                total_students_in_class += 1
+            
+            # O'quvchilarni tartiblash (percentage, keyin score bo'yicha)
+            attempts_list.sort(key=lambda x: (x.get('best_percentage') or 0, x.get('best_score') or 0), reverse=True)
+            
+            # O'quvchining o'rinni topish
+            for rank, attempt_data in enumerate(attempts_list, 1):
+                if attempt_data['student_id'] == request.user.id:
+                    student_rank = rank
+                    break
+        except Exception as e:
+            # Xatolik bo'lsa, o'rin hisoblanmaydi
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error calculating rank: {str(e)}")
+        
         return JsonResponse({
             'message': completion_message,
             'results': {
@@ -511,6 +622,7 @@ def finish_test(request, attempt_id):
                 'total_points': results['total_points'],
                 'percentage': results['percentage'],
                 'grade': test_result.grade,
+                'grade_message': grade_message,
                 'correct_answers': correct_answers,
                 'incorrect_answers': incorrect_answers,
                 'unanswered': unanswered,
@@ -518,6 +630,8 @@ def finish_test(request, attempt_id):
                 'all_answered': all_answered,
                 'answered_count': answered_count,
                 'total_questions': total_questions,
+                'rank': student_rank,  # O'rin
+                'total_students': total_students_in_class,  # Jami o'quvchilar soni
                 'incorrect_questions': results.get('incorrect_questions', [])
             }
         })
@@ -535,21 +649,44 @@ def test_results_view(request, test_id):
             if test.grade != request.user.grade:
                 return JsonResponse({'error': 'Access denied'}, status=403)
             
-            attempt = TestAttempt.objects.filter(test=test, student=request.user).first()
+            # correct_answers maydoni database'da yo'qligi uchun values() ishlatamiz
+            attempt_data = TestAttempt.objects.filter(
+                test=test, 
+                student=request.user
+            ).values('id', 'is_completed', 'percentage', 'score', 'total_points', 'finished_at').first()
+            
+            attempt = None
+            attempt_id = None
+            if attempt_data:
+                attempt_id = attempt_data['id']
+                # Minimal object yaratish
+                class MinimalAttempt:
+                    def __init__(self, data):
+                        self.id = data['id']
+                        self.is_completed = data['is_completed']
+                        self.percentage = data.get('percentage')
+                        self.score = data.get('score')
+                        self.total_points = data.get('total_points')
+                        self.finished_at = data.get('finished_at')
+                
+                attempt = MinimalAttempt(attempt_data)
             if not attempt or not attempt.is_completed:
                 return JsonResponse({'error': 'Test not completed'}, status=404)
             
-            # Get detailed results
-            correct_answers = attempt.result.correct_answers if hasattr(attempt, 'result') else 0
-            incorrect_answers = attempt.result.incorrect_answers if hasattr(attempt, 'result') else 0
-            unanswered = attempt.result.unanswered if hasattr(attempt, 'result') else 0
+            # Get detailed results from TestResult
+            from tests_app.models import TestResult
+            test_result = TestResult.objects.filter(attempt_id=attempt_id).first()
+            correct_answers = test_result.correct_answers if test_result else 0
+            incorrect_answers = test_result.incorrect_answers if test_result else 0
+            unanswered = test_result.unanswered if test_result else 0
             
             # Get incorrect questions details
             incorrect_questions = []
             unanswered_questions = []
-            if hasattr(attempt, 'result') and attempt.result:
+            if test_result:
                 # Get all answers for this attempt
-                answers = Answer.objects.filter(attempt=attempt).select_related('question')
+                from tests_app.models import Answer
+                answers = Answer.objects.filter(attempt_id=attempt_id).select_related('question')
                 answered_question_ids = set(answers.values_list('question_id', flat=True))
                 
                 # Get all questions for this test
@@ -577,14 +714,24 @@ def test_results_view(request, test_id):
                             'explanation': question.explanation or ''
                         })
             
+            # Get time_taken from TestAttempt
+            attempt_with_time = TestAttempt.objects.filter(id=attempt_id).values('time_taken').first()
+            time_taken = attempt_with_time.get('time_taken') if attempt_with_time else None
+            
+            # Grade message ni olish
+            grade_message = ''
+            if test_result:
+                grade_message = test_result.get_grade_message()
+            
             result_data = {
                 'student': request.user.username,
                 'score': attempt.score,
                 'total_points': attempt.total_points,
                 'percentage': attempt.percentage,
-                'grade': attempt.result.grade if hasattr(attempt, 'result') else '',
-                'time_taken': str(attempt.time_taken),
-                'finished_at': attempt.finished_at.isoformat(),
+                'grade': test_result.grade if test_result else '',
+                'grade_message': grade_message,
+                'time_taken': str(time_taken) if time_taken else '',
+                'finished_at': attempt.finished_at.isoformat() if attempt.finished_at else '',
                 'correct_answers': correct_answers,
                 'incorrect_answers': incorrect_answers,
                 'unanswered': unanswered,
@@ -624,9 +771,14 @@ def test_results_view(request, test_id):
             ).values_list('latest_attempt_id', flat=True)
             
             # Faqat oxirgi attempt'larni olish
+            # correct_answers maydoni database'da yo'qligi uchun defer() ishlatamiz
             attempts = TestAttempt.objects.filter(
                 id__in=latest_attempts
-            ).select_related('student', 'result').order_by('student__grade', 'student__class_name', 'student__first_name', 'student__last_name')
+            ).select_related('student', 'result').defer(
+                'correct_answers',
+                'incorrect_answers',
+                'unanswered'
+            ).order_by('student__grade', 'student__class_name', 'student__first_name', 'student__last_name')
             
             results_data = []
             for attempt in attempts:
@@ -676,12 +828,12 @@ def test_results_view(request, test_id):
                     'score': attempt.score,
                     'total_points': attempt.total_points,
                     'percentage': attempt.percentage,
-                    'grade': attempt.result.grade if hasattr(attempt, 'result') else '',
-                    'time_taken': str(attempt.time_taken),
-                    'finished_at': attempt.finished_at.isoformat(),
-                    'correct_answers': attempt.result.correct_answers if hasattr(attempt, 'result') else 0,
-                    'incorrect_answers': attempt.result.incorrect_answers if hasattr(attempt, 'result') else 0,
-                    'unanswered': attempt.result.unanswered if hasattr(attempt, 'result') else 0,
+                    'grade': attempt.result.grade if hasattr(attempt, 'result') and attempt.result else '',
+                    'time_taken': str(attempt.time_taken) if attempt.time_taken else '',
+                    'finished_at': attempt.finished_at.isoformat() if attempt.finished_at else '',
+                    'correct_answers': attempt.result.correct_answers if hasattr(attempt, 'result') and attempt.result else 0,
+                    'incorrect_answers': attempt.result.incorrect_answers if hasattr(attempt, 'result') and attempt.result else 0,
+                    'unanswered': attempt.result.unanswered if hasattr(attempt, 'result') and attempt.result else 0,
                     # Admin va o'qituvchilar uchun xato qilgan savollarni ko'rsatish
                     'incorrect_questions': incorrect_questions,
                     'unanswered_questions': unanswered_questions
@@ -749,10 +901,10 @@ def export_results(request, test_id):
             attempt.score,
             attempt.total_points,
             attempt.percentage,
-            attempt.result.grade if hasattr(attempt, 'result') else '',
-            attempt.result.correct_answers if hasattr(attempt, 'result') else 0,
-            attempt.result.incorrect_answers if hasattr(attempt, 'result') else 0,
-            attempt.result.unanswered if hasattr(attempt, 'result') else 0,
+            attempt.result.grade if hasattr(attempt, 'result') and attempt.result else '',
+            attempt.result.correct_answers if hasattr(attempt, 'result') and attempt.result else 0,
+            attempt.result.incorrect_answers if hasattr(attempt, 'result') and attempt.result else 0,
+            attempt.result.unanswered if hasattr(attempt, 'result') and attempt.result else 0,
             str(attempt.time_taken),
             attempt.finished_at.strftime('%Y-%m-%d %H:%M:%S')
         ]
@@ -1879,16 +2031,12 @@ def export_subject_results_view(request):
 
 @login_required
 def students_test_results_view(request):
-    """O'quvchilar yechgan testlarning natijalarini ko'rsatish - Faqat Admin uchun"""
-    from django.db import connection
-    from django.conf import settings
+    """O'quvchilar yechgan testlarning natijalarini ko'rsatish - Admin va Teacher uchun"""
+    from django.db.models import Q
+    from tests_app.models import TestAttempt, Test
     
-    if request.user.role != 'admin':
+    if request.user.role not in ['admin', 'teacher']:
         return redirect('accounts:dashboard')
-    
-    # Database backend detection
-    db_engine = settings.DATABASES['default']['ENGINE']
-    param_style = '?' if 'sqlite' in db_engine.lower() else '%s'
     
     if request.method == 'GET' and request.headers.get('Accept') == 'application/json':
         try:
@@ -1898,85 +2046,93 @@ def students_test_results_view(request):
             test_id_filter = request.GET.get('test', '')
             student_filter = request.GET.get('student', '')
             
-            # SQL query - faqat mavjud ustunlarni ishlatish
-            query = """
-                SELECT
-                    ta.id, ta.percentage, ta.score, ta.total_points,
-                    ta.finished_at, ta.started_at, ta.attempt_number, ta.time_taken,
-                    ta.is_completed,
-                    u.id as student_id, u.first_name, u.last_name, u.username, 
-                    u.student_id as student_unique_id, u.class_name, u.grade as student_grade,
-                    t.id as test_id, t.title as test_title, t.subject, t.grade as test_grade
-                FROM tests_app_testattempt ta
-                INNER JOIN accounts_user u ON ta.student_id = u.id
-                INNER JOIN tests_app_test t ON ta.test_id = t.id
-                WHERE ta.is_completed = 1
-            """
-            params = []
+            # ORM query boshlandi
+            attempts = TestAttempt.objects.filter(
+        is_completed=True
+            ).select_related('student', 'test', 'test__created_by')
+            
+            # Teacher uchun faqat o'z yaratgan testlarini ko'rsatish
+            if request.user.role == 'teacher':
+                attempts = attempts.filter(test__created_by=request.user)
             
             # Filterlar
             if grade_filter:
-                query += " AND u.grade = " + param_style
-                params.append(grade_filter)
+                attempts = attempts.filter(student__grade=grade_filter)
             if subject_filter:
-                query += " AND t.subject = " + param_style
-                params.append(subject_filter)
+                attempts = attempts.filter(test__subject=subject_filter)
             if test_id_filter:
-                query += " AND t.id = " + param_style
-                params.append(test_id_filter)
+                attempts = attempts.filter(test_id=test_id_filter)
             if student_filter:
-                query += " AND (u.first_name LIKE " + param_style + " OR u.last_name LIKE " + param_style + " OR u.username LIKE " + param_style + ")"
-                search_term = f'%{student_filter}%'
-                params.extend([search_term, search_term, search_term])
+                attempts = attempts.filter(
+                    Q(student__first_name__icontains=student_filter) |
+                    Q(student__last_name__icontains=student_filter) |
+                    Q(student__username__icontains=student_filter)
+                )
             
-            query += " ORDER BY ta.finished_at DESC, u.grade, u.last_name, u.first_name"
+            # Tartib - eng yaxshi natijani topish uchun avval percentage bo'yicha sort qilamiz
+            attempts = attempts.order_by('student__id', 'test__id', '-percentage', '-finished_at')
             
-            with connection.cursor() as cursor:
-                cursor.execute(query, params)
-                columns = [col[0] for col in cursor.description]
-                results_data = []
+            # Har bir o'quvchi-test juftligi uchun faqat eng yaxshi natijani olish
+            seen_combinations = set()
+            results_data = []
+            for attempt in attempts:
+                # O'quvchi-test juftligi kaliti
+                combination_key = (attempt.student.id, attempt.test.id)
                 
-                for row in cursor.fetchall():
-                    row_dict = dict(zip(columns, row))
-                    percentage = row_dict['percentage'] or 0
-                    
-                    # Baholash
-                    if percentage >= 81:
-                        grade_text = "A'lo"
-                    elif percentage >= 61:
-                        grade_text = "Yaxshi"
-                    elif percentage >= 31:
-                        grade_text = "Qoniqarli"
-                    else:
-                        grade_text = "Qoniqarsiz"
-                    
-                    results_data.append({
-                        'id': row_dict['id'],
-                        'test': {
-                            'id': row_dict['test_id'],
-                            'title': row_dict['test_title'],
-                            'subject': row_dict['subject'],
-                            'grade': row_dict['test_grade']
-                        },
-                        'student': {
-                            'id': row_dict['student_id'],
-                            'username': row_dict['username'],
-                            'first_name': row_dict['first_name'],
-                            'last_name': row_dict['last_name'],
-                            'student_id': row_dict['student_unique_id'],
-                            'class_name': row_dict['class_name'],
-                            'grade': row_dict['student_grade'],
-                            'full_name': f"{row_dict['first_name'] or ''} {row_dict['last_name'] or ''}".strip() or row_dict['username']
-                        },
-                        'score': row_dict['score'],
-                        'total_points': row_dict['total_points'],
-                        'percentage': percentage,
-                        'grade': grade_text,
-                        'time_taken': str(row_dict['time_taken']) if row_dict['time_taken'] else '',
-                        'finished_at': row_dict['finished_at'].isoformat() if row_dict['finished_at'] else None,
-                        'started_at': row_dict['started_at'].isoformat() if row_dict['started_at'] else None,
-                        'attempt_number': row_dict['attempt_number'],
-                    })
+                # Agar bu juftlik ko'rilgan bo'lsa, o'tkazib yuborish
+                if combination_key in seen_combinations:
+                    continue
+                
+                # Juftlikni qo'shish
+                seen_combinations.add(combination_key)
+                percentage = attempt.percentage or 0
+                
+                # Baholash
+                if percentage >= 81:
+                    grade_text = "A'lo"
+                elif percentage >= 61:
+                    grade_text = "Yaxshi"
+                elif percentage >= 31:
+                    grade_text = "Qoniqarli"
+                else:
+                    grade_text = "Qoniqarsiz"
+                
+                results_data.append({
+                    'id': attempt.id,
+                    'test': {
+                        'id': attempt.test.id,
+                        'title': attempt.test.title,
+                        'subject': attempt.test.subject,
+                        'grade': attempt.test.grade
+                    },
+                    'student': {
+                        'id': attempt.student.id,
+                        'username': attempt.student.username,
+                        'first_name': attempt.student.first_name or '',
+                        'last_name': attempt.student.last_name or '',
+                        'student_id': getattr(attempt.student, 'student_id', ''),
+                        'class_name': getattr(attempt.student, 'class_name', ''),
+                        'grade': attempt.student.grade or '',
+                        'full_name': attempt.student.get_full_name() or attempt.student.username
+                    },
+                    'score': attempt.score or 0,
+                    'total_points': attempt.total_points or 0,
+                    'percentage': percentage,
+                    'grade': grade_text,
+                    'time_taken': str(attempt.time_taken) if attempt.time_taken else '',
+                    'finished_at': attempt.finished_at.isoformat() if attempt.finished_at else None,
+                    'started_at': attempt.started_at.isoformat() if attempt.started_at else None,
+                    'attempt_number': attempt.attempt_number,
+                })
+            
+            # Natijalarni to'g'ri tartiblash (grade, last_name, first_name bo'yicha)
+            results_data.sort(key=lambda x: (
+                x['student']['grade'] or '',
+                x['student']['last_name'] or '',
+                x['student']['first_name'] or '',
+                x['test']['subject'] or '',
+                x['test']['title'] or ''
+            ))
             
             # Statistika
             stats = {
@@ -2007,16 +2163,32 @@ def students_test_results_view(request):
                 }
             }, status=500, json_dumps_params={'ensure_ascii': False})
     
-    # HTML render
+    # HTML render - O'qituvchi uchun faqat o'zining fanlarini ko'rsatish
+    teacher_subjects = []
+    if request.user.role == 'teacher':
+        # O'qituvchining fani (ro'yxatdan o'tgan fani)
+        if request.user.subject:
+            teacher_subjects.append(request.user.subject)
+        
+        # O'qituvchi yaratgan testlarning barcha fanlari
+        created_test_subjects = Test.objects.filter(
+            created_by=request.user
+        ).values_list('subject', flat=True).distinct()
+        
+        # Barcha fanlarni birlashtirish (takrorlanishlarsiz)
+        all_subjects = set(teacher_subjects) | set(created_test_subjects)
+        teacher_subjects = sorted(list(all_subjects))
+    
     return render(request, 'tests_app/students_test_results.html', {
-        'user_role': request.user.role
+        'user_role': request.user.role,
+        'teacher_subjects': teacher_subjects if request.user.role == 'teacher' else []
     })
 
 @login_required
 def export_students_test_results_view(request):
-    """O'quvchilar test natijalarini Excel formatida export qilish - Sinflar aro - Faqat Admin uchun"""
-    if request.user.role != 'admin':
-        return JsonResponse({'error': 'Faqat adminlar kirishi mumkin'}, status=403)
+    """O'quvchilar test natijalarini Excel formatida export qilish - Sinflar aro - Admin va Teacher uchun"""
+    if request.user.role not in ['admin', 'teacher']:
+        return JsonResponse({'error': 'Ruxsat yo\'q'}, status=403)
     
     if not OPENPYXL_AVAILABLE:
         return JsonResponse({'error': 'Excel export funksiyasi mavjud emas. Iltimos openpyxl kutubxonasini o\'rnating.'}, status=500)
@@ -2049,16 +2221,32 @@ def export_students_test_results_view(request):
                 student__grade=grade
             ).select_related('student', 'test')
             
+            # Teacher uchun faqat o'z yaratgan testlarini ko'rsatish
+            if request.user.role == 'teacher':
+                attempts_query = attempts_query.filter(test__created_by=request.user)
+            
             # Filterlar
             if subject_filter:
                 attempts_query = attempts_query.filter(test__subject=subject_filter)
             if test_id_filter:
                 attempts_query = attempts_query.filter(test_id=int(test_id_filter))
             
-            attempts_query = attempts_query.order_by('test__subject', 'test__title', 'student__last_name', 'student__first_name', '-finished_at')
+            # Har bir o'quvchi-test juftligi uchun faqat eng yaxshi natijani olish
+            # Avval percentage bo'yicha sort qilamiz (eng yaxshi birinchi)
+            attempts_query = attempts_query.order_by('student__id', 'test__id', '-percentage', '-finished_at')
             
             attempts_data = []
+            seen_combinations = set()
             for attempt in attempts_query:
+                # O'quvchi-test juftligi kaliti
+                combination_key = (attempt.student.id, attempt.test.id)
+                
+                # Agar bu juftlik ko'rilgan bo'lsa, o'tkazib yuborish (faqat birinchi eng yaxshi natija)
+                if combination_key in seen_combinations:
+                    continue
+                
+                # Juftlikni qo'shish
+                seen_combinations.add(combination_key)
                 attempts_data.append({
                     'id': attempt.id,
                     'percentage': attempt.percentage,
@@ -2077,6 +2265,14 @@ def export_students_test_results_view(request):
                     'subject': attempt.test.subject if attempt.test else ''
                 })
             
+            # Natijalarni to'g'ri tartiblash (test, student bo'yicha)
+            attempts_data.sort(key=lambda x: (
+                x.get('subject', '') or '',
+                x.get('test_title', '') or '',
+                x.get('last_name', '') or '',
+                x.get('first_name', '') or ''
+            ))
+            
             # Agar bu sinf uchun natijalar bo'lmasa, sheet yaratma
             if not attempts_data:
                 continue
@@ -2084,57 +2280,102 @@ def export_students_test_results_view(request):
             # Sheet yaratish
             ws = wb.create_sheet(title=f"{grade}-sinf")
             
-            # Header
-            ws['A1'] = f"{grade}-sinf O'quvchilar Test Natijalari"
-            ws['A1'].font = Font(bold=True, size=16, color="FFFFFF")
-            ws['A1'].fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
+            # Header - Chiroyli dizayn
+            ws['A1'] = f"📊 {grade}-sinf O'quvchilar Test Natijalari"
+            ws['A1'].font = Font(bold=True, size=18, color="FFFFFF")
+            ws['A1'].fill = PatternFill(start_color="7C4DFF", end_color="9C27B0", fill_type="solid")
             ws['A1'].alignment = Alignment(horizontal='center', vertical='center')
             ws.merge_cells('A1:K1')
+            ws.row_dimensions[1].height = 35
             
-            # Statistika
-            ws['A3'] = "Statistika:"
-            ws['A3'].font = Font(bold=True)
-            ws['A4'] = f"Jami Natijalar: {len(attempts_data)}"
+            # Statistika - Chiroyli dizayn
+            stats_row = 3
+            ws[f'A{stats_row}'] = "📈 Statistika"
+            ws[f'A{stats_row}'].font = Font(bold=True, size=14, color="FFFFFF")
+            ws[f'A{stats_row}'].fill = PatternFill(start_color="00E676", end_color="00C853", fill_type="solid")
+            ws[f'A{stats_row}'].alignment = Alignment(horizontal='center', vertical='center')
+            ws.merge_cells(f'A{stats_row}:K{stats_row}')
+            ws.row_dimensions[stats_row].height = 30
+            
             if attempts_data:
                 avg_percentage = sum([r['percentage'] or 0 for r in attempts_data]) / len(attempts_data)
                 excellent_count = sum(1 for r in attempts_data if (r['percentage'] or 0) >= 81)
-                ws['A5'] = f"O'rtacha Foiz: {avg_percentage:.1f}%"
-                ws['A6'] = f"A'lo Natijalar (≥81%): {excellent_count}"
+                good_count = sum(1 for r in attempts_data if 61 <= (r['percentage'] or 0) < 81)
+                satisfactory_count = sum(1 for r in attempts_data if 31 <= (r['percentage'] or 0) < 61)
+                poor_count = sum(1 for r in attempts_data if (r['percentage'] or 0) < 31)
+                
+                # Statistika - Soddalashtirilgan ko'rinish
+                stats_row_start = stats_row + 1
+                ws[f'A{stats_row_start}'] = f"📊 Jami Natijalar: {len(attempts_data)}"
+                ws[f'D{stats_row_start}'] = f"📈 O'rtacha Foiz: {avg_percentage:.1f}%"
+                ws[f'G{stats_row_start}'] = f"⭐ A'lo: {excellent_count} | ✅ Yaxshi: {good_count}"
+                
+                ws[f'A{stats_row_start + 1}'] = f"⚡ Qoniqarli: {satisfactory_count} | ❌ Qoniqarsiz: {poor_count}"
+                
+                # Statistikalar uchun format
+                for r in range(stats_row_start, stats_row_start + 2):
+                    for col in range(1, 12):
+                        cell = ws.cell(row=r, column=col)
+                        if r == stats_row_start:
+                            if col == 1:
+                                cell.font = Font(bold=True, size=11, color="667EEA")
+                            elif col == 4:
+                                cell.font = Font(bold=True, size=11, color="00E676")
+                            elif col == 7:
+                                cell.font = Font(bold=True, size=11, color="4CAF50")
+                            else:
+                                cell.font = Font(bold=True, size=11)
+                        else:
+                            if col == 1:
+                                cell.font = Font(bold=True, size=11, color="FF9800")
+                            else:
+                                cell.font = Font(bold=True, size=11, color="F44336")
+                        cell.fill = PatternFill(start_color="F8F9FA", end_color="F8F9FA", fill_type="solid")
+                        cell.alignment = Alignment(horizontal='left', vertical='center')
+                
+                ws.row_dimensions[stats_row_start].height = 25
+                ws.row_dimensions[stats_row_start + 1].height = 25
             
-            # Jadval header
+            header_row = stats_row + 4
+            
+            # Jadval header - Chiroyli dizayn
             headers = ['№', 'O\'quvchi', 'Student ID', 'Sinf', 'Test', 'Fan', 'Ball', 'Foiz', 'Baholash', 'Urinish', 'Sana']
-            header_row = 8
             
             for col, header in enumerate(headers, 1):
                 cell = ws.cell(row=header_row, column=col, value=header)
-                cell.font = Font(bold=True, color="FFFFFF")
-                cell.fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
-                cell.alignment = Alignment(horizontal='center', vertical='center')
+                cell.font = Font(bold=True, size=11, color="FFFFFF")
+                cell.fill = PatternFill(start_color="667EEA", end_color="764BA2", fill_type="solid")
+                cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
                 cell.border = Border(
-                    left=Side(style='thin'),
-                    right=Side(style='thin'),
-                    top=Side(style='thin'),
-                    bottom=Side(style='thin')
+                    left=Side(style='medium', color="FFFFFF"),
+                    right=Side(style='medium', color="FFFFFF"),
+                    top=Side(style='medium', color="FFFFFF"),
+                    bottom=Side(style='medium', color="FFFFFF")
                 )
+            ws.row_dimensions[header_row].height = 30
             
             # Ma'lumotlarni yozish
             row = header_row + 1
             for idx, attempt in enumerate(attempts_data, 1):
                 percentage = attempt['percentage'] or 0
 
-                # Baholash
+                # Baholash - Yorqin ranglar
                 if percentage >= 81:
                     grade_text = "A'lo"
-                    fill_color = "C6EFCE"
+                    fill_color = "00FF88"  # Yorqin yashil
+                    text_color = "FFFFFF"
                 elif percentage >= 61:
                     grade_text = "Yaxshi"
-                    fill_color = "FFEB9C"
+                    fill_color = "FFD700"  # Yorqin sariq
+                    text_color = "000000"
                 elif percentage >= 31:
                     grade_text = "Qoniqarli"
-                    fill_color = "FFC7CE"
+                    fill_color = "FF9800"  # Yorqin to'q sariq
+                    text_color = "FFFFFF"
                 else:
                     grade_text = "Qoniqarsiz"
-                    fill_color = "FFC7CE"
+                    fill_color = "FF5252"  # Yorqin qizil
+                    text_color = "FFFFFF"
                 
                 student_name = f"{attempt['first_name'] or ''} {attempt['last_name'] or ''}".strip()
                 if not student_name:
@@ -2159,39 +2400,86 @@ def export_students_test_results_view(request):
                 for col, value in enumerate(data, 1):
                     cell = ws.cell(row=row, column=col, value=value)
                     
+                    # Har bir qatorning rangini alternativ qilish (zebra striping)
+                    if idx % 2 == 0:
+                        row_fill_color = "F5F5F5"  # Oq-grey
+                    else:
+                        row_fill_color = "FFFFFF"  # Oq
+                    
                     # Baholash ustuniga rang berish
                     if col == 9:  # Baholash ustuni
                         cell.fill = PatternFill(start_color=fill_color, end_color=fill_color, fill_type="solid")
+                        cell.font = Font(bold=True, size=11, color=text_color)
+                    else:
+                        cell.fill = PatternFill(start_color=row_fill_color, end_color=row_fill_color, fill_type="solid")
                     
                     # Alignment
                     if col in [1, 7, 8, 10]:  # Raqamli ustunlar
-                        cell.alignment = Alignment(horizontal='center')
+                        cell.alignment = Alignment(horizontal='center', vertical='center')
                     else:
-                        cell.alignment = Alignment(horizontal='left')
+                        cell.alignment = Alignment(horizontal='left', vertical='center')
                     
+                    # Border - Chiroyli
                     cell.border = Border(
-                        left=Side(style='thin'),
-                        right=Side(style='thin'),
-                        top=Side(style='thin'),
-                        bottom=Side(style='thin')
+                        left=Side(style='thin', color="E0E0E0"),
+                        right=Side(style='thin', color="E0E0E0"),
+                        top=Side(style='thin', color="E0E0E0"),
+                        bottom=Side(style='thin', color="E0E0E0")
                     )
                 
+                # Foiz ustuniga rang berish
+                percentage_cell = ws.cell(row=row, column=8)
+                if percentage >= 81:
+                    percentage_cell.font = Font(bold=True, size=11, color="00C853")
+                elif percentage >= 61:
+                    percentage_cell.font = Font(bold=True, size=11, color="FF9800")
+                elif percentage >= 31:
+                    percentage_cell.font = Font(bold=True, size=11, color="FF6F00")
+                else:
+                    percentage_cell.font = Font(bold=True, size=11, color="F44336")
+                
                 row += 1
-    
-        # Ustun kengliklarini sozlash
-            column_widths = [5, 25, 12, 10, 30, 15, 10, 10, 12, 8, 20]
+            
+            # Ustun kengliklarini sozlash - Optimal kengliklar
+            column_widths = [6, 28, 15, 12, 35, 18, 12, 12, 15, 10, 22]
             for col, width in enumerate(column_widths, 1):
                 ws.column_dimensions[get_column_letter(col)].width = width
+            
+            # Jadval uchun freeze panes (header har doim ko'rinib turadi)
+            last_data_row = row - 1  # Oxirgi ma'lumot qatori
+            try:
+                if last_data_row > header_row:
+                    freeze_cell = f'A{header_row + 1}'
+                    ws.freeze_panes = freeze_cell
+            except Exception:
+                pass
+            
+            # Auto filter qo'shish
+            try:
+                if last_data_row > header_row:
+                    last_col_letter = 'K'  # 11-ustun
+                    auto_filter_range = f'A{header_row}:{last_col_letter}{last_data_row}'
+                    ws.auto_filter.ref = auto_filter_range
+            except Exception:
+                pass
         
         # Default sheet'ni o'chirish
         if 'Sheet' in wb.sheetnames:
             wb.remove(wb['Sheet'])
         
+        # Filename yaratish
+        if grade_filter:
+            # Agar faqat bitta sinf tanlangan bo'lsa, o'sha sinf nomi bilan fayl yaratamiz
+            filename = f"{grade_filter}-sinf_test_natijalari.xlsx"
+        else:
+            # Agar barcha sinflar tanlangan bo'lsa, umumiy nom bilan
+            filename = "barcha_sinflar_test_natijalari.xlsx"
+        
         # Response yaratish
         response = HttpResponse(
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
-        response['Content-Disposition'] = 'attachment; filename="oquvchilar_test_natijalari.xlsx"'
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
         
         # Excel faylni saqlash
         wb.save(response)

@@ -177,19 +177,26 @@ def dashboard_view(request):
         context['verification_requests_count'] = VerificationRequest.objects.filter(is_approved=None).count()
     elif request.user.role == 'student':
         # O'quvchi uchun natijalarni olish
-        test_results = TestResult.objects.filter(
+        # correct_answers maydoni database'da yo'qligi uchun values() ishlatamiz
+        test_results_data = TestResult.objects.filter(
             attempt__student=request.user
-        ).select_related('attempt', 'attempt__test').order_by('-attempt__started_at')[:5]
+        ).values(
+            'attempt__id',
+            'attempt__score',
+            'attempt__total_points',
+            'attempt__started_at',
+            'attempt__test__id',
+            'attempt__test__title'
+        ).order_by('-attempt__started_at')[:5]
         
         context['recent_results'] = []
-        for result in test_results:
-            # Grade ni hisoblash - безопасная версия
+        for result_data in test_results_data:
+            # Grade ni hisoblash
             try:
-                if (result.attempt and 
-                    result.attempt.score is not None and 
-                    result.attempt.total_points is not None and 
-                    result.attempt.total_points > 0):
-                    percentage = (result.attempt.score / result.attempt.total_points * 100)
+                if (result_data['attempt__score'] is not None and 
+                    result_data['attempt__total_points'] is not None and 
+                    result_data['attempt__total_points'] > 0):
+                    percentage = (result_data['attempt__score'] / result_data['attempt__total_points'] * 100)
                 else:
                     percentage = 0
             except (TypeError, ZeroDivisionError):
@@ -205,31 +212,45 @@ def dashboard_view(request):
                 grade = 'Qoniqarsiz'
                 
             context['recent_results'].append({
-                'test_name': result.attempt.test.title,
-                'score': result.attempt.score,
-                'max_score': result.attempt.total_points,
+                'test_name': result_data['attempt__test__title'],
+                'score': result_data['attempt__score'],
+                'max_score': result_data['attempt__total_points'],
                 'percentage': percentage,
                 'grade': grade,
-                'created_at': result.attempt.started_at,
-                'test_id': result.attempt.test.id
+                'created_at': result_data['attempt__started_at'],
+                'test_id': result_data['attempt__test__id']
             })
         
         # Umumiy statistika
-        all_results = TestResult.objects.filter(attempt__student=request.user)
-        context['total_tests'] = all_results.count()
+        # correct_answers maydoni database'da yo'qligi uchun values() ishlatamiz
+        all_results_data = TestResult.objects.filter(
+            attempt__student=request.user
+        ).values(
+            'attempt__id',
+            'attempt__score',
+            'attempt__total_points',
+            'attempt__started_at',
+            'attempt__finished_at',
+            'attempt__test__id',
+            'attempt__test__title',
+            'attempt__test__subject'
+        )
         
-        if all_results:
+        # List'ga aylantirish
+        all_results_list_data = list(all_results_data)
+        context['total_tests'] = len(all_results_list_data)
+        
+        if all_results_list_data:
             # Безопасное вычисление среднего балла
             total_percentage = 0
             valid_results = 0
             
-            for r in all_results:
+            for r in all_results_list_data:
                 try:
-                    if (r.attempt and 
-                        r.attempt.score is not None and 
-                        r.attempt.total_points is not None and 
-                        r.attempt.total_points > 0):
-                        total_percentage += (r.attempt.score / r.attempt.total_points * 100)
+                    if (r['attempt__score'] is not None and 
+                        r['attempt__total_points'] is not None and 
+                        r['attempt__total_points'] > 0):
+                        total_percentage += (r['attempt__score'] / r['attempt__total_points'] * 100)
                         valid_results += 1
                 except (TypeError, ZeroDivisionError):
                     continue
@@ -238,13 +259,12 @@ def dashboard_view(request):
             
             # BARCHA natijalarni contextga qo'shish (faqat best emas)
             all_results_list = []
-            for r in all_results:
+            for r in all_results_list_data:
                 try:
-                    if (r.attempt and 
-                        r.attempt.score is not None and 
-                        r.attempt.total_points is not None and 
-                        r.attempt.total_points > 0):
-                        current_percentage = (r.attempt.score / r.attempt.total_points * 100)
+                    if (r['attempt__score'] is not None and 
+                        r['attempt__total_points'] is not None and 
+                        r['attempt__total_points'] > 0):
+                        current_percentage = (r['attempt__score'] / r['attempt__total_points'] * 100)
                         
                         # Grade ni hisoblash
                         if current_percentage >= 81:
@@ -257,15 +277,15 @@ def dashboard_view(request):
                             grade = 'Qoniqarsiz'
                         
                         all_results_list.append({
-                            'test_name': r.attempt.test.title,
-                            'test_subject': r.attempt.test.subject,
-                            'score': r.attempt.score,
-                            'max_score': r.attempt.total_points,
+                            'test_name': r['attempt__test__title'],
+                            'test_subject': r['attempt__test__subject'],
+                            'score': r['attempt__score'],
+                            'max_score': r['attempt__total_points'],
                             'percentage': current_percentage,
                             'grade': grade,
-                            'finished_at': r.attempt.finished_at
+                            'finished_at': r['attempt__finished_at']
                         })
-                except (TypeError, ZeroDivisionError):
+                except (TypeError, ZeroDivisionError, KeyError):
                     continue
             
             # Foiz bo'yicha tartiblash (eng yaxshisi birinchi)

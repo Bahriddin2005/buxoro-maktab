@@ -85,9 +85,8 @@ class TestAttempt(models.Model):
     time_taken = models.DurationField(null=True, blank=True)
     attempt_number = models.IntegerField(default=1)  # Qayta ishlash raqami
     is_retake = models.BooleanField(default=False)  # Qayta ishlashmi
-    correct_answers = models.IntegerField(default=0)  # To'g'ri javoblar soni
-    incorrect_answers = models.IntegerField(default=0)  # Noto'g'ri javoblar soni
-    unanswered = models.IntegerField(default=0)  # Javob berilmagan savollar
+    # correct_answers, incorrect_answers, unanswered maydonlari TestResult model'ida saqlanadi
+    # Database'da bu ustunlar yo'qligi uchun model'dan olib tashlandi
     current_question_index = models.IntegerField(default=0)  # Hozir qaysi savolda
     is_terminated = models.BooleanField(default=False)  # O'qituvchi tomonidan to'xtatilganmi
     terminated_by = models.ForeignKey(
@@ -203,15 +202,17 @@ class TestAttempt(models.Model):
         self.score = final_score
         self.total_points = total_points
         self.percentage = (final_score / total_points * 100) if total_points > 0 else 0
-        self.correct_answers = correct_count
-        self.incorrect_answers = incorrect_count
-        self.unanswered = unanswered_count
+        # correct_answers, incorrect_answers, unanswered TestResult model'ida saqlanadi
+        # Database'da bu ustunlar yo'qligi uchun bu yerda saqlanmaydi
         self.save()
         
         return {
             'score': self.score,
             'total_points': self.total_points,
             'percentage': self.percentage,
+            'correct_answers': correct_count,
+            'incorrect_answers': incorrect_count,
+            'unanswered': unanswered_count,
             'all_answered': all_questions_answered,
             'answered_count': answered_questions,
             'total_questions': total_questions,
@@ -274,12 +275,24 @@ class TestResult(models.Model):
         percentage = self.attempt.percentage
         if percentage >= 81:
             return "A'lo"
-        elif percentage >= 61:
+        elif percentage >= 51:
             return 'Yaxshi'
         elif percentage >= 31:
             return 'Qoniqarli'
         else:
             return 'Qoniqarsiz'
+    
+    def get_grade_message(self):
+        """Ball tizimida baholash xabari"""
+        percentage = self.attempt.percentage
+        if percentage >= 81:
+            return "Ilimingiz juda yaxshi ekan. Siz maktab liderlaridan siz!"
+        elif percentage >= 51:
+            return "Ilimingiz juda yaxshi ekan, sal yetmay qol'di."
+        elif percentage >= 31:
+            return "Ilimingiz yaxshi, harakatingizni yanada ko'paytiring."
+        else:
+            return "Ilim olishda to'xtamang."
     
     def __str__(self):
         return f"Result for {self.attempt}"

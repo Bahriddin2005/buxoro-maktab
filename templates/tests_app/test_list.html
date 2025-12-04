@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block title %}
-{% if user.role == 'student' %}Testlar{% else %}Mening Testlarim{% endif %} - Buxoro Bilimdonlar Maktabi
+{% if user.role == 'student' %}📝 Testlar{% else %}📚 Mening Testlarim{% endif %} - Buxoro Bilimdonlar Maktabi
 {% endblock %}
 
 {% block extra_css %}
@@ -184,37 +184,7 @@
                 Filterlash
             </h5>
             <div class="row g-3 align-items-end">
-                <div class="col-md-3">
-                    <label class="form-label text-white-50 small mb-2">
-                        <i class="fas fa-search me-1"></i>
-                        Qidiruv
-                    </label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-dark border-secondary text-white">
-                            <i class="fas fa-search"></i>
-                        </span>
-                        <input type="text" class="form-control bg-dark border-secondary text-white" 
-                               placeholder="Test qidiring..." id="searchInput" onkeyup="filterTests()">
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label text-white-50 small mb-2">
-                        <i class="fas fa-graduation-cap me-1"></i>
-                        Sinf
-                    </label>
-                    <select class="form-select bg-dark border-secondary text-white" id="gradeFilterStudent" onchange="filterTests()">
-                        <option value="">Barcha sinflar</option>
-                        <option value="4">4-sinf</option>
-                        <option value="5">5-sinf</option>
-                        <option value="6">6-sinf</option>
-                        <option value="7">7-sinf</option>
-                        <option value="8">8-sinf</option>
-                        <option value="9">9-sinf</option>
-                        <option value="10">10-sinf</option>
-                        <option value="11">11-sinf</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
+                <div class="col-md-6">
                     <label class="form-label text-white-50 small mb-2">
                         <i class="fas fa-book me-1"></i>
                         Fan
@@ -234,19 +204,7 @@
                         <option value="Tabiiy fan">Tabiiy fan</option>
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <label class="form-label text-white-50 small mb-2">
-                        <i class="fas fa-filter me-1"></i>
-                        Status
-                    </label>
-                    <select class="form-select bg-dark border-secondary text-white" id="statusFilter" onchange="filterTests()">
-                        <option value="">Barcha testlar</option>
-                        <option value="available">Mavjud testlar</option>
-                        <option value="completed">Tugallangan</option>
-                        <option value="in-progress">Jarayonda</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
+                <div class="col-md-3">
                     <button class="btn btn-outline-light w-100" onclick="clearFilters()">
                         <i class="fas fa-times me-2"></i>Tozalash
                     </button>
@@ -397,11 +355,11 @@ async function loadTests(page = 1) {
     console.log(`🔍 Loading tests... Page: ${page}`);
     console.log('🔧 Cache Busting - timestamp:', Date.now());
     try {
-        // Filter parametrlarini olish
-        const gradeFilter = document.getElementById('gradeFilter')?.value || document.getElementById('gradeFilterStudent')?.value || '';
+        // Filter parametrlarini olish (faqat Fan)
+        const gradeFilter = document.getElementById('gradeFilter')?.value || '';
         const subjectFilter = document.getElementById('subjectFilter')?.value || '';
         const statusFilter = document.getElementById('statusFilter')?.value || '';
-        const searchFilter = (document.getElementById('searchFilter')?.value || document.getElementById('searchInput')?.value || '').trim();
+        const searchFilter = document.getElementById('searchFilter')?.value || '';
         
         // URL parametrlarini yaratish
         const params = new URLSearchParams({
@@ -753,10 +711,10 @@ function filterTests() {
     loadTests(1);
     
     // Frontend'da ham filter (tez ko'rsatish uchun)
-    const searchTerm = (document.getElementById('searchFilter') || document.getElementById('searchInput'))?.value.toLowerCase() || '';
+    const searchTerm = document.getElementById('searchFilter')?.value.toLowerCase() || '';
     const subjectFilter = document.getElementById('subjectFilter')?.value || '';
     const statusFilter = document.getElementById('statusFilter')?.value || '';
-    const gradeFilter = document.getElementById('gradeFilter')?.value || document.getElementById('gradeFilterStudent')?.value || '';
+    const gradeFilter = document.getElementById('gradeFilter')?.value || '';
     
     const testItems = document.querySelectorAll('.test-item');
     let visibleCount = 0;
@@ -817,19 +775,15 @@ function filterTests() {
 }
 
 function clearFilters() {
-    const searchInput = document.getElementById('searchInput');
     const searchFilter = document.getElementById('searchFilter');
     const subjectFilter = document.getElementById('subjectFilter');
     const statusFilter = document.getElementById('statusFilter');
     const gradeFilter = document.getElementById('gradeFilter');
-    const gradeFilterStudent = document.getElementById('gradeFilterStudent');
     
-    if (searchInput) searchInput.value = '';
     if (searchFilter) searchFilter.value = '';
     if (subjectFilter) subjectFilter.value = '';
     if (statusFilter) statusFilter.value = '';
     if (gradeFilter) gradeFilter.value = '';
-    if (gradeFilterStudent) gradeFilterStudent.value = '';
     
     // Filterlarni tozalagandan keyin testlarni qayta yuklash
     currentPage = 1;

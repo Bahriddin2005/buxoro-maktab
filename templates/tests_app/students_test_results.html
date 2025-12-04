@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}O'quvchilar Natijalari - Buxoro Bilimdonlar Maktabi{% endblock %}
+{% block title %}👥 O'quvchilar Natijalari - Buxoro Bilimdonlar Maktabi{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -14,7 +14,7 @@
         --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
         --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        --success-gradient: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+        --success-gradient: linear-gradient(135deg, #00FF88 0%, #00E676 50%, #00C853 100%);
         --warning-gradient: linear-gradient(135deg, #FF9800 0%, #f57c00 100%);
         --danger-gradient: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
         --info-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -78,14 +78,15 @@
     
     /* Export button - Premium design */
     .btn-export {
-        background: var(--success-gradient);
+        background: linear-gradient(135deg, #00FF88 0%, #00E676 50%, #00C853 100%);
+        background-size: 200% 200%;
         border: none;
         padding: 14px 32px;
         border-radius: 16px;
         font-weight: 700;
         font-size: 1rem;
         letter-spacing: 0.3px;
-        box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+        box-shadow: 0 8px 25px rgba(0, 255, 136, 0.6);
         transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         position: relative;
         z-index: 1;
@@ -100,7 +101,7 @@
         width: 0;
         height: 0;
         border-radius: 50%;
-        background: rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.4);
         transform: translate(-50%, -50%);
         transition: width 0.6s, height 0.6s;
     }
@@ -112,7 +113,8 @@
     
     .btn-export:hover {
         transform: translateY(-4px) scale(1.05);
-        box-shadow: 0 12px 35px rgba(76, 175, 80, 0.6);
+        box-shadow: 0 12px 35px rgba(0, 255, 136, 0.8);
+        background-position: 100% 0;
     }
     
     .btn-export:active {
@@ -523,14 +525,16 @@
     
     /* Grade Section - Alohida sinf natijalari */
     .grade-section {
-        margin-bottom: 2.5rem;
-        animation: fadeInUp 0.6s ease-out;
+        margin-bottom: 3rem;
+        animation: fadeInUp 0.8s ease-out;
+        position: relative;
+        transition: transform 0.3s ease;
     }
     
     @keyframes fadeInUp {
         from {
             opacity: 0;
-            transform: translateY(30px);
+            transform: translateY(40px);
         }
         to {
             opacity: 1;
@@ -538,16 +542,44 @@
         }
     }
     
+    .grade-section:hover {
+        transform: translateY(-2px);
+    }
+    
     .grade-section-header {
-        background: var(--primary-gradient);
-        padding: 1.5rem 2rem;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.95) 0%, rgba(118, 75, 162, 0.95) 100%);
+        padding: 1.75rem 2.5rem;
         border-radius: 20px 20px 0 0;
         display: flex;
         justify-content: space-between;
         align-items: center;
         flex-wrap: wrap;
-        gap: 1rem;
-        box-shadow: var(--shadow-medium);
+        gap: 1.5rem;
+        box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .grade-section-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+        animation: pulse 4s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% {
+            opacity: 0.3;
+            transform: scale(1);
+        }
+        50% {
+            opacity: 0.6;
+            transform: scale(1.1);
+        }
     }
     
     .grade-section-header h3 {
@@ -555,57 +587,215 @@
         font-weight: 800;
         margin: 0;
         color: white;
-        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        text-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
         display: flex;
         align-items: center;
         gap: 0.75rem;
+        position: relative;
+        z-index: 1;
+        animation: fadeInLeft 0.6s ease-out;
+    }
+    
+    @keyframes fadeInLeft {
+        from {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
     }
     
     .grade-section-header .grade-badge {
-        background: rgba(255, 255, 255, 0.2);
-        padding: 8px 20px;
-        border-radius: 25px;
+        background: rgba(255, 255, 255, 0.25);
+        padding: 10px 24px;
+        border-radius: 30px;
         font-size: 1.2rem;
         font-weight: 700;
-        backdrop-filter: blur(10px);
-        border: 2px solid rgba(255, 255, 255, 0.3);
+        backdrop-filter: blur(15px);
+        border: 2px solid rgba(255, 255, 255, 0.4);
+        box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
+        transition: all 0.3s ease;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .grade-section-header .grade-badge:hover {
+        background: rgba(255, 255, 255, 0.35);
+        transform: scale(1.05);
+        box-shadow: 0 6px 20px rgba(255, 255, 255, 0.2);
     }
     
     .grade-stats {
         display: flex;
         gap: 1.5rem;
         flex-wrap: wrap;
+        position: relative;
+        z-index: 1;
     }
     
     .grade-stat-item {
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        background: rgba(255, 255, 255, 0.15);
-        padding: 8px 16px;
-        border-radius: 15px;
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.2);
+        padding: 10px 18px;
+        border-radius: 20px;
+        backdrop-filter: blur(15px);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        animation: fadeInUp 0.6s ease-out backwards;
+    }
+    
+    .grade-stat-item:nth-child(1) {
+        animation-delay: 0.1s;
+    }
+    
+    .grade-stat-item:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+    
+    .grade-stat-item:nth-child(3) {
+        animation-delay: 0.3s;
+    }
+    
+    .grade-stat-item:hover {
+        transform: translateY(-3px) scale(1.05);
+        background: rgba(255, 255, 255, 0.3);
+        box-shadow: 0 6px 20px rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.5);
     }
     
     .grade-stat-item i {
-        font-size: 1.1rem;
+        font-size: 1.2rem;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
     }
     
     .grade-stat-item span {
         font-weight: 700;
         font-size: 1.1rem;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    }
+    
+    /* Grade Export Button - Har bir sinf uchun */
+    .grade-export-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        background: linear-gradient(135deg, #00FF88 0%, #00E676 50%, #00C853 100%);
+        background-size: 200% 200%;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 15px;
+        font-weight: 700;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        box-shadow: 0 8px 25px rgba(0, 255, 136, 0.6);
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(255, 255, 255, 0.4);
+        position: relative;
+        z-index: 1;
+        overflow: hidden;
+        animation: fadeInRight 0.6s ease-out 0.4s backwards;
+    }
+    
+    @keyframes fadeInRight {
+        from {
+            opacity: 0;
+            transform: translateX(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    
+    .grade-export-btn::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        transform: translate(-50%, -50%);
+        transition: width 0.6s, height 0.6s;
+        z-index: -1;
+    }
+    
+    .grade-export-btn:hover {
+        transform: translateY(-3px) scale(1.08);
+        box-shadow: 0 12px 35px rgba(0, 255, 136, 0.8);
+        background-position: 100% 0;
+        border-color: rgba(255, 255, 255, 0.6);
+    }
+    
+    .grade-export-btn:hover::before {
+        width: 300px;
+        height: 300px;
+    }
+    
+    .grade-export-btn:active {
+        transform: translateY(-1px) scale(1.05);
+        box-shadow: 0 4px 15px rgba(0, 200, 81, 0.5);
+    }
+    
+    .grade-export-btn i {
+        font-size: 1.2rem;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+        transition: transform 0.3s ease;
+    }
+    
+    .grade-export-btn:hover i {
+        transform: rotate(15deg) scale(1.1);
+    }
+    
+    .grade-export-btn span {
+        font-size: 0.95rem;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        letter-spacing: 0.3px;
+    }
+    
+    @media (max-width: 768px) {
+        .grade-export-btn {
+            padding: 8px 16px;
+            font-size: 0.85rem;
+        }
+        
+        .grade-export-btn span {
+            display: none;
+        }
+        
+        .grade-export-btn i {
+            font-size: 1.2rem;
+        }
     }
     
     .grade-section-body {
-        background: rgba(255, 255, 255, 0.08);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
         border-radius: 0 0 20px 20px;
-        padding: 2rem;
-        border: 1px solid rgba(255, 255, 255, 0.15);
+        padding: 2.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.2);
         border-top: none;
-        box-shadow: var(--shadow-medium);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        position: relative;
+    }
+    
+    .grade-section-body::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
     }
     
     .grade-table-container {
@@ -653,14 +843,41 @@
     
     .no-grade-results {
         text-align: center;
-        padding: 3rem 2rem;
+        padding: 4rem 2rem;
         color: rgba(255, 255, 255, 0.6);
+        animation: fadeIn 0.6s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
     }
     
     .no-grade-results i {
-        font-size: 4rem;
-        opacity: 0.4;
-        margin-bottom: 1rem;
+        font-size: 5rem;
+        opacity: 0.3;
+        margin-bottom: 1.5rem;
+        animation: float 3s ease-in-out infinite;
+        filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+    }
+    
+    @keyframes float {
+        0%, 100% {
+            transform: translateY(0);
+        }
+        50% {
+            transform: translateY(-10px);
+        }
+    }
+    
+    .no-grade-results p {
+        font-size: 1.1rem;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.7);
     }
     
     /* Students Grid - O'quvchilar ro'yxati */
@@ -672,18 +889,19 @@
     }
     
     .student-card {
-        background: rgba(255, 255, 255, 0.08);
-        backdrop-filter: blur(15px);
-        -webkit-backdrop-filter: blur(15px);
-        border-radius: 16px;
-        padding: 1.5rem;
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 18px;
+        padding: 1.75rem;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         position: relative;
         overflow: hidden;
         display: flex;
         flex-direction: column;
-        gap: 1rem;
+        gap: 1.25rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     }
     
     .student-card::before {
@@ -691,39 +909,64 @@
         position: absolute;
         top: 0;
         left: 0;
-        width: 4px;
+        width: 5px;
         height: 100%;
-        background: var(--primary-gradient);
+        background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
         transform: scaleY(0);
-        transition: transform 0.3s ease;
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        box-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
+    }
+    
+    .student-card::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+        opacity: 0;
+        transition: opacity 0.4s ease;
     }
     
     .student-card:hover {
-        transform: translateY(-5px) scale(1.02);
-        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
-        border-color: rgba(255, 255, 255, 0.3);
-        background: rgba(255, 255, 255, 0.12);
+        transform: translateY(-8px) scale(1.03);
+        box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
+        border-color: rgba(255, 255, 255, 0.4);
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.1) 100%);
     }
     
     .student-card:hover::before {
         transform: scaleY(1);
     }
     
+    .student-card:hover::after {
+        opacity: 1;
+    }
+    
     .student-number {
         position: absolute;
-        top: 1rem;
-        right: 1rem;
-        width: 40px;
-        height: 40px;
+        top: 1.25rem;
+        right: 1.25rem;
+        width: 45px;
+        height: 45px;
         border-radius: 50%;
-        background: var(--primary-gradient);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-weight: 700;
-        font-size: 1.1rem;
+        font-weight: 800;
+        font-size: 1.2rem;
         color: white;
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        transition: all 0.3s ease;
+        z-index: 2;
+    }
+    
+    .student-card:hover .student-number {
+        transform: scale(1.15) rotate(5deg);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
     }
     
     .student-info {
@@ -753,21 +996,54 @@
         align-items: center;
         justify-content: space-between;
         gap: 1rem;
-        padding: 1rem;
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 1.25rem;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+        border-radius: 15px;
+        border: 2px solid rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .student-percentage::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        transition: left 0.5s ease;
+    }
+    
+    .student-card:hover .student-percentage::before {
+        left: 100%;
+    }
+    
+    .student-card:hover .student-percentage {
+        border-color: rgba(255, 255, 255, 0.25);
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.1) 100%);
     }
     
     .percentage-value {
-        font-size: 2rem;
-        font-weight: 800;
-        padding: 0.5rem 1.5rem;
-        border-radius: 12px;
+        font-size: 2.2rem;
+        font-weight: 900;
+        padding: 0.75rem 1.75rem;
+        border-radius: 15px;
         color: white;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        min-width: 100px;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        min-width: 110px;
         text-align: center;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .student-card:hover .percentage-value {
+        transform: scale(1.05);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
     }
     
     .badge-percentage.bg-success {
@@ -843,10 +1119,12 @@
                 </p>
             </div>
             <div class="mt-3 mt-md-0 d-flex flex-column align-items-md-end gap-2">
+                {% if user.role == 'admin' or user.role == 'teacher' %}
                 <button class="btn btn-export text-white" onclick="exportToExcel()">
                     <i class="fas fa-file-excel me-2"></i>
                     Barcha Sinflar Excel'ga
                 </button>
+                {% if user.role == 'admin' %}
                 <div class="grade-export-menu mt-1">
                     {% for i in "12345678901"|make_list %}
                     <button type="button"
@@ -857,6 +1135,8 @@
                     </button>
                     {% endfor %}
                 </div>
+                {% endif %}
+                {% endif %}
         </div>
     </div>
 
@@ -972,10 +1252,15 @@ function debounceSearch() {
 
 async function loadResults() {
     try {
-        const grade = document.getElementById('filterGrade').value;
-        const subject = document.getElementById('filterSubject').value;
-        const test = document.getElementById('filterTest').value;
-        const student = document.getElementById('searchStudent').value;
+        const gradeEl = document.getElementById('filterGrade');
+        const subjectEl = document.getElementById('filterSubject');
+        const testEl = document.getElementById('filterTest');
+        const studentEl = document.getElementById('searchStudent');
+        
+        const grade = gradeEl ? gradeEl.value : '';
+        const subject = subjectEl ? subjectEl.value : '';
+        const test = testEl ? testEl.value : '';
+        const student = studentEl ? studentEl.value : '';
         
         const params = new URLSearchParams();
         if (grade) params.append('grade', grade);
@@ -1033,24 +1318,33 @@ async function loadResults() {
         
     } catch (error) {
         console.error('Error:', error);
-        document.getElementById('gradeResultsContainer').innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-exclamation-triangle text-danger"></i>
-                <h5 class="text-white mt-3">Xatolik yuz berdi</h5>
-                <p class="text-white-50">${error.message}</p>
-                <button class="btn btn-primary mt-3" onclick="loadResults()">
-                    <i class="fas fa-redo me-2"></i>Qayta urinish
-                </button>
-            </div>
-        `;
+        const container = document.getElementById('gradeResultsContainer');
+        if (container) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-exclamation-triangle text-danger"></i>
+                    <h5 class="text-white mt-3">Xatolik yuz berdi</h5>
+                    <p class="text-white-50">${error.message || 'Noma\'lum xatolik'}</p>
+                    <button class="btn btn-primary mt-3" onclick="loadResults()">
+                        <i class="fas fa-redo me-2"></i>Qayta urinish
+                    </button>
+                </div>
+            `;
+        }
     }
 }
 
 function updateStatistics(stats) {
-    document.getElementById('totalResults').textContent = stats.total_results || 0;
-    document.getElementById('avgPercentage').textContent = (stats.avg_percentage || 0).toFixed(1) + '%';
-    document.getElementById('excellentCount').textContent = stats.excellent_count || 0;
-    document.getElementById('poorCount').textContent = stats.poor_count || 0;
+    if (!stats) stats = {};
+    const totalResultsEl = document.getElementById('totalResults');
+    const avgPercentageEl = document.getElementById('avgPercentage');
+    const excellentCountEl = document.getElementById('excellentCount');
+    const poorCountEl = document.getElementById('poorCount');
+    
+    if (totalResultsEl) totalResultsEl.textContent = stats.total_results || 0;
+    if (avgPercentageEl) avgPercentageEl.textContent = (stats.avg_percentage || 0).toFixed(1) + '%';
+    if (excellentCountEl) excellentCountEl.textContent = stats.excellent_count || 0;
+    if (poorCountEl) poorCountEl.textContent = stats.poor_count || 0;
 }
 
 function displayResults(results) {
@@ -1156,19 +1450,25 @@ function displayResults(results) {
                                 (${gradeStudents.length} ta o'quvchi)
                             </span>
                         </h3>
-                        <div class="grade-stats">
-                            <div class="grade-stat-item">
-                                <i class="fas fa-percentage text-white"></i>
-                                <span class="text-white">O'rtacha: ${gradeStats.avgPercentage.toFixed(1)}%</span>
+                        <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                            <div class="grade-stats">
+                                <div class="grade-stat-item">
+                                    <i class="fas fa-percentage text-white"></i>
+                                    <span class="text-white">O'rtacha: ${gradeStats.avgPercentage.toFixed(1)}%</span>
+                                </div>
+                                <div class="grade-stat-item">
+                                    <i class="fas fa-star text-warning"></i>
+                                    <span class="text-white">A'lo: ${gradeStats.excellent}</span>
+                                </div>
+                                <div class="grade-stat-item">
+                                    <i class="fas fa-check-circle text-success"></i>
+                                    <span class="text-white">Yaxshi: ${gradeStats.good}</span>
+                                </div>
                             </div>
-                            <div class="grade-stat-item">
-                                <i class="fas fa-star text-warning"></i>
-                                <span class="text-white">A'lo: ${gradeStats.excellent}</span>
-                            </div>
-                            <div class="grade-stat-item">
-                                <i class="fas fa-check-circle text-success"></i>
-                                <span class="text-white">Yaxshi: ${gradeStats.good}</span>
-                            </div>
+                            <button class="grade-export-btn" onclick="exportGradeExcel(${grade})" title="${grade}-sinf natijalarini Excel'ga yuklab olish" ${gradeStudents.length === 0 ? 'style="opacity: 0.7;"' : ''}>
+                                <i class="fas fa-file-excel"></i>
+                                <span>Excel'ga Yuklash</span>
+                            </button>
                         </div>
                     </div>
                     <div class="grade-section-body">
@@ -1226,19 +1526,24 @@ function displayResults(results) {
             `;
         }
         
-        container.innerHTML = html;
+        if (container) {
+            container.innerHTML = html;
+        }
     } catch (error) {
         console.error('Error in displayResults:', error);
-        container.innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-exclamation-triangle text-danger"></i>
-                <h5 class="text-white mt-3">Xatolik yuz berdi</h5>
-                <p class="text-white-50">${error.message}</p>
-                <button class="btn btn-primary mt-3" onclick="loadResults()">
-                    <i class="fas fa-redo me-2"></i>Qayta urinish
-                </button>
-            </div>
-        `;
+        const container = document.getElementById('gradeResultsContainer');
+        if (container) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-exclamation-triangle text-danger"></i>
+                    <h5 class="text-white mt-3">Xatolik yuz berdi</h5>
+                    <p class="text-white-50">${error.message || 'Noma\'lum xatolik'}</p>
+                    <button class="btn btn-primary mt-3" onclick="loadResults()">
+                        <i class="fas fa-redo me-2"></i>Qayta urinish
+                    </button>
+                </div>
+            `;
+        }
     }
 }
 
@@ -1290,28 +1595,69 @@ function getPercentageColorClass(percentage) {
 
 async function loadFilterOptions() {
     try {
-        // Load subjects and tests from current results
-        const subjects = [...new Set(allResults.map(r => r.test.subject).filter(Boolean))].sort();
         const subjectSelect = document.getElementById('filterSubject');
+        if (!subjectSelect) {
+            console.warn('filterSubject element not found');
+            return;
+        }
         const currentSubject = subjectSelect.value;
+        
+        {% if user.role == 'teacher' %}
+        // O'qituvchi uchun faqat o'zining fanlarini ko'rsatish
+        const teacherSubjects = [
+            {% for subject in teacher_subjects %}
+                '{{ subject|escapejs }}',
+            {% endfor %}
+        ];
+        
+        // O'qituvchi yaratgan testlarning fanlarini olish
+        const resultSubjects = [...new Set(allResults.map(r => r.test.subject).filter(Boolean))];
+        
+        // Faqat o'qituvchining fanlari bilan kesishgan fanlarni ko'rsatish
+        const availableSubjects = resultSubjects.filter(s => teacherSubjects.includes(s));
+        
+        subjectSelect.innerHTML = '<option value="">Barcha fanlar</option>' + 
+            availableSubjects.sort().map(s => `<option value="${s}" ${s === currentSubject ? 'selected' : ''}>${s}</option>`).join('');
+        {% else %}
+        // Admin uchun barcha fanlar
+        const subjects = [...new Set(allResults.map(r => r.test.subject).filter(Boolean))].sort();
         subjectSelect.innerHTML = '<option value="">Barcha fanlar</option>' + 
             subjects.map(s => `<option value="${s}" ${s === currentSubject ? 'selected' : ''}>${s}</option>`).join('');
+        {% endif %}
         
         // Get unique tests
         const testsMap = new Map();
         allResults.forEach(r => {
             if (r.test && r.test.id) {
-                testsMap.set(r.test.id, {id: r.test.id, title: r.test.title});
+                testsMap.set(r.test.id, {id: r.test.id, title: r.test.title, subject: r.test.subject});
             }
         });
         const tests = Array.from(testsMap.values());
         const testSelect = document.getElementById('filterTest');
         const currentTest = testSelect.value;
         let testOptions = '<option value="">Barcha testlar</option>';
+        
+        {% if user.role == 'teacher' %}
+        // O'qituvchi uchun faqat o'zining fanlari bilan testlarni ko'rsatish
+        const teacherSubjectsList = [
+            {% for subject in teacher_subjects %}
+                '{{ subject|escapejs }}',
+            {% endfor %}
+        ];
+        tests.forEach(t => {
+            if (teacherSubjectsList.includes(t.subject)) {
+                const selected = t.id.toString() === currentTest ? 'selected' : '';
+                testOptions += `<option value="${t.id}" ${selected}>${t.title}</option>`;
+            }
+        });
+        {% else %}
+        // Admin uchun barcha testlar
         tests.forEach(t => {
             const selected = t.id.toString() === currentTest ? 'selected' : '';
             testOptions += `<option value="${t.id}" ${selected}>${t.title}</option>`;
         });
+        {% endif %}
+        
         testSelect.innerHTML = testOptions;
             
         // Fallback removed - all-results endpoint no longer exists
@@ -1321,32 +1667,68 @@ async function loadFilterOptions() {
 }
 
 function exportToExcel() {
-    const grade = document.getElementById('filterGrade').value;
-    const subject = document.getElementById('filterSubject').value;
-    const test = document.getElementById('filterTest').value;
-    
-    const params = new URLSearchParams();
-    if (grade) params.append('grade', grade);
-    if (subject) params.append('subject', subject);
-    if (test) params.append('test', test);
-    
-    window.location.href = `/tests/students-test-results/export/?${params.toString()}`;
+    try {
+        const gradeEl = document.getElementById('filterGrade');
+        const subjectEl = document.getElementById('filterSubject');
+        const testEl = document.getElementById('filterTest');
+        
+        const params = new URLSearchParams();
+        if (gradeEl && gradeEl.value) params.append('grade', gradeEl.value);
+        if (subjectEl && subjectEl.value) params.append('subject', subjectEl.value);
+        if (testEl && testEl.value) params.append('test', testEl.value);
+        
+        window.location.href = `/tests/students-test-results/export/?${params.toString()}`;
+    } catch (error) {
+        console.error('Export error:', error);
+        alert('Excel export qilishda xatolik yuz berdi. Iltimos, qayta urinib ko\'ring.');
+    }
 }
 
 function exportGradeExcel(grade) {
-    const subject = document.getElementById('filterSubject').value;
-    const test = document.getElementById('filterTest').value;
-    
-    const params = new URLSearchParams();
-    params.append('grade', String(grade));
-    if (subject) params.append('subject', subject);
-    if (test) params.append('test', test);
-    
-    window.location.href = '/tests/students-test-results/export/?' + params.toString();
+    try {
+        if (!grade) {
+            console.error('Grade parameter is required');
+            return;
+        }
+        
+        const subjectEl = document.getElementById('filterSubject');
+        const testEl = document.getElementById('filterTest');
+        
+        const params = new URLSearchParams();
+        params.append('grade', String(grade));
+        if (subjectEl && subjectEl.value) params.append('subject', subjectEl.value);
+        if (testEl && testEl.value) params.append('test', testEl.value);
+        
+        window.location.href = '/tests/students-test-results/export/?' + params.toString();
+    } catch (error) {
+        console.error('Export error:', error);
+        alert('Excel export qilishda xatolik yuz berdi. Iltimos, qayta urinib ko\'ring.');
+    }
 }
 
 // Load results on page load
+// Sahifa yuklanganda o'qituvchining fanlarini ko'rsatish
+function initializeTeacherFilters() {
+    {% if user.role == 'teacher' %}
+    const subjectSelect = document.getElementById('filterSubject');
+    const teacherSubjects = [
+        {% for subject in teacher_subjects %}
+            '{{ subject|escapejs }}',
+        {% endfor %}
+    ];
+    
+    // O'qituvchining fanlarini dropdown'ga qo'shish
+    teacherSubjects.forEach(subject => {
+        const option = document.createElement('option');
+        option.value = subject;
+        option.textContent = subject;
+        subjectSelect.appendChild(option);
+    });
+    {% endif %}
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+    initializeTeacherFilters();
     loadResults();
 });
 </script>

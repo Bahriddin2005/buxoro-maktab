@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Test Natijalari - Buxoro Bilimdonlar Maktabi{% endblock %}
+{% block title %}📋 Test Natijalari - Buxoro Bilimdonlar Maktabi{% endblock %}
 
 {% block extra_css %}
 <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
@@ -869,7 +869,8 @@
         </div>
     </div>
 
-    <!-- Grade Filters (for teachers/admins) -->
+    <!-- Grade Filters (for admin only) -->
+    {% if user.role == 'admin' %}
     <div id="gradeFilters" class="grade-filters" style="display: none;" data-aos="fade-up">
         <button class="grade-filter-btn active" onclick="filterByGrade('all')">
             <i class="fas fa-th me-2"></i>Barchasi
@@ -882,6 +883,7 @@
         <button class="grade-filter-btn" onclick="filterByGrade('10')">10-sinf</button>
         <button class="grade-filter-btn" onclick="filterByGrade('11')">11-sinf</button>
     </div>
+    {% endif %}
 
     <!-- Results Grid -->
     <div id="resultsGrid" class="results-grid" style="display: none;"></div>
@@ -981,6 +983,7 @@ function displayStudentResult(result) {
         total_points: result.total_points,
         percentage: result.percentage,
         grade: result.grade || grade,
+        grade_message: result.grade_message || null, // Server'dan kelgan xabar
         time_taken: result.time_taken,
         finished_at: result.finished_at,
         correct_answers: result.correct_answers,
@@ -1007,8 +1010,11 @@ function displayTeacherResults(results, testId) {
     document.getElementById('statisticsSection').style.display = 'block';
     displayStatistics(results);
 
-    // Show grade filters
-    document.getElementById('gradeFilters').style.display = 'flex';
+    // Show grade filters (only for admin)
+    const gradeFiltersEl = document.getElementById('gradeFilters');
+    if (gradeFiltersEl && data.user_role === 'admin') {
+        gradeFiltersEl.style.display = 'flex';
+    }
 
     // Show results grid
     displayResultsGrid(results);
@@ -1181,6 +1187,50 @@ function createResultCard(result, isStudentView = false) {
         `;
     }
 
+    // Baholash xabarini olish (server'dan yoki frontend'da hisoblash)
+    const gradeMessage = getGradeMessage(result.percentage, result.grade_message);
+    const gradeIcon = getGradeIcon(result.percentage);
+    
+    // O'quvchi uchun maxsus ko'rinish
+    const motivationHTML = isStudentView ? `
+        <div class="motivation-message" style="
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 15px;
+            background: ${result.percentage >= 81 ? 'linear-gradient(135deg, rgba(46, 213, 115, 0.2) 0%, rgba(46, 213, 115, 0.1) 100%)' : 
+                         result.percentage >= 51 ? 'linear-gradient(135deg, rgba(255, 193, 7, 0.2) 0%, rgba(255, 193, 7, 0.1) 100%)' : 
+                         result.percentage >= 31 ? 'linear-gradient(135deg, rgba(52, 152, 219, 0.2) 0%, rgba(52, 152, 219, 0.1) 100%)' : 
+                         'linear-gradient(135deg, rgba(231, 76, 60, 0.2) 0%, rgba(231, 76, 60, 0.1) 100%)'};
+            border: 2px solid ${result.percentage >= 81 ? '#2ed573' : 
+                                result.percentage >= 51 ? '#ffc107' : 
+                                result.percentage >= 31 ? '#3498db' : 
+                                '#e74c3c'};
+            text-align: center;
+        ">
+            <div style="font-size: 3rem; margin-bottom: 15px;">
+                <i class="fas ${gradeIcon}" style="color: ${result.percentage >= 81 ? '#2ed573' : 
+                                                           result.percentage >= 51 ? '#ffc107' : 
+                                                           result.percentage >= 31 ? '#3498db' : 
+                                                           '#e74c3c'};"></i>
+            </div>
+            <h4 style="
+                color: ${result.percentage >= 81 ? '#2ed573' : 
+                        result.percentage >= 51 ? '#ffc107' : 
+                        result.percentage >= 31 ? '#3498db' : 
+                        '#e74c3c'};
+                font-weight: 700;
+                margin-bottom: 10px;
+            ">${result.grade || grade}</h4>
+            <p style="
+                color: white;
+                font-size: 1.1rem;
+                line-height: 1.6;
+                margin: 0;
+                font-weight: 500;
+            ">${gradeMessage}</p>
+        </div>
+    ` : '';
+    
     card.innerHTML = `
         <div class="student-info">
             <div class="student-avatar">${initials}</div>
@@ -1231,6 +1281,8 @@ function createResultCard(result, isStudentView = false) {
             </span>
         </div>
         
+        ${motivationHTML}
+        
         ${mistakesHTML}
     `;
 
@@ -1276,10 +1328,39 @@ function displayStatistics(results) {
 }
 
 function getGrade(percentage) {
+    // Yangi ball tizimi: 0-30: Qoniqarsiz, 31-50: Qoniqarli, 51-80: Yaxshi, 81-100: A'lo
+    // Ball tizimida baholash
     if (percentage >= 81) return "A'lo";
-    if (percentage >= 61) return "Yaxshi";
+    if (percentage >= 51) return "Yaxshi";
     if (percentage >= 31) return "Qoniqarli";
     return "Qoniqarsiz";
+}
+
+function getGradeMessage(percentage, gradeMessageFromServer = null) {
+    // Agar server'dan xabar kelsa, uni ishlatish
+    if (gradeMessageFromServer) {
+        return gradeMessageFromServer;
+    }
+    
+    // Frontend'da hisoblash (fallback)
+    // Yangi ball tizimi: 0-30: Qoniqarsiz, 31-50: Qoniqarli, 51-80: Yaxshi, 81-100: A'lo
+    if (percentage >= 81) {
+        return "Ilimingiz juda yaxshi ekan. Siz maktab liderlaridan siz!";
+    } else if (percentage >= 51) {
+        return "Ilimingiz juda yaxshi ekan, sal yetmay qol'di.";
+    } else if (percentage >= 31) {
+        return "Ilimingiz yaxshi, harakatingizni yanada ko'paytiring.";
+    } else {
+        return "Ilim olishda to'xtamang.";
+    }
+}
+
+function getGradeIcon(percentage) {
+    // Har bir baho uchun ikonka
+    if (percentage >= 81) return "fa-trophy";
+    if (percentage >= 51) return "fa-star";
+    if (percentage >= 31) return "fa-thumbs-up";
+    return "fa-arrow-up";
 }
 
 function getInitials(name) {
