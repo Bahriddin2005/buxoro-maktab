@@ -11,7 +11,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-change-this-in-produc
 DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 
 ALLOWED_HOSTS = [
-    '176.96.241.174', 
+    '95.182.119.206', 
     'buxorobilimdonlarmaktabi.uz',
     'www.buxorobilimdonlarmaktabi.uz',
     'localhost',
