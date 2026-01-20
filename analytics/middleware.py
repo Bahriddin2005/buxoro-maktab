@@ -1,16 +1,22 @@
-from django.utils.deprecation import MiddlewareMixin
-from django.utils import timezone
+from django.utils import timezone  # pyright: ignore[reportMissingImports]
 from .models import UserActivity, PageView
 import time
 
 
-class AnalyticsMiddleware(MiddlewareMixin):
+class AnalyticsMiddleware:
     """User activity va page views ni track qilish"""
     
-    def process_request(self, request):
+    def __init__(self, get_response):
+        self.get_response = get_response
+    
+    def __call__(self, request):
         # Request boshlanish vaqtini saqlash
         request._analytics_start_time = time.time()
-        return None
+        
+        response = self.get_response(request)
+        
+        # Process response
+        return self.process_response(request, response)
     
     def process_response(self, request, response):
         try:
@@ -31,9 +37,9 @@ class AnalyticsMiddleware(MiddlewareMixin):
                     response_time=response_time
                 )
         
-        except Exception as e:
+        except Exception:
             # Xatolik analytics'ga ta'sir qilmasligi kerak
-            print(f"Analytics middleware error: {str(e)}")
+            pass
         
         return response
     
@@ -77,6 +83,6 @@ class AnalyticsMiddleware(MiddlewareMixin):
                 session_duration=kwargs.get('session_duration')
             )
         
-        except Exception as e:
-            print(f"Log activity error: {str(e)}")
+        except Exception:
+            pass
 

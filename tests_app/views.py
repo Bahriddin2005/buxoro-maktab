@@ -437,10 +437,6 @@ def submit_answer(request, attempt_id):
         question_id = data.get('question_id')
         question = get_object_or_404(Question, id=question_id, test=attempt.test)
         
-        # Debug logging
-        print(f"Submitting answer for question {question_id}, type: {question.question_type}")
-        print(f"Data received: {data}")
-        
         answer, created = Answer.objects.get_or_create(
             attempt=attempt,
             question=question
@@ -452,15 +448,11 @@ def submit_answer(request, attempt_id):
         
         if question.question_type == 'text_answer':
             answer.text_answer = data.get('text_answer', '')
-            print(f"Text answer saved: {answer.text_answer}")
         else:
             choice_ids = data.get('choice_ids', [])
             if choice_ids:
                 choices = Choice.objects.filter(id__in=choice_ids, question=question)
-                print(f"Choices found: {list(choices.values_list('id', flat=True))}")
                 answer.selected_choices.set(choices)
-            else:
-                print("No choice_ids provided")
         
         answer.save()
         
@@ -472,7 +464,6 @@ def submit_answer(request, attempt_id):
         
         # Verify answer was saved
         saved_choices = list(answer.selected_choices.values_list('id', flat=True))
-        print(f"Answer saved successfully. Selected choices: {saved_choices}")
         
         return JsonResponse({
             'message': 'Answer saved',
@@ -480,13 +471,9 @@ def submit_answer(request, attempt_id):
             'text_answer': answer.text_answer
         })
         
-    except json.JSONDecodeError as e:
-        print(f"JSON decode error: {str(e)}")
+    except json.JSONDecodeError:
         return JsonResponse({'error': 'Invalid JSON data'}, status=400)
     except Exception as e:
-        print(f"Error submitting answer: {str(e)}")
-        import traceback
-        traceback.print_exc()
         return JsonResponse({'error': str(e)}, status=500)
 
 @login_required
@@ -1037,6 +1024,27 @@ def create_test_view(request):
                     if not question_text.strip():
                         continue
                     
+                    # Rasm faylini tekshirish va yuklash
+                    question_image = None
+                    if i < len(question_images):
+                        uploaded_file = question_images[i]
+                        # Fayl mavjudligini va hajmini tekshirish
+                        if uploaded_file and uploaded_file.size > 0:
+                            # Maksimal hajm: 1GB
+                            MAX_FILE_SIZE = 1024 * 1024 * 1024  # 1GB
+                            if uploaded_file.size > MAX_FILE_SIZE:
+                                return JsonResponse({
+                                    'success': False, 
+                                    'error': f'Savol {i+1} uchun rasm hajmi 1GB dan oshmasligi kerak!'
+                                }, status=400)
+                            # Fayl turini tekshirish
+                            if not uploaded_file.content_type.startswith('image/'):
+                                return JsonResponse({
+                                    'success': False, 
+                                    'error': f'Savol {i+1} uchun faqat rasm fayllari ruxsat etilgan!'
+                                }, status=400)
+                            question_image = uploaded_file
+                    
                     question = Question.objects.create(
                         test=test,
                         question_text=question_text,
@@ -1044,7 +1052,7 @@ def create_test_view(request):
                         points=float(points_list[i]) if points_list[i] else 1.0,
                         order=i + 1,
                         explanation=explanations[i] if i < len(explanations) else '',
-                        image=question_images[i] if i < len(question_images) and question_images[i] else None
+                        image=question_image
                     )
                     
                     # Javob variantlarini qo'shish
@@ -1147,9 +1155,6 @@ def request_retake_view(request, test_id):
         })
         
     except Exception as e:
-        print(f"Request retake error: {str(e)}")
-        import traceback
-        traceback.print_exc()
         return JsonResponse({'error': f'Xatolik yuz berdi: {str(e)}'}, status=500)
 
 @login_required  
@@ -1262,9 +1267,6 @@ def retake_requests_view(request):
                             'updated_at': row_dict.get('updated_at').isoformat() if row_dict.get('updated_at') else ''
                         })
             except Exception as query_error:
-                import traceback
-                print(f"SQL Query Error: {str(query_error)}")
-                traceback.print_exc()
                 # Fallback - Django ORM ishlatish (agar SQL xatolik bersa)
                 requests_qs = TestRetakeRequest.objects.select_related(
                     'student', 'test', 'approved_by'
@@ -1292,8 +1294,9 @@ def retake_requests_view(request):
                                 if attempt_values:
                                     previous_score = attempt_values.get('score') or 0
                                     previous_percentage = attempt_values.get('percentage') or 0
-                            except Exception as e:
-                                print(f"Error loading attempt {req.previous_attempt_id}: {str(e)}")
+                            except Exception:
+                                previous_score = 0
+                                previous_percentage = 0
                         
                         # Status display
                         status_display_map = {
@@ -1328,10 +1331,7 @@ def retake_requests_view(request):
                             'created_at': req.created_at.isoformat() if req.created_at else '',
                             'updated_at': req.updated_at.isoformat() if req.updated_at else ''
                         })
-                    except Exception as e:
-                        import traceback
-                        print(f"Error processing retake request {req.id if hasattr(req, 'id') else 'unknown'}: {str(e)}")
-                        traceback.print_exc()
+                    except Exception:
                         continue
             
             return JsonResponse({
@@ -1527,11 +1527,6 @@ def edit_test_view(request, test_id):
     if request.method == 'POST':
         try:
             # Check if it's FormData (for image upload) or JSON
-            print(f"Request content type: {request.content_type}")
-            print(f"Request method: {request.method}")
-            print(f"Request POST data: {request.POST}")
-            print(f"Request FILES: {request.FILES}")
-            
             if request.content_type and 'multipart/form-data' in request.content_type:
                 # Handle FormData for image upload or removal
                 
@@ -1583,12 +1578,6 @@ def edit_test_view(request, test_id):
                 explanation = request.POST.get('explanation', '')
                 question_image = request.FILES.get('question_image')
                 
-                print(f"Question text: {question_text}")
-                print(f"Question type: {question_type}")
-                print(f"Points: {points}")
-                print(f"Explanation: {explanation}")
-                print(f"Question image: {question_image}")
-                
                 # Validation
                 if not question_text:
                     return JsonResponse({
@@ -1613,9 +1602,7 @@ def edit_test_view(request, test_id):
                         explanation=explanation,
                         image=question_image
                     )
-                    print(f"Question created successfully with ID: {question.id}")
                 except Exception as e:
-                    print(f"Error creating question: {e}")
                     return JsonResponse({
                         'success': False,
                         'error': f'Question yaratishda xatolik: {str(e)}'
@@ -1634,11 +1621,10 @@ def edit_test_view(request, test_id):
                                     choice_text=choice_text,
                                     is_correct=is_correct
                                 )
-                                print(f"Choice {choice_index} created: {choice_text}")
                             choice_index += 1
-                except Exception as e:
-                    print(f"Error creating choices: {e}")
+                except Exception:
                     # Don't return error here, question is already created
+                    pass
                 
                 return JsonResponse({
                     'success': True,
@@ -1648,7 +1634,6 @@ def edit_test_view(request, test_id):
             else:
                 # Handle JSON data (existing functionality)
                 data = json.loads(request.body)
-                print(f"Received data for test {test_id}: {data}")
             
                 # Update test fields
                 test.title = data.get('title', test.title)
@@ -1661,11 +1646,9 @@ def edit_test_view(request, test_id):
                 test.is_active = data.get('is_active', test.is_active)
                 test.shuffle_questions = data.get('shuffle_questions', test.shuffle_questions)
                 test.save()
-                print(f"Test {test_id} updated successfully")
 
                 # Update questions
                 questions_data = data.get('questions', [])
-                print(f"Processing {len(questions_data)} questions")
             
                 # Get existing question IDs
                 existing_question_ids = set(test.questions.values_list('id', flat=True))
@@ -1673,7 +1656,6 @@ def edit_test_view(request, test_id):
             
                 for i, q_data in enumerate(questions_data):
                     question_id = q_data.get('id')
-                    print(f"Processing question {i+1}: ID={question_id}, Text='{q_data.get('question_text', '')[:50]}...'")
                 
                     if question_id and question_id in existing_question_ids:
                         # Update existing question
@@ -1686,7 +1668,6 @@ def edit_test_view(request, test_id):
                             question.explanation = q_data.get('explanation', '')
                             question.save()
                             new_question_ids.add(question_id)
-                            print(f"Updated existing question {question_id}")
                         
                             # Update choices
                             if q_data['question_type'] in ['single_choice', 'multiple_choice']:
@@ -1727,7 +1708,6 @@ def edit_test_view(request, test_id):
                                         )
                     else:
                         # Create new question
-                        print(f"Creating new question: {q_data['question_text'][:50]}...")
                         question = Question.objects.create(
                             test=test,
                             question_text=q_data['question_text'],
@@ -1737,7 +1717,6 @@ def edit_test_view(request, test_id):
                             explanation=q_data.get('explanation', '')
                         )
                         new_question_ids.add(question.id)
-                        print(f"Created new question with ID {question.id}")
                     
                         if q_data['question_type'] in ['single_choice', 'multiple_choice']:
                             for c_data in q_data.get('choices', []):
@@ -1795,10 +1774,6 @@ def edit_test_view(request, test_id):
                     for c in q.choices.all()
                 ]
             questions_data.append(q_data)
-        
-        print(f"Returning {len(questions_data)} questions for test {test.id}")
-        for i, q in enumerate(questions_data):
-            print(f"  Question {i+1}: {q['question_text'][:50]}... ({q['question_type']})")
         
         return JsonResponse({
             'test': {
@@ -2026,9 +2001,6 @@ def export_subject_results_view(request):
         return response
         
     except Exception as e:
-        print(f"Export error: {str(e)}")
-        import traceback
-        traceback.print_exc()
         return JsonResponse({'error': f'Export xatolik yuz berdi: {str(e)}'}, status=500)
 
 @login_required
@@ -2519,13 +2491,10 @@ def export_subject_results_view(request):
         
         subjects = subjects_query.values_list('subject', flat=True).distinct().order_by('subject')
         
-        print(f"Found subjects: {list(subjects)}")
-        
         for subject in subjects:
             if not subject:
                 continue
                 
-            print(f"\nProcessing subject: {subject}")
             
             # Sheet yaratish
             ws = wb.create_sheet(title=subject[:31])  # Excel sheet name limit: 31 characters
@@ -2641,13 +2610,9 @@ def export_subject_results_view(request):
         # Excel faylni saqlash
         wb.save(response)
         
-        print(f"Excel file created successfully with {len(wb.sheetnames)} sheets")
         return response
         
     except Exception as e:
-        print(f"Export subject results error: {str(e)}")
-        import traceback
-        traceback.print_exc()
         return JsonResponse({'error': f'Export xatolik yuz berdi: {str(e)}'}, status=500)
 
 @login_required

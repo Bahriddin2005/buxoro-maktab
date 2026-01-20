@@ -151,15 +151,13 @@ REST_FRAMEWORK = {
 # Кастомная модель пользователя
 AUTH_USER_MODEL = 'accounts.User'
 
+# Fayl yuklash limitlari (1GB)
+FILE_UPLOAD_MAX_MEMORY_SIZE = 1024 * 1024 * 1024  # 1GB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 1024 * 1024 * 1024  # 1GB
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
+
 # WhiteNoise для статических файлов (уже настроен выше)
 # STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
-# В settings.py проверьте эти пути:
-BASE_DIR = Path(__file__).resolve().parent.parent  # Должно указывать на /home/baxadev/my_test
-
-# Убедитесь что эти пути существуют
-# print("BASE_DIR:", BASE_DIR)
-# print("Static dirs:", BASE_DIR / 'static')
 
 # Jazzmin Settings
 JAZZMIN_SETTINGS = {

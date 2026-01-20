@@ -555,7 +555,7 @@
             </label>
             <input type="file" class="form-control" name="question_image[]" accept="image/*">
             <div class="form-text text-muted mt-1" style="font-size: 0.85rem;">
-                JPG, PNG, GIF formatlari qo'llab-quvvatlanadi. Maksimal hajm: 5MB
+                JPG, PNG, GIF formatlari qo'llab-quvvatlanadi. Maksimal hajm: 1GB
             </div>
             <div class="image-preview mt-2" style="display: none;">
                 <img src="" alt="Preview" style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 2px solid rgba(255,255,255,0.2);">
@@ -620,9 +620,10 @@ document.addEventListener('DOMContentLoaded', function() {
             imageInput.addEventListener('change', function(e) {
                 const file = e.target.files[0];
                 if (file) {
-                    // Fayl hajmini tekshirish (5MB)
-                    if (file.size > 5 * 1024 * 1024) {
-                        alert('⚠️ Rasm hajmi 5MB dan katta bo\'lishi mumkin emas!');
+                    // Fayl hajmini tekshirish (1GB)
+                    const MAX_FILE_SIZE = 1024 * 1024 * 1024; // 1GB
+                    if (file.size > MAX_FILE_SIZE) {
+                        alert('⚠️ Rasm hajmi 1GB dan katta bo\'lishi mumkin emas!');
                         e.target.value = '';
                         return;
                     }

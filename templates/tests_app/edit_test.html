@@ -540,7 +540,7 @@
               <i class="fas fa-image me-2"></i>Savol uchun rasm (ixtiyoriy)
             </label>
             <input type="file" class="form-control glass-input" name="question_image" accept="image/*">
-            <div class="form-text text-white-50 mt-2">JPG, PNG, GIF formatlari qo'llab-quvvatlanadi. Maksimal hajm: 5MB</div>
+            <div class="form-text text-white-50 mt-2">JPG, PNG, GIF formatlari qo'llab-quvvatlanadi. Maksimal hajm: 1GB</div>
           </div>
           <div class="d-grid gap-2">
             <button type="submit" class="btn btn-primary btn-lg">
@@ -1199,7 +1199,7 @@ function createQuestionHtml(question, index) {
         html += `<div class='mb-2'>`;
         html += `<label class='form-label'>Rasm yuklash (ixtiyoriy)</label>`;
         html += `<input type='file' class='form-control glass-input question-image-upload' accept='image/*' data-question-id='${question.id}'>`;
-        html += `<div class='form-text text-white-50'>JPG, PNG, GIF formatlari. Max: 5MB</div>`;
+        html += `<div class='form-text text-white-50'>JPG, PNG, GIF formatlari. Max: 1GB</div>`;
         html += `</div>`;
     }
     
@@ -1303,9 +1303,10 @@ function addQuestionEventListeners(questionElement) {
             const file = e.target.files[0];
             if (!file) return;
             
-            // Validate file size (5MB max)
-            if (file.size > 5 * 1024 * 1024) {
-                alert('❌ Rasm hajmi 5MB dan oshmasligi kerak!');
+            // Validate file size (1GB max)
+            const MAX_FILE_SIZE = 1024 * 1024 * 1024; // 1GB
+            if (file.size > MAX_FILE_SIZE) {
+                alert('❌ Rasm hajmi 1GB dan oshmasligi kerak!');
                 this.value = '';
                 return;
             }
