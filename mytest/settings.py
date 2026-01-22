@@ -222,6 +222,8 @@ JAZZMIN_SETTINGS = {
     # Additional links to include in the user menu on the top right
     "usermenu_links": [
         {"name": "Saytga O'tish", "url": "/", "new_window": True},
+        {"name": "📥 O'qituvchilar Login", "url": "/admin/export-teachers-credentials/", "permissions": ["auth.view_user"]},
+        {"name": "📥 O'quvchilar Login", "url": "/admin/export-students-credentials/", "permissions": ["auth.view_user"]},
         {"model": "auth.user"}
     ],
 
@@ -243,6 +245,21 @@ JAZZMIN_SETTINGS = {
 
     # List of apps to base side menu ordering off of
     "order_with_respect_to": ["accounts", "tests_app"],
+    
+    # Custom links for side menu
+    "custom_links": {
+        "accounts": [{
+            "name": "📥 O'qituvchilar Login Export",
+            "url": "/admin/export-teachers-credentials/",
+            "icon": "fas fa-download",
+            "permissions": ["auth.view_user"]
+        }, {
+            "name": "📥 O'quvchilar Login Export",
+            "url": "/admin/export-students-credentials/",
+            "icon": "fas fa-download",
+            "permissions": ["auth.view_user"]
+        }]
+    },
 
     # Custom icons for side menu apps (Font Awesome icons)
     "icons": {
