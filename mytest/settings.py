@@ -203,6 +203,10 @@ JAZZMIN_SETTINGS = {
 
         # external url that opens in a new window (Permissions can be added)
         {"name": "Saytga O'tish", "url": "/", "new_window": True},
+        
+        # Export credentials links
+        {"name": "📥 O'qituvchilar Login", "url": "/admin/export-teachers-credentials/", "permissions": ["auth.view_user"]},
+        {"name": "📥 O'quvchilar Login", "url": "/admin/export-students-credentials/", "permissions": ["auth.view_user"]},
 
         # model admin to link to (Permissions checked against model)
         {"model": "auth.User"},

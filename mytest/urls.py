@@ -5,6 +5,7 @@ from django.conf.urls.static import static
 from django.shortcuts import render
 from django.http import HttpResponse, FileResponse
 from django.views.decorators.cache import cache_control
+from accounts.admin_views import export_teachers_credentials_view, export_students_credentials_view
 import os
 # from accounts.urls import *
 # from tests_app.urls import *
@@ -47,6 +48,8 @@ def favicon_view(request):
 urlpatterns = [
     path("", home_view, name='home'),
     path("favicon.ico", favicon_view, name='favicon'),
+    path('admin/export-teachers-credentials/', admin.site.admin_view(export_teachers_credentials_view), name='admin_export_teachers'),
+    path('admin/export-students-credentials/', admin.site.admin_view(export_students_credentials_view), name='admin_export_students'),
     path("admin/", admin.site.urls),
     path('accounts/', include('accounts.urls')),
     path('tests/', include('tests_app.urls')),
