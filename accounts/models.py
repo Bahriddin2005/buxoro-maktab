@@ -18,6 +18,7 @@ class User(AbstractUser):
     class_name = models.CharField(max_length=10, blank=True, null=True)  # For students
     grade = models.IntegerField(null=True, blank=True)  # For students
     subject = models.CharField(max_length=50, blank=True, null=True)  # For teachers
+    temporary_password = models.CharField(max_length=128, blank=True, null=True, help_text="Foydalanuvchi yaratilganda parolni saqlash uchun (export uchun)")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     email = models.EmailField(unique=True)

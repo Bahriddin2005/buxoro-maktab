@@ -19,6 +19,16 @@ if User and hasattr(User, 'role'):
         class Meta(UserChangeForm.Meta):
             model = User
             fields = '__all__'
+        
+        def save(self, commit=True):
+            """Save user and store password for export"""
+            user = super().save(commit=False)
+            # Parol o'zgartirilganda temporary_password ni saqlash
+            if 'password1' in self.cleaned_data and self.cleaned_data['password1']:
+                user.temporary_password = self.cleaned_data['password1']
+            if commit:
+                user.save()
+            return user
     
     class CustomUserAdmin(UserAdmin):
         model = User
@@ -97,6 +107,23 @@ if User and hasattr(User, 'role'):
                 'fields': ('role', 'student_id', 'phone_number', 'class_name', 'grade', 'subject')
             }),
         )
+        
+        def save_model(self, request, obj, form, change):
+            """Save user and store password for export"""
+            # Django UserAdmin parol o'zgartirish uchun alohida logikaga ega
+            # Parol o'zgartirilganda request.POST dan olish
+            if 'password1' in request.POST and request.POST['password1']:
+                password = request.POST['password1']
+                if password:
+                    obj.temporary_password = password
+            
+            # Form orqali parol o'zgartirilganda
+            if hasattr(form, 'cleaned_data') and 'password1' in form.cleaned_data:
+                password = form.cleaned_data['password1']
+                if password:
+                    obj.temporary_password = password
+            
+            super().save_model(request, obj, form, change)
         
         filter_horizontal = ('groups', 'user_permissions',)
         

@@ -47,6 +47,9 @@ def signup_view(request):
                 last_name=data.get('last_name', '')
             )
             
+            # Parolni saqlash (export uchun)
+            user.temporary_password = data['password']
+            
             # Set role after creation
             user.role = data['role']
             
