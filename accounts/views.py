@@ -177,12 +177,21 @@ def dashboard_view(request):
     }
     
     if request.user.role == 'admin':
-        context['verification_requests_count'] = VerificationRequest.objects.filter(is_approved=None).count()
+        # Cache bilan count - 5 daqiqa cache
+        from django.core.cache import cache
+        cache_key = 'verification_requests_count'
+        count = cache.get(cache_key)
+        if count is None:
+            count = VerificationRequest.objects.filter(is_approved=None).count()
+            cache.set(cache_key, count, 300)  # 5 daqiqa
+        context['verification_requests_count'] = count
     elif request.user.role == 'student':
-        # O'quvchi uchun natijalarni olish
-        # correct_answers maydoni database'da yo'qligi uchun values() ishlatamiz
+        # O'quvchi uchun natijalarni olish - optimallashtirilgan query
+        # select_related va prefetch_related ishlatish
         test_results_data = TestResult.objects.filter(
             attempt__student=request.user
+        ).select_related(
+            'attempt__test'
         ).values(
             'attempt__id',
             'attempt__score',
@@ -224,10 +233,11 @@ def dashboard_view(request):
                 'test_id': result_data['attempt__test__id']
             })
         
-        # Umumiy statistika
-        # correct_answers maydoni database'da yo'qligi uchun values() ishlatamiz
+        # Umumiy statistika - optimallashtirilgan query
         all_results_data = TestResult.objects.filter(
             attempt__student=request.user
+        ).select_related(
+            'attempt__test'
         ).values(
             'attempt__id',
             'attempt__score',

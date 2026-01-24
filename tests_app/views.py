@@ -49,34 +49,52 @@ def test_list_view(request):
                     Q(description__icontains=search_filter)
                 )
             
+            # Bulk query optimizatsiyasi - N+1 query muammosini hal qilish
+            test_ids = list(tests.values_list('id', flat=True))
+            
+            # Barcha attempt'larni bir marta olish
+            attempts_dict = {}
+            if test_ids:
+                attempts = TestAttempt.objects.filter(
+                    test_id__in=test_ids,
+                    student=request.user
+                ).values('test_id', 'id', 'is_completed', 'percentage')
+                
+                for att in attempts:
+                    test_id = att['test_id']
+                    if test_id not in attempts_dict:
+                        attempts_dict[test_id] = {
+                            'id': att['id'],
+                            'is_completed': att['is_completed'],
+                            'percentage': att.get('percentage')
+                        }
+            
+            # Barcha retake request'larni bir marta olish
+            retake_permissions = set()
+            if test_ids:
+                retakes = TestRetakeRequest.objects.filter(
+                    student=request.user,
+                    test_id__in=test_ids,
+                    status='approved',
+                    is_used=False
+                ).values_list('test_id', flat=True)
+                retake_permissions = set(retakes)
+            
             test_data = []
             for test in tests:
-                # correct_answers maydoni database'da yo'qligi uchun values() ishlatamiz
-                attempt_data = TestAttempt.objects.filter(
-                    test=test, 
-                    student=request.user
-                ).values('id', 'is_completed', 'percentage').first()
-                
+                # Attempt ma'lumotlari
+                attempt_data = attempts_dict.get(test.id)
                 attempt = None
                 if attempt_data:
-                    # Minimal object yaratish
                     class MinimalAttempt:
                         def __init__(self, data):
                             self.id = data['id']
                             self.is_completed = data['is_completed']
                             self.percentage = data.get('percentage')
-                    
                     attempt = MinimalAttempt(attempt_data)
                 
                 # Qayta ishlash ruxsati bormi tekshirish
-                has_retake_permission = False
-                if attempt and attempt.is_completed:
-                    has_retake_permission = TestRetakeRequest.objects.filter(
-                        student=request.user,
-                        test=test,
-                        status='approved',
-                        is_used=False
-                    ).exists()
+                has_retake_permission = test.id in retake_permissions
                 
                 # O'quvchi testni yecha oladimi?
                 can_attempt = test.is_active and (

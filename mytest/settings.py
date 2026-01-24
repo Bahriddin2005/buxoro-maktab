@@ -46,6 +46,7 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.cache.UpdateCacheMiddleware',  # Cache middleware (yuqorida)
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -53,6 +54,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'mytest.middleware.NoCacheMiddleware',
     'analytics.middleware.AnalyticsMiddleware',  # Analytics tracking
+    'django.middleware.cache.FetchFromCacheMiddleware',  # Cache middleware (pastda)
 ]
 
 ROOT_URLCONF = 'mytest.urls'
@@ -150,6 +152,22 @@ REST_FRAMEWORK = {
 
 # Кастомная модель пользователя
 AUTH_USER_MODEL = 'accounts.User'
+
+# Caching konfiguratsiyasi - performance uchun
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+        'OPTIONS': {
+            'MAX_ENTRIES': 1000,
+            'CULL_FREQUENCY': 3,
+        }
+    }
+}
+
+# Cache timeout'lar (sekundlarda)
+CACHE_MIDDLEWARE_SECONDS = 60  # 1 daqiqa
+CACHE_MIDDLEWARE_KEY_PREFIX = 'buxoro_maktab'
 
 # Fayl yuklash limitlari (1GB)
 FILE_UPLOAD_MAX_MEMORY_SIZE = 1024 * 1024 * 1024  # 1GB

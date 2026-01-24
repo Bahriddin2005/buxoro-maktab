@@ -20,22 +20,47 @@ class AnalyticsMiddleware:
     
     def process_response(self, request, response):
         try:
+            # Static files, admin panel va API endpointlarini skip qilish
+            path = request.path
+            
+            # Skip qilish kerak bo'lgan pathlar
+            skip_paths = [
+                '/static/',
+                '/media/',
+                '/admin/static/',
+                '/admin/jsi18n/',
+                '/favicon.ico',
+                '/__debug__/',
+                '/api/',
+            ]
+            
+            # Agar path skip qilish kerak bo'lsa, analytics'ni o'tkazib yuborish
+            if any(path.startswith(skip) for skip in skip_paths):
+                return response
+            
+            # Faqat 200 OK response'larni track qilish
+            if response.status_code != 200:
+                return response
+            
             # IP address olish
             ip_address = self.get_client_ip(request)
             
             # User agent
             user_agent = request.META.get('HTTP_USER_AGENT', '')[:500]
             
-            # Page view ni saqlash
+            # Page view ni saqlash (faqat muhim pathlar uchun)
             if hasattr(request, '_analytics_start_time'):
                 response_time = (time.time() - request._analytics_start_time) * 1000  # milliseconds
                 
-                PageView.objects.create(
-                    path=request.path,
-                    user=request.user if request.user.is_authenticated else None,
-                    ip_address=ip_address,
-                    response_time=response_time
-                )
+                # Faqat response_time 1000ms dan kichik bo'lsa yoki authenticated user bo'lsa
+                # Bu juda sekin request'larni filter qiladi
+                if response_time < 1000 or request.user.is_authenticated:
+                    PageView.objects.create(
+                        path=path[:255],  # Max length limit
+                        user=request.user if request.user.is_authenticated else None,
+                        ip_address=ip_address,
+                        response_time=response_time
+                    )
         
         except Exception:
             # Xatolik analytics'ga ta'sir qilmasligi kerak
