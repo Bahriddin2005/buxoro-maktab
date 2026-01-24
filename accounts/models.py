@@ -53,7 +53,14 @@ class User(AbstractUser):
         - Shell orqali
         """
         if raw_password:
-            self.temporary_password = raw_password
+            # temporary_password maydoni mavjudligini xavfsiz tekshirish
+            try:
+                # hasattr() ishlatish - model'da maydon mavjudligini tekshirish
+                if hasattr(self, 'temporary_password'):
+                    self.temporary_password = raw_password
+            except Exception:
+                # Agar xatolik bo'lsa, o'tkazib yuborish (parol hash qilinadi)
+                pass
         super().set_password(raw_password)
     
     def save(self, *args, **kwargs):

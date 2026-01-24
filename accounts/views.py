@@ -112,7 +112,16 @@ def login_view(request):
                 return JsonResponse({'error': 'Username/Email and password are required'}, status=400)
             
             # Try to authenticate with username first
-            user = authenticate(request, username=username_or_email, password=password)
+            try:
+                user = authenticate(request, username=username_or_email, password=password)
+            except Exception as auth_error:
+                # Database yoki authentication xatosi
+                import traceback
+                print(f"Authentication error: {str(auth_error)}")
+                print(traceback.format_exc())
+                return JsonResponse({
+                    'error': f'Authentication error: {str(auth_error)}'
+                }, status=500)
             
             # If that fails, try to find user by email and authenticate
             if user is None:
@@ -121,19 +130,37 @@ def login_view(request):
                     user = authenticate(request, username=user_obj.username, password=password)
                 except User.DoesNotExist:
                     pass
+                except Exception as db_error:
+                    # Database xatosi
+                    import traceback
+                    print(f"Database error during login: {str(db_error)}")
+                    print(traceback.format_exc())
+                    return JsonResponse({
+                        'error': f'Database error: {str(db_error)}'
+                    }, status=500)
             
             if user is not None:
                 if not user.is_verified:
                     return JsonResponse({'error': 'Account not verified yet. Please wait for admin approval.'}, status=403)
                 
-                login(request, user)
+                try:
+                    login(request, user)
+                except Exception as login_error:
+                    import traceback
+                    print(f"Login session error: {str(login_error)}")
+                    print(traceback.format_exc())
+                    return JsonResponse({
+                        'error': f'Session error: {str(login_error)}'
+                    }, status=500)
                 
                 # Track login activity
                 try:
                     from analytics.middleware import AnalyticsMiddleware
                     AnalyticsMiddleware.log_activity(user, 'login', request)
-                except:
-                    pass  # Analytics xatosi login'ni to'xtatmasligi kerak
+                except Exception as analytics_error:
+                    # Analytics xatosi login'ni to'xtatmasligi kerak
+                    print(f"Analytics error (non-critical): {str(analytics_error)}")
+                    pass
                 
                 return JsonResponse({
                     'message': 'Login successful',
@@ -151,7 +178,24 @@ def login_view(request):
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON data'}, status=400)
         except Exception as e:
-            return JsonResponse({'error': 'An error occurred during login'}, status=500)
+            # Barcha boshqa xatoliklarni log qilish
+            import traceback
+            error_message = str(e)
+            error_traceback = traceback.format_exc()
+            print(f"Login error: {error_message}")
+            print(error_traceback)
+            
+            # Production'da aniq xatolikni ko'rsatish (DEBUG=False bo'lsa, faqat umumiy xabar)
+            from django.conf import settings
+            if settings.DEBUG:
+                return JsonResponse({
+                    'error': f'An error occurred during login: {error_message}',
+                    'details': error_traceback
+                }, status=500)
+            else:
+                return JsonResponse({
+                    'error': 'An error occurred during login. Please try again or contact administrator.'
+                }, status=500)
     
     return render(request, 'accounts/login.html')
 
