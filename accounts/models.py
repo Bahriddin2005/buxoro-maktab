@@ -43,6 +43,19 @@ class User(AbstractUser):
             if domain not in allowed_domains:
                 raise ValidationError('Email must be from school domain.')
     
+    def set_password(self, raw_password):
+        """
+        Parolni hash qilishdan oldin temporary_password ga saqlash.
+        Bu har qanday joyda parol o'zgarganda ishlaydi:
+        - Signup
+        - Admin panel
+        - Password reset
+        - Shell orqali
+        """
+        if raw_password:
+            self.temporary_password = raw_password
+        super().set_password(raw_password)
+    
     def save(self, *args, **kwargs):
         # Skip clean() validation for superusers
         if not self.is_superuser:
