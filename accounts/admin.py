@@ -138,59 +138,12 @@ if User and hasattr(User, 'role'):
             from accounts.admin_views import export_students_credentials_view
             return export_students_credentials_view(request)
         
-        def export_teachers_with_reset(self, request, queryset):
-            """Export ALL teachers credentials with password reset for missing (ignores queryset selection)"""
-            from django.http import QueryDict
-            from accounts.admin_views import export_teachers_credentials_view
-            # GET parametriga reset_missing=1 qo'shish
-            request.GET = QueryDict('reset_missing=1')
-            return export_teachers_credentials_view(request)
-        
-        def export_students_with_reset(self, request, queryset):
-            """Export ALL students credentials with password reset for missing (ignores queryset selection)"""
-            from django.http import QueryDict
-            from accounts.admin_views import export_students_credentials_view
-            # GET parametriga reset_missing=1 qo'shish
-            request.GET = QueryDict('reset_missing=1')
-            return export_students_credentials_view(request)
-        
-        def reset_selected_passwords(self, request, queryset):
-            """Tanlangan foydalanuvchilar uchun yangi parol generatsiya qilish"""
-            import secrets
-            import string
-            
-            def generate_password(length=12):
-                alphabet = string.ascii_letters + string.digits
-                password = [
-                    secrets.choice(string.ascii_uppercase),
-                    secrets.choice(string.ascii_lowercase),
-                    secrets.choice(string.digits),
-                ]
-                password += [secrets.choice(alphabet) for _ in range(length - 3)]
-                secrets.SystemRandom().shuffle(password)
-                return ''.join(password)
-            
-            count = 0
-            for user in queryset:
-                new_password = generate_password()
-                user.set_password(new_password)
-                user.save()
-                count += 1
-            
-            self.message_user(request, f'{count} ta foydalanuvchi uchun yangi parol berildi.')
-        
-        export_teachers_credentials.short_description = "📥 O'qituvchilar - mavjud parollar bilan"
-        export_students_credentials.short_description = "📥 O'quvchilar - mavjud parollar bilan"
-        export_teachers_with_reset.short_description = "🔑 O'qituvchilar - YANGI parol berib yuklab olish"
-        export_students_with_reset.short_description = "🔑 O'quvchilar - YANGI parol berib yuklab olish"
-        reset_selected_passwords.short_description = "🔐 Tanlanganlarga yangi parol berish"
+        export_teachers_credentials.short_description = "📥 O'qituvchilar login, email va parollarini yuklab olish"
+        export_students_credentials.short_description = "📥 O'quvchilar login, email va parollarini yuklab olish"
         
         actions = [
             export_teachers_credentials, 
             export_students_credentials,
-            export_teachers_with_reset,
-            export_students_with_reset,
-            reset_selected_passwords
         ]
     
     admin.site.register(User, CustomUserAdmin)
