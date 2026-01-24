@@ -6,6 +6,7 @@ from django.shortcuts import render
 from django.http import HttpResponse, FileResponse
 from django.views.decorators.cache import cache_control
 from accounts.admin_views import export_teachers_credentials_view, export_students_credentials_view
+from django.shortcuts import render
 import os
 # from accounts.urls import *
 # from tests_app.urls import *
@@ -15,6 +16,10 @@ def home_view(request):
 
 def test_debug_view(request):
     return render(request, 'test_debug.html')
+
+def export_credentials_page_view(request):
+    """Login va parollarni yuklab olish uchun sahifa"""
+    return render(request, 'admin/export_credentials.html')
 
 @cache_control(max_age=31536000)  # 1 yil cache
 def favicon_view(request):
@@ -48,6 +53,7 @@ def favicon_view(request):
 urlpatterns = [
     path("", home_view, name='home'),
     path("favicon.ico", favicon_view, name='favicon'),
+    path('admin/export-credentials/', export_credentials_page_view, name='export_credentials_page'),
     path('admin/export-teachers-credentials/', admin.site.admin_view(export_teachers_credentials_view), name='admin_export_teachers'),
     path('admin/export-students-credentials/', admin.site.admin_view(export_students_credentials_view), name='admin_export_students'),
     path("admin/", admin.site.urls),

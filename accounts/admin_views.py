@@ -52,25 +52,13 @@ def generate_secure_password(length=12):
 @admin_required
 def export_teachers_credentials_view(request):
     """
-    O'qituvchilar login, email va parollarini yuklab olish (FAQAT ADMIN UCHUN)
-    Parolsiz foydalanuvchilarga avtomatik yangi parol beriladi
+    O'qituvchilar login, email va JORIY PAROLLARINI yuklab olish (FAQAT ADMIN UCHUN)
+    Faqat mavjud (saqlangan) parollar ko'rsatiladi
     """
     teachers = User.objects.filter(role='teacher', is_verified=True).order_by('first_name', 'last_name')
     
     if not teachers.exists():
         return HttpResponse('O\'qituvchilar topilmadi!', status=404)
-    
-    # Parolsiz foydalanuvchilarga avtomatik yangi parol berish
-    reset_count = 0
-    for user in teachers:
-        if not user.temporary_password:
-            new_password = generate_secure_password()
-            user.set_password(new_password)  # Bu temporary_password ni ham saqlaydi
-            user.save()
-            reset_count += 1
-    
-    # Queryset ni yangilash
-    teachers = User.objects.filter(role='teacher', is_verified=True).order_by('first_name', 'last_name')
     
     wb = Workbook()
     ws = wb.active
@@ -102,8 +90,6 @@ def export_teachers_credentials_view(request):
     ws.merge_cells(merge_range_info)
     info_cell = ws['A2']
     info_text = f"Export qilingan sana: {timezone.now().strftime('%Y-%m-%d %H:%M:%S')} | Jami: {teachers.count()} ta"
-    if reset_count > 0:
-        info_text += f" | Yangi parol berilgan: {reset_count} ta"
     info_cell.value = info_text
     info_cell.font = Font(size=10, italic=True)
     info_cell.alignment = Alignment(horizontal='center')
@@ -124,8 +110,13 @@ def export_teachers_credentials_view(request):
     for idx, user in enumerate(teachers, 1):
         row = header_row + idx
         
-        # Har doim parol bo'lishi kerak (avtomatik generatsiya qilingan bo'lsa ham)
-        password = user.temporary_password if user.temporary_password else generate_secure_password()
+        # Faqat mavjud (saqlangan) parolni ko'rsatish - ro'yxatdan o'tgan paytda kiritilgan parol
+        password = "(Parol saqlanmagan)"
+        try:
+            if hasattr(user, 'temporary_password') and user.temporary_password:
+                password = user.temporary_password
+        except (AttributeError, Exception):
+            password = "(Parol saqlanmagan)"
         
         data = [
             idx,
@@ -138,6 +129,10 @@ def export_teachers_credentials_view(request):
             cell = ws.cell(row=row, column=col, value=value)
             cell.alignment = Alignment(horizontal='left', vertical='center')
             cell.border = thin_border
+            
+            # Parol saqlanmagan bo'lsa, qizil rangda ko'rsatish
+            if col == 4 and value == "(Parol saqlanmagan)":
+                cell.font = Font(italic=True, color="FF0000")
             
             if row % 2 == 0:
                 cell.fill = PatternFill(start_color="E7E6E6", end_color="E7E6E6", fill_type="solid")
@@ -167,25 +162,13 @@ def export_teachers_credentials_view(request):
 @admin_required
 def export_students_credentials_view(request):
     """
-    O'quvchilar login, email va parollarini yuklab olish (FAQAT ADMIN UCHUN)
-    Parolsiz foydalanuvchilarga avtomatik yangi parol beriladi
+    O'quvchilar login, email va JORIY PAROLLARINI yuklab olish (FAQAT ADMIN UCHUN)
+    Faqat mavjud (saqlangan) parollar ko'rsatiladi
     """
     students = User.objects.filter(role='student', is_verified=True).order_by('grade', 'class_name', 'first_name', 'last_name')
     
     if not students.exists():
         return HttpResponse('O\'quvchilar topilmadi!', status=404)
-    
-    # Parolsiz foydalanuvchilarga avtomatik yangi parol berish
-    reset_count = 0
-    for user in students:
-        if not user.temporary_password:
-            new_password = generate_secure_password()
-            user.set_password(new_password)  # Bu temporary_password ni ham saqlaydi
-            user.save()
-            reset_count += 1
-    
-    # Queryset ni yangilash
-    students = User.objects.filter(role='student', is_verified=True).order_by('grade', 'class_name', 'first_name', 'last_name')
     
     wb = Workbook()
     ws = wb.active
@@ -217,8 +200,6 @@ def export_students_credentials_view(request):
     ws.merge_cells(merge_range_info)
     info_cell = ws['A2']
     info_text = f"Export qilingan sana: {timezone.now().strftime('%Y-%m-%d %H:%M:%S')} | Jami: {students.count()} ta"
-    if reset_count > 0:
-        info_text += f" | Yangi parol berilgan: {reset_count} ta"
     info_cell.value = info_text
     info_cell.font = Font(size=10, italic=True)
     info_cell.alignment = Alignment(horizontal='center')
@@ -239,8 +220,13 @@ def export_students_credentials_view(request):
     for idx, user in enumerate(students, 1):
         row = header_row + idx
         
-        # Har doim parol bo'lishi kerak (avtomatik generatsiya qilingan bo'lsa ham)
-        password = user.temporary_password if user.temporary_password else generate_secure_password()
+        # Faqat mavjud (saqlangan) parolni ko'rsatish
+        password = "(Parol saqlanmagan)"
+        try:
+            if hasattr(user, 'temporary_password') and user.temporary_password:
+                password = user.temporary_password
+        except (AttributeError, Exception):
+            password = "(Parol saqlanmagan)"
         
         data = [
             idx,
@@ -253,6 +239,10 @@ def export_students_credentials_view(request):
             cell = ws.cell(row=row, column=col, value=value)
             cell.alignment = Alignment(horizontal='left', vertical='center')
             cell.border = thin_border
+            
+            # Parol saqlanmagan bo'lsa, qizil rangda ko'rsatish
+            if col == 4 and value == "(Parol saqlanmagan)":
+                cell.font = Font(italic=True, color="FF0000")
             
             if row % 2 == 0:
                 cell.fill = PatternFill(start_color="E7E6E6", end_color="E7E6E6", fill_type="solid")
