@@ -31,16 +31,28 @@ class CustomAdminSite(admin.AdminSite):
         # Add export links to context
         extra_context['export_links'] = [
             {
-                'name': "📥 O'qituvchilar Login va Parollarini Yuklab Olish",
+                'name': "📥 O'qituvchilar - Faqat mavjud parollar",
                 'url': reverse('admin:export_teachers_credentials'),
                 'icon': 'fas fa-download',
-                'description': 'Barcha o\'qituvchilar uchun login va email ma\'lumotlarini Excel formatida yuklab olish'
+                'description': 'O\'qituvchilar login va parollari (faqat saqlangan parollar)'
             },
             {
-                'name': "📥 O'quvchilar Login va Parollarini Yuklab Olish",
+                'name': "📥 O'qituvchilar - Yangi parol berish",
+                'url': reverse('admin:export_teachers_credentials') + '?reset_missing=1',
+                'icon': 'fas fa-key',
+                'description': 'Parolsiz o\'qituvchilarga YANGI parol berib yuklab olish'
+            },
+            {
+                'name': "📥 O'quvchilar - Faqat mavjud parollar",
                 'url': reverse('admin:export_students_credentials'),
                 'icon': 'fas fa-download',
-                'description': 'Barcha o\'quvchilar uchun login va email ma\'lumotlarini Excel formatida yuklab olish'
+                'description': 'O\'quvchilar login va parollari (faqat saqlangan parollar)'
+            },
+            {
+                'name': "📥 O'quvchilar - Yangi parol berish",
+                'url': reverse('admin:export_students_credentials') + '?reset_missing=1',
+                'icon': 'fas fa-key',
+                'description': 'Parolsiz o\'quvchilarga YANGI parol berib yuklab olish'
             }
         ]
         
