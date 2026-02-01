@@ -379,7 +379,28 @@
             });
             
             if (response.ok) {
-                const data = await response.json();
+                let data;
+                try {
+                    data = await response.json();
+                } catch (e) {
+                    console.error('JSON parse error:', e);
+                    const text = await response.text();
+                    console.error('Response text:', text.substring(0, 500));
+                    throw new Error('Server noto\'g\'ri javob qaytardi');
+                }
+                
+                // Savollar va variantlar mavjudligini tekshirish
+                if (!data.questions || data.questions.length === 0) {
+                    throw new Error('Testda savollar topilmadi. Iltimos, admin bilan bog\'laning.');
+                }
+                
+                // Har bir savol uchun variantlarni tekshirish
+                for (let q of data.questions) {
+                    if (q.question_type !== 'text_answer' && (!q.choices || q.choices.length === 0)) {
+                        console.warn(`Savol ${q.id} uchun variantlar topilmadi`);
+                    }
+                }
+                
                 testData = data;
                 attemptId = data.attempt_id;
                 questions = data.questions;
@@ -394,38 +415,71 @@
                 const clientTime = new Date();
                 serverTimeOffset = serverCurrentTime.getTime() - clientTime.getTime();
                 
-                console.log('Server current time:', serverCurrentTime.toISOString());
-                console.log('Server start time:', serverStartTime.toISOString());
-                console.log('Client time:', clientTime.toISOString());
-                console.log('Time offset (ms):', serverTimeOffset);
-                console.log('Test will auto-submit at:', new Date(serverStartTime.getTime() + (timeLimit * 1000)).toISOString());
+                console.log('✅ Test yuklandi:', {
+                    questions_count: questions.length,
+                    time_limit: timeLimit,
+                    attempt_id: attemptId
+                });
+                
+                // Har bir savol uchun variantlarni tekshirish va log qilish
+                questions.forEach((q, idx) => {
+                    if (q.question_type !== 'text_answer') {
+                        console.log(`Savol ${idx + 1} (ID: ${q.id}):`, {
+                            text: q.question_text.substring(0, 50),
+                            type: q.question_type,
+                            choices_count: q.choices ? q.choices.length : 0,
+                            choices: q.choices ? q.choices.map(c => c.text.substring(0, 30)) : []
+                        });
+                    }
+                });
+                
+                // Agar savollar bo'sh bo'lsa, xatolik
+                if (questions.length === 0) {
+                    throw new Error('Testda savollar topilmadi!');
+                }
                 
                 initializeTest();
                 startTimer();
                 showQuestion(0);
             } else {
-                const error = await response.json();
+                let error;
+                try {
+                    const text = await response.text();
+                    try {
+                        error = JSON.parse(text);
+                    } catch (e) {
+                        error = { error: `Server xatosi (${response.status}): ${text.substring(0, 500)}` };
+                    }
+                } catch (e) {
+                    error = { error: `Server xatosi (${response.status})` };
+                }
                 console.error('Test start error:', error);
+                console.error('Response status:', response.status);
                 
                 // Xatolikni faqat bir marta ko'rsatish
                 if (!window.errorShown) {
                     window.errorShown = true;
-                showAlert(error.error || 'Testni boshlashda xatolik yuz berdi', 'danger');
-                setTimeout(() => {
-                    window.location.href = '{% url "tests:tests" %}';
-                    }, 3000);
+                    const errorMessage = error.error || `Server xatosi (${response.status}). Iltimos, sahifani yangilang yoki admin bilan bog'laning.`;
+                    showAlert(errorMessage, 'danger');
+                    setTimeout(() => {
+                        window.location.href = '{% url "tests:tests" %}';
+                    }, 5000);
                 }
             }
         } catch (error) {
             console.error('Network error:', error);
+            console.error('Error details:', {
+                message: error.message,
+                stack: error.stack
+            });
             
             // Xatolikni faqat bir marta ko'rsatish
             if (!window.errorShown) {
                 window.errorShown = true;
-            showAlert('Server bilan bog\'lanishda xatolik yuz berdi', 'danger');
-            setTimeout(() => {
-                window.location.href = '{% url "tests:tests" %}';
-                }, 3000);
+                showAlert('Server bilan bog\'lanishda xatolik yuz berdi: ' + error.message, 'danger');
+                setTimeout(() => {
+                    window.location.href = '{% url "tests:tests" %}';
+                }, 5000);
             }
         }
     }
@@ -465,15 +519,32 @@
     }
 
     function showQuestion(index) {
-        if (index < 0 || index >= questions.length) return;
+        if (index < 0 || index >= questions.length) {
+            console.error(`Invalid question index: ${index}, total questions: ${questions.length}`);
+            return;
+        }
         
         currentQuestion = index;
         const question = questions[index];
         
+        // Savol ma'lumotlarini tekshirish
+        if (!question) {
+            console.error(`Question at index ${index} is undefined!`, questions);
+            showAlert('Savol yuklanmadi. Iltimos, sahifani yangilang.', 'danger');
+            return;
+        }
+        
+        console.log(`Showing question ${index + 1}:`, {
+            id: question.id,
+            type: question.question_type,
+            has_choices: question.choices && question.choices.length > 0,
+            choices_count: question.choices ? question.choices.length : 0
+        });
+        
         // Update question display
         document.getElementById('currentQuestionNumber').textContent = index + 1;
-        document.getElementById('questionText').innerHTML = question.question_text;
-        document.getElementById('questionPoints').textContent = `${question.points} ball`;
+        document.getElementById('questionText').innerHTML = question.question_text || 'Savol matni topilmadi';
+        document.getElementById('questionPoints').textContent = `${question.points || 1} ball`;
         
         // Rasm ko'rsatish
         const questionImageContainer = document.getElementById('questionImageContainer');
@@ -514,7 +585,12 @@
             // Multiple choice questions
             const savedChoices = answers[question.id]?.choice_ids || [];
             
-            question.choices.forEach(choice => {
+            // Variantlar mavjudligini tekshirish
+            if (!question.choices || question.choices.length === 0) {
+                console.error(`Savol ${question.id} uchun variantlar topilmadi!`, question);
+                html = '<div class="alert alert-warning">Bu savol uchun variantlar topilmadi. Iltimos, admin bilan bog\'laning.</div>';
+            } else {
+                question.choices.forEach(choice => {
                 const isSelected = savedChoices.includes(choice.id);
                 const inputType = question.question_type === 'single_choice' ? 'radio' : 'checkbox';
                 
@@ -535,7 +611,8 @@
                         </div>
                     </div>
                 `;
-            });
+                });
+            }
             
             if (isAnswered) {
                 html += '<small class="text-warning mt-3 d-block"><i class="fas fa-lock me-1"></i>Javob belgilangan. O\'zgartirish mumkin emas.</small>';

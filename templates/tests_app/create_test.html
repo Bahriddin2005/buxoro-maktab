@@ -372,6 +372,60 @@
         <form id="createTestForm" method="post" enctype="multipart/form-data">
             {% csrf_token %}
             
+            <!-- Word fayldan test yaratish -->
+            <div class="glass-card p-4 mb-4" style="background: rgba(255, 255, 255, 0.1); border: 2px dashed rgba(102, 126, 234, 0.5);">
+                <h5 class="text-white mb-3" style="font-weight: 600;">
+                    <i class="fas fa-file-word me-2 text-primary"></i>Word Fayldan Avtomatik Test Yaratish
+                </h5>
+                <p class="text-white-50 mb-3" style="font-size: 14px;">
+                    Word faylda test ma'lumotlari va savollarni yozib, avtomatik test yarating.
+                </p>
+                
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="wordFile" class="form-label">
+                            <i class="fas fa-upload me-2"></i>Word Fayl Tanlang (.docx, .doc)
+                        </label>
+                        <input type="file" class="form-control" id="wordFile" name="word_file" accept=".docx,.doc">
+                        <div class="form-text text-white-50" style="font-size: 12px;">
+                            Word faylda test nomi, fan va savollar bo'lishi kerak
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="wordTestGrade" class="form-label">
+                            <i class="fas fa-layer-group me-2"></i>Sinf
+                        </label>
+                        <select class="form-select" id="wordTestGrade" name="word_test_grade">
+                            <option value="">Sinf tanlang (ixtiyoriy)</option>
+                            {% for i in "123456789" %}
+                            <option value="{{ i }}">{{ i }}-sinf</option>
+                            {% endfor %}
+                            <option value="10">10-sinf</option>
+                            <option value="11">11-sinf</option>
+                        </select>
+                        <div class="form-text text-white-50" style="font-size: 12px;">
+                            Agar Word faylda sinf bo'lmasa, bu yerdan tanlang
+                        </div>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button type="button" class="btn btn-primary w-100" id="generateFromWordBtn">
+                            <i class="fas fa-magic me-2"></i>Avtomatik Yaratish
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="wordUploadResult" class="mt-3" style="display: none;"></div>
+                
+                <div class="mt-3">
+                    <a href="{% url 'tests:download_word_template' %}" class="btn btn-outline-light btn-sm me-2">
+                        <i class="fas fa-download me-2"></i>Namuna Fayl Yuklab Olish
+                    </a>
+                    <a href="{% url 'tests:word_import_guide' %}" class="btn btn-outline-info btn-sm">
+                        <i class="fas fa-book me-2"></i>Qo'llanma
+                    </a>
+                </div>
+            </div>
+
             <!-- Test asosiy ma'lumotlari -->
             <div class="glass-card p-4 mb-4" style="background: rgba(255, 255, 255, 0.1);">
                 <h5 class="text-white mb-4" style="font-weight: 600;">
@@ -505,7 +559,11 @@
         <div class="row g-3 mb-3">
             <div class="col-md-8">
                 <label class="form-label">Savol matni</label>
-                <textarea class="form-control" name="question_text[]" rows="3" required></textarea>
+                <div class="math-input-wrapper">
+                    {% include 'includes/math_toolbar.html' %}
+                    <textarea class="form-control math-target" name="question_text[]" rows="3" required placeholder="½, ¼, x², x³ kabi matematik belgilar qo'shish uchun yuqoridagi tugmalardan foydalaning"></textarea>
+                </div>
+                <small class="text-white-50">Kasrlar va darajalar — nusxalab saytga qo'yish mumkin</small>
             </div>
             <div class="col-md-2">
                 <label class="form-label">Tur</label>
@@ -522,18 +580,20 @@
         </div>
         
         <div class="choices-container">
-            <div class="mb-3">
+                <div class="mb-3 math-input-wrapper">
                 <label class="form-label mb-3">
                     <i class="fas fa-list-ul me-2"></i>Javob variantlari
                 </label>
+                {% include 'includes/math_toolbar.html' %}
+                <small class="text-white-50 d-block mb-2">Variantga ½ x² yozish: birinchi variant ustiga bosing, keyin yuqoridagi tugmani bosing</small>
                 <div class="choice-items">
                     <div class="choice-item d-flex align-items-center gap-2">
                         <input type="radio" class="form-check-input" name="correct_choice_1" value="0" style="width: 20px; height: 20px;">
-                        <input type="text" class="form-control" name="choices_1[]" placeholder="Javob varianti 1" required>
+                        <input type="text" class="form-control math-target" name="choices_1[]" placeholder="Javob varianti (½, x²)" required>
                     </div>
                     <div class="choice-item d-flex align-items-center gap-2">
                         <input type="radio" class="form-check-input" name="correct_choice_1" value="1" style="width: 20px; height: 20px;">
-                        <input type="text" class="form-control" name="choices_1[]" placeholder="Javob varianti 2" required>
+                        <input type="text" class="form-control math-target" name="choices_1[]" placeholder="Javob varianti (½, x²)" required>
                     </div>
                 </div>
                 <button type="button" class="btn btn-add-choice mt-3 add-choice">
@@ -546,7 +606,10 @@
             <label class="form-label">
                 <i class="fas fa-comment-dots me-2"></i>Tushuntirish (ixtiyoriy)
             </label>
-            <textarea class="form-control" name="explanation[]" rows="2" placeholder="Javob uchun tushuntirish"></textarea>
+            <div class="math-input-wrapper">
+                {% include 'includes/math_toolbar.html' %}
+                <textarea class="form-control math-target" name="explanation[]" rows="2" placeholder="Javob uchun tushuntirish (½, x²)"></textarea>
+            </div>
         </div>
         
         <div class="mt-3">
@@ -567,6 +630,25 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     let questionCount = 0;
+    
+    // Math toolbar - kasrlar va darajalar qo'shish
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('.math-insert');
+        if (!btn) return;
+        e.preventDefault();
+        const text = btn.getAttribute('data-insert') || btn.textContent;
+        const wrapper = btn.closest('.math-input-wrapper');
+        if (!wrapper) return;
+        let target = wrapper.querySelector('.math-target:focus') || wrapper.querySelector('.math-target');
+        if (target) {
+            const start = target.selectionStart || 0;
+            const end = target.selectionEnd || 0;
+            const val = target.value || '';
+            target.value = val.slice(0, start) + text + val.slice(end);
+            target.selectionStart = target.selectionEnd = start + text.length;
+            target.focus();
+        }
+    });
     
     // Savol qo'shish tugmalari
     document.getElementById('addQuestionBtn').addEventListener('click', function() {
@@ -778,7 +860,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const choiceHtml = `
             <div class="choice-item d-flex align-items-center gap-2" style="animation: slideIn 0.3s ease;">
                 <input type="${inputType}" class="form-check-input" name="${inputName}" value="${choiceCount}" style="width: 20px; height: 20px;">
-                <input type="text" class="form-control" name="choices_${questionNum}[]" placeholder="Javob varianti ${choiceCount + 1}" required>
+                <input type="text" class="form-control math-target" name="choices_${questionNum}[]" placeholder="Javob varianti (½, x²)" required>
                 <button type="button" class="btn btn-remove-choice remove-choice">
                     <i class="fas fa-times"></i>
                 </button>
@@ -838,6 +920,123 @@ document.addEventListener('DOMContentLoaded', function() {
             submitBtn.disabled = false;
         });
     });
+    
+    // Word fayldan test yaratish
+    document.getElementById('generateFromWordBtn').addEventListener('click', function() {
+        const wordFileInput = document.getElementById('wordFile');
+        const resultDiv = document.getElementById('wordUploadResult');
+        
+        if (!wordFileInput.files[0]) {
+            showWordResult(resultDiv, 'error', 'Iltimos, Word fayl tanlang!');
+            return;
+        }
+        
+        const formData = new FormData();
+        formData.append('word_file', wordFileInput.files[0]);
+        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+        
+        // Sinfni qo'shish (agar tanlangan bo'lsa)
+        const wordTestGrade = document.getElementById('wordTestGrade').value;
+        if (wordTestGrade) {
+            formData.append('grade', wordTestGrade);
+        }
+        
+        showWordResult(resultDiv, 'info', 'Word fayl yuklanmoqda va tahlil qilinmoqda...');
+        this.disabled = true;
+        this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Yuklanmoqda...';
+        
+        fetch('/tests/create-from-word/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(async response => {
+            // Avval response'ni text sifatida o'qish
+            const text = await response.text();
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch (e) {
+                // Agar JSON bo'lmasa, xatolik
+                console.error('JSON parse error:', e, 'Response text:', text.substring(0, 500));
+                throw new Error('Server noto\'g\'ri javob qaytardi. Status: ' + response.status);
+            }
+            
+            if (!response.ok) {
+                throw new Error(data.error || 'Server xatosi');
+            }
+            return data;
+        })
+        .then(data => {
+            if (data.error) {
+                showWordResult(resultDiv, 'error', data.error + (data.details ? '<br><small>' + data.details + '</small>' : ''));
+            } else if (data.success) {
+                showWordResult(resultDiv, 'success', data.message + (data.test_id ? '<br><a href="/tests/" class="text-white">Testlar ro\'yxatiga o\'tish</a>' : ''));
+                
+                // Form ma'lumotlarini to'ldirish
+                if (data.test_data) {
+                    if (document.getElementById('testTitle')) {
+                        document.getElementById('testTitle').value = data.test_data.title || '';
+                    }
+                    if (document.getElementById('testDescription')) {
+                        document.getElementById('testDescription').value = data.test_data.description || '';
+                    }
+                    if (document.getElementById('testSubject')) {
+                        document.getElementById('testSubject').value = data.test_data.subject || '';
+                    }
+                    if (document.getElementById('testGrade')) {
+                        document.getElementById('testGrade').value = data.test_data.grade || '';
+                    }
+                    if (document.getElementById('timeLimit')) {
+                        document.getElementById('timeLimit').value = data.test_data.time_limit || 45;
+                    }
+                    if (document.getElementById('maxAttempts')) {
+                        document.getElementById('maxAttempts').value = data.test_data.max_attempts || 1;
+                    }
+                    
+                    if (data.test_data.show_results !== undefined && document.getElementById('showResults')) {
+                        document.getElementById('showResults').checked = data.test_data.show_results;
+                    }
+                    if (data.test_data.is_active !== undefined && document.getElementById('isActive')) {
+                        document.getElementById('isActive').checked = data.test_data.is_active;
+                    }
+                    if (data.test_data.shuffle_questions !== undefined && document.getElementById('shuffleQuestions')) {
+                        document.getElementById('shuffleQuestions').checked = data.test_data.shuffle_questions;
+                    }
+                }
+                
+                // Agar test yaratilgan bo'lsa, testlar ro'yxatiga yo'naltirish
+                if (data.test_id && data.auto_created) {
+                    showWordResult(resultDiv, 'success', data.message + '<br><strong>Test muvaffaqiyatli yaratildi va faollashtirildi!</strong><br><a href="/tests/" class="text-white">Testlar ro\'yxatiga o\'tish</a>');
+                    setTimeout(() => {
+                        window.location.href = '/tests/';
+                    }, 3000);
+                }
+            } else {
+                showWordResult(resultDiv, 'error', 'Noma\'lum xatolik yuz berdi');
+            }
+        })
+        .catch(error => {
+            console.error('Word upload error:', error);
+            showWordResult(resultDiv, 'error', 'Xatolik yuz berdi: ' + error.message);
+        })
+        .finally(() => {
+            this.disabled = false;
+            this.innerHTML = '<i class="fas fa-magic me-2"></i>Avtomatik Yaratish';
+        });
+    });
+    
+    function showWordResult(resultDiv, type, message) {
+        resultDiv.innerHTML = `
+            <div class="alert alert-${type === 'error' ? 'danger' : type === 'success' ? 'success' : 'info'}">
+                <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : type === 'success' ? 'check-circle' : 'info-circle'} me-2"></i>
+                ${message}
+            </div>
+        `;
+        resultDiv.style.display = 'block';
+    }
     
     // Add animation keyframes
     const style = document.createElement('style');

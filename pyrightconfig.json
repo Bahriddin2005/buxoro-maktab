@@ -1,0 +1,22 @@
+{
+  "include": [
+    "."
+  ],
+  "exclude": [
+    "**/node_modules",
+    "**/__pycache__",
+    "**/.*"
+  ],
+  "reportMissingImports": "none",
+  "reportMissingTypeStubs": false,
+  "reportUndefinedVariable": "none",
+  "pythonVersion": "3.8",
+  "typeCheckingMode": "off",
+  "executionEnvironments": [
+    {
+      "root": ".",
+      "pythonVersion": "3.8",
+      "extraPaths": []
+    }
+  ]
+}

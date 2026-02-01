@@ -20,13 +20,14 @@
 
     <div class="row">
         <div class="col-lg-8">
-            <div class="glass-card p-4">
+            <!-- Excel Upload -->
+            <div class="glass-card p-4 mb-4">
                 <h4 class="text-white mb-4">
                     <i class="fas fa-file-excel text-success me-2"></i>
                     Excel Fayl Yuklash
                 </h4>
                 
-                <form id="upload-form" enctype="multipart/form-data">
+                <form id="upload-excel-form" enctype="multipart/form-data">
                     {% csrf_token %}
                     <div class="mb-4">
                         <label for="excel_file" class="form-label text-white-50">Excel Fayl Tanlang</label>
@@ -36,13 +37,41 @@
                         </div>
                     </div>
                     
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn btn-success">
                         <i class="fas fa-upload me-2"></i>
-                        Yuklash
+                        Excel Yuklash
                     </button>
                 </form>
                 
-                <div id="upload-result" class="mt-4" style="display: none;">
+                <div id="excel-upload-result" class="mt-4" style="display: none;">
+                    <!-- Upload result will be shown here -->
+                </div>
+            </div>
+            
+            <!-- Word Upload -->
+            <div class="glass-card p-4">
+                <h4 class="text-white mb-4">
+                    <i class="fas fa-file-word text-primary me-2"></i>
+                    Word Fayl Yuklash (Avtomatik Tuzatish)
+                </h4>
+                
+                <form id="upload-word-form" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-4">
+                        <label for="word_file" class="form-label text-white-50">Word Fayl Tanlang</label>
+                        <input type="file" class="form-control" id="word_file" name="word_file" accept=".docx,.doc" required>
+                        <div class="form-text text-white-50">
+                            Faqat .docx va .doc formatidagi fayllar qabul qilinadi
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-upload me-2"></i>
+                        Word Yuklash va Avtomatik Tuzatish
+                    </button>
+                </form>
+                
+                <div id="word-upload-result" class="mt-4" style="display: none;">
                     <!-- Upload result will be shown here -->
                 </div>
             </div>
@@ -56,25 +85,45 @@
                 </h5>
                 
                 <div class="text-white-50">
-                    <p><strong>Majburiy ustunlar:</strong></p>
-                    <ul>
-                        <li>question_text - Savol matni</li>
-                        <li>question_type - Savol turi (single_choice, multiple_choice, text_answer)</li>
-                        <li>points - Ball (raqam)</li>
-                    </ul>
-                    
-                    <p class="mt-3"><strong>Ixtiyoriy ustunlar:</strong></p>
-                    <ul>
-                        <li>explanation - Tushuntirish</li>
-                        <li>choice_1, choice_2, ... - Javob variantlari</li>
-                        <li>choice_1_correct, choice_2_correct, ... - To'g'ri javob (true/false)</li>
-                    </ul>
+                    <h6 class="text-white mb-2">📝 Word Format (Bitta Qoida):</h6>
+                    <div class="alert alert-warning p-2 mb-2" style="font-size: 11px;">
+                        <strong>⚠️ Format:</strong> <code>Raqam. Savol?</code> → <code>a) Variant (✓)</code>
+                    </div>
+                    <pre class="bg-dark p-2 rounded" style="font-size: 11px; line-height: 1.6;">
+1. Savol matni bu yerda?
+
+a) Birinchi variant
+b) Ikkinchi variant
+c) Uchinchi variant (✓)
+d) To'rtinchi variant
+
+2. Ikkinchi savol?
+
+a) Variant 1
+b) Variant 2 (✓)
+c) Variant 3
+d) Variant 4
+                    </pre>
+                    <p class="mt-2" style="font-size: 12px;">
+                        <strong>✅ Bitta Qoida:</strong><br>
+                        1️⃣ <code>1. Savol?</code> - Raqam + nuqta + savol<br>
+                        2️⃣ <code>a) Variant</code> - Harf + qavs + variant<br>
+                        3️⃣ <code>(✓)</code> - To'g'ri javob (faqat bu belgi)
+                    </p>
+                    <p class="mt-2 text-info" style="font-size: 11px;">
+                        <strong>🔢 Math:</strong> Kasrlar ½ ¼ ¾ ²⁄₃ ³⁄₄, darajalar x² x³ x⁴ — nusxalab web saytga tashlasa hech qanday o'zgarishsiz tushadi (Unicode belgilar)
+                    </p>
                 </div>
                 
                 <div class="mt-4">
-                    <a href="#" class="btn btn-outline-light btn-sm" id="download-template">
+                    <a href="{% url 'tests:download_word_template' %}" class="btn btn-outline-light btn-sm mb-2">
                         <i class="fas fa-download me-2"></i>
-                        Namuna Fayl Yuklab Olish
+                        Word Namuna Fayl Yuklab Olish
+                    </a>
+                    <br>
+                    <a href="{% url 'tests:word_import_guide' %}" class="btn btn-outline-info btn-sm mt-2">
+                        <i class="fas fa-book me-2"></i>
+                        Batafsil Qo'llanma
                     </a>
                 </div>
             </div>
@@ -84,22 +133,22 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('upload-form');
-    const resultDiv = document.getElementById('upload-result');
+    // Excel form
+    const excelForm = document.getElementById('upload-excel-form');
+    const excelResultDiv = document.getElementById('excel-upload-result');
     
-    form.addEventListener('submit', function(e) {
+    excelForm.addEventListener('submit', function(e) {
         e.preventDefault();
         
-        const formData = new FormData(form);
+        const formData = new FormData(excelForm);
         const fileInput = document.getElementById('excel_file');
         
         if (!fileInput.files[0]) {
-            showResult('error', 'Iltimos, fayl tanlang!');
+            showResult(excelResultDiv, 'error', 'Iltimos, Excel fayl tanlang!');
             return;
         }
         
-        // Show loading
-        showResult('info', 'Fayl yuklanmoqda...');
+        showResult(excelResultDiv, 'info', 'Excel fayl yuklanmoqda va tahlil qilinmoqda...');
         
         fetch("{% url 'tests:upload_questions' test.id %}", {
             method: 'POST',
@@ -111,18 +160,56 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.error) {
-                showResult('error', data.error);
+                showResult(excelResultDiv, 'error', data.error);
             } else {
-                showResult('success', data.message);
-                form.reset();
+                showResult(excelResultDiv, 'success', data.message);
+                excelForm.reset();
             }
         })
         .catch(error => {
-            showResult('error', 'Xatolik yuz berdi: ' + error.message);
+            showResult(excelResultDiv, 'error', 'Xatolik yuz berdi: ' + error.message);
         });
     });
     
-    function showResult(type, message) {
+    // Word form
+    const wordForm = document.getElementById('upload-word-form');
+    const wordResultDiv = document.getElementById('word-upload-result');
+    
+    wordForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(wordForm);
+        const fileInput = document.getElementById('word_file');
+        
+        if (!fileInput.files[0]) {
+            showResult(wordResultDiv, 'error', 'Iltimos, Word fayl tanlang!');
+            return;
+        }
+        
+        showResult(wordResultDiv, 'info', 'Word fayl yuklanmoqda, tahlil qilinmoqda va avtomatik tuzatilmoqda...');
+        
+        fetch("{% url 'tests:upload_questions_word' test.id %}", {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                showResult(wordResultDiv, 'error', data.error + (data.details ? '<br><small>' + data.details + '</small>' : ''));
+            } else {
+                showResult(wordResultDiv, 'success', data.message + (data.questions_count ? ` (${data.questions_count} ta savol)` : ''));
+                wordForm.reset();
+            }
+        })
+        .catch(error => {
+            showResult(wordResultDiv, 'error', 'Xatolik yuz berdi: ' + error.message);
+        });
+    });
+    
+    function showResult(resultDiv, type, message) {
         resultDiv.innerHTML = `
             <div class="alert alert-${type === 'error' ? 'danger' : type === 'success' ? 'success' : 'info'}">
                 <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : type === 'success' ? 'check-circle' : 'info-circle'} me-2"></i>

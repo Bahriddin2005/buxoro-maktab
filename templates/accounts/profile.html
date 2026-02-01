@@ -258,7 +258,7 @@
         passwordModal.show();
     }
 
-    function updatePassword() {
+    async function updatePassword() {
         const currentPassword = document.getElementById('current_password').value;
         const newPassword = document.getElementById('new_password').value;
         const confirmPassword = document.getElementById('confirm_password').value;
@@ -278,11 +278,34 @@
             return;
         }
         
-        // Here you would implement the password change functionality
-        showAlert('Parol o\'zgartirish funksiyasi hozircha mavjud emas', 'warning');
-        
-        const modal = bootstrap.Modal.getInstance(document.getElementById('passwordModal'));
-        modal.hide();
+        try {
+            const response = await fetch('{% url "accounts:profile" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({
+                    action: 'change_password',
+                    current_password: currentPassword,
+                    new_password: newPassword,
+                    confirm_password: confirmPassword
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                showAlert(data.message || 'Parol muvaffaqiyatli o\'zgartirildi!', 'success');
+                document.getElementById('passwordForm').reset();
+                const modal = bootstrap.Modal.getInstance(document.getElementById('passwordModal'));
+                modal.hide();
+            } else {
+                showAlert(data.error || 'Parolni o\'zgartirishda xatolik yuz berdi', 'danger');
+            }
+        } catch (error) {
+            showAlert('Server bilan bog\'lanishda xatolik yuz berdi', 'danger');
+        }
     }
 
     function confirmLogout() {

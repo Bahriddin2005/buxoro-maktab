@@ -1,0 +1,235 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Word Formatida Test Yaratish Qo'llanmasi{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="glass-card p-4 mb-4">
+                <h2 class="text-white mb-3">
+                    <i class="fas fa-book text-primary me-2"></i>
+                    Word Formatida Test Yaratish Qo'llanmasi
+                </h2>
+                <p class="text-white-50">
+                    Bu qo'llanmada Word fayldan test savollarini yaratish va import qilish haqida batafsil ma'lumot beriladi.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Qo'llanma -->
+            <div class="glass-card p-4 mb-4">
+                <h3 class="text-white mb-4">
+                    <i class="fas fa-list-ol text-info me-2"></i>
+                    Qadam-baqadam Qo'llanma
+                </h3>
+                
+                <div class="text-white-50">
+                    <div class="mb-4">
+                        <h5 class="text-white mb-3">1️⃣ Namuna Fayl Yuklab Olish</h5>
+                        <p>Quyidagi tugma orqali Word formatida namuna faylni yuklab oling:</p>
+                        <a href="{% url 'tests:download_word_template' %}" class="btn btn-primary mb-3">
+                            <i class="fas fa-download me-2"></i>
+                            Namuna Word Fayl Yuklab Olish
+                        </a>
+                        <p class="small">Bu fayl Word formatida test yaratish uchun namunadir.</p>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h5 class="text-white mb-3">2️⃣ Word Faylni Ochish va Tuzatish</h5>
+                        <ol>
+                            <li>Yuklab olgan namuna faylni Microsoft Word yoki boshqa matn muharririda oching</li>
+                            <li>Namuna savollarni o'chirib, o'zingizning savollaringizni kiriting</li>
+                            <li><strong>Bitta qoidaga rioya qiling:</strong> <code>Raqam. Savol?</code> → <code>a) Variant (✓)</code></li>
+                        </ol>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h5 class="text-white mb-3">3️⃣ Format Qoidasi (Bitta Oddiy Qoida)</h5>
+                        
+                        <div class="alert alert-warning mb-3">
+                            <strong>⚠️ MUHIM:</strong> Quyidagi formatga qat'iy rioya qiling!
+                        </div>
+                        
+                        <div class="bg-dark p-4 rounded mb-3">
+                            <pre class="text-white mb-0" style="font-size: 14px; line-height: 2; font-family: 'Courier New', monospace;">
+1. Savol matni bu yerda?
+
+a) Birinchi javob varianti
+b) Ikkinchi javob varianti
+c) Uchinchi javob varianti (✓)
+d) To'rtinchi javob varianti
+
+2. Ikkinchi savol matni?
+
+a) Variant 1
+b) Variant 2 (*)
+c) Variant 3
+d) Variant 4
+                            </pre>
+                        </div>
+                        
+                        <div class="alert alert-success">
+                            <strong>✅ Bitta Qoida:</strong>
+                            <ol class="mb-0 mt-2">
+                                <li><strong>Savol:</strong> Raqam + nuqta + bo'sh joy + savol matni (masalan: <code>1. Savol matni?</code>)</li>
+                                <li><strong>Variantlar:</strong> Harf + qavs + bo'sh joy + variant matni (masalan: <code>a) Variant matni</code>)</li>
+                                <li><strong>To'g'ri javob:</strong> Variant matnidan keyin faqat <code>(✓)</code> belgisini qo'shing</li>
+                                <li><strong>Bo'sh qator:</strong> Har bir savoldan keyin bo'sh qator qoldiring</li>
+                            </ol>
+                        </div>
+                        
+                        <div class="alert alert-info mt-3">
+                            <strong>🔢 Matematika (kasrlar va darajalar):</strong> Unicode belgilar — nusxalab web saytga tashlasa hech qanday o'zgarishsiz tushadi:
+                            <ul class="mb-0 mt-2">
+                                <li><strong>Kasrlar:</strong> ½ ¼ ¾ ¹⁄₂ ²⁄₃ ³⁄₄ ¹⁄₄ (yoki ⅓ ⅔ ⅕ ⅗ ⅙ ⅛ ⅜ ⅝ ⅞)</li>
+                                <li><strong>Darajalar:</strong> x² x³ x⁴ x⁵ xⁿ (⁰ ¹ ² ³ ⁴ ⁵ ⁶ ⁷ ⁸ ⁹)</li>
+                                <li><strong>Boshqa:</strong> × ÷ ± √ π ∞</li>
+                                <li>Word: Insert → Symbol yoki platformada yuqoridagi tugmalardan foydalaning</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h5 class="text-white mb-3">4️⃣ Test Yaratish va Import Qilish</h5>
+                        <ol>
+                            <li>Web saytga kirib, yangi test yarating yoki mavjud testni tahrirlang</li>
+                            <li>"Savollar Yuklash" bo'limiga o'ting</li>
+                            <li>"Word Fayl Yuklash" bo'limida tuzatilgan Word faylni tanlang</li>
+                            <li>"Word Yuklash va Avtomatik Tuzatish" tugmasini bosing</li>
+                            <li>Tizim avtomatik ravishda savollarni tahlil qiladi va testlarni tuzadi</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Namuna savollar -->
+            <div class="glass-card p-4">
+                <h3 class="text-white mb-4">
+                    <i class="fas fa-lightbulb text-warning me-2"></i>
+                    Namuna Savollar
+                </h3>
+                
+                <div class="text-white-50">
+                    <div class="mb-4">
+                        <h5 class="text-white mb-3">📝 Namuna Savollar (Bitta Qoida)</h5>
+                        
+                        <div class="alert alert-success mb-3">
+                            <strong>✅ Bitta Qoida:</strong><br>
+                            <code>Raqam. Savol?</code> → <code>a) Variant (✓)</code>
+                        </div>
+                        
+                        <div class="bg-dark p-4 rounded mb-3">
+                            <pre class="text-white mb-0" style="font-size: 13px; line-height: 1.8; font-family: 'Courier New', monospace;">
+1. Matematikada 2+2 nechaga teng? (x², ½ belgilari ham qo'llab-quvvatlanadi)
+
+a) 3
+b) 4 (✓)
+c) 5
+d) 6
+
+2. O'zbekiston poytaxti qayerda?
+
+a) Samarqand
+b) Toshkent (✓)
+c) Buxoro
+d) Andijon
+
+3. Fizikada tezlik formulasi qanday?
+
+a) v = s/t (✓)
+b) v = s*t
+c) v = t/s
+d) v = s+t
+                            </pre>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <strong>💡 Eslatma:</strong>
+                            <ul class="mb-0 mt-2">
+                                <li>To'g'ri javob belgilanmagan bo'lsa, birinchi variant (a) avtomatik to'g'ri deb qabul qilinadi</li>
+                                <li>Variantlar bo'lmasa, savol matnli javob turiga o'tadi</li>
+                                <li>Har bir savoldan keyin bo'sh qator qoldirish majburiy emas, lekin tavsiya etiladi</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- Tezkor havolalar -->
+            <div class="glass-card p-4 mb-4">
+                <h5 class="text-white mb-3">
+                    <i class="fas fa-link text-success me-2"></i>
+                    Tezkor Havolalar
+                </h5>
+                
+                <div class="d-grid gap-2">
+                    <a href="{% url 'tests:download_word_template' %}" class="btn btn-primary">
+                        <i class="fas fa-download me-2"></i>
+                        Namuna Fayl Yuklab Olish
+                    </a>
+                    
+                    <a href="{% url 'tests:tests' %}" class="btn btn-outline-light">
+                        <i class="fas fa-list me-2"></i>
+                        Testlar Ro'yxati
+                    </a>
+                    
+                    <a href="{% url 'tests:create_test' %}" class="btn btn-outline-light">
+                        <i class="fas fa-plus me-2"></i>
+                        Yangi Test Yaratish
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Maslahatlar -->
+            <div class="glass-card p-4">
+                <h5 class="text-white mb-3">
+                    <i class="fas fa-tips text-warning me-2"></i>
+                    Maslahatlar
+                </h5>
+                
+                <div class="text-white-50 small">
+                    <div class="mb-3">
+                        <strong>✅ Qilish kerak:</strong>
+                        <ul class="mt-2">
+                            <li>Har bir savoldan keyin bo'sh qator qoldiring</li>
+                            <li>To'g'ri javobni aniq belgilang</li>
+                            <li>Variantlarni a), b), c), d) formatida yozing</li>
+                            <li>Faylni .docx formatida saqlang</li>
+                            <li>Matematika: ½ x² kabi belgilar — nusxalab saytga qo'yish mumkin</li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <strong>❌ Qilmaslik kerak:</strong>
+                        <ul class="mt-2">
+                            <li>Raqamdan keyin nuqta qo'yishni unutmang (1., 2.)</li>
+                            <li>Variantlarni boshqa formatda yozmaslik</li>
+                            <li>To'g'ri javobni belgilamaslik</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Yordam -->
+            <div class="glass-card p-4 mt-4">
+                <h5 class="text-white mb-3">
+                    <i class="fas fa-question-circle text-info me-2"></i>
+                    Yordam
+                </h5>
+                
+                <p class="text-white-50 small">
+                    Agar muammo bo'lsa yoki qo'shimcha yordam kerak bo'lsa, 
+                    admin bilan bog'laning yoki qo'llanmani qayta o'qib chiqing.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

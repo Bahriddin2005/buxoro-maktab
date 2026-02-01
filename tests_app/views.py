@@ -1,13 +1,15 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse, HttpResponse, HttpResponseForbidden
 from django.views.decorators.http import require_http_methods
 from django.utils import timezone
 from django.db import transaction
 from django.core.paginator import Paginator
 from django.db.models import Count, Avg, Max, Min, Q
+from django.conf import settings
 import json
 import random
+import re
 from .models import Test, Question, Choice, TestAttempt, Answer, TestResult, TestRetakeRequest
 from accounts.models import User
 from .views_overall import student_overall_results_view, student_export_results_view, test_api_view
@@ -23,233 +25,296 @@ except ImportError:
 @login_required
 def test_list_view(request):
     """List all available tests for students or created tests for teachers"""
-    if request.method == 'GET' and request.headers.get('Accept') == 'application/json':
-        # Pagination parametrlari
-        page = int(request.GET.get('page', 1))
-        page_size = int(request.GET.get('page_size', 100))  # 100 ta test/sahifa
-        
-        # Filter parametrlari
-        grade_filter = request.GET.get('grade', '')
-        subject_filter = request.GET.get('subject', '')
-        status_filter = request.GET.get('status', '')
-        search_filter = request.GET.get('search', '')
-        
-        if request.user.role == 'student':
-            tests = Test.objects.filter(
-                is_active=True,
-                grade=request.user.grade
-            ).select_related('created_by').prefetch_related('questions').order_by('-created_at')
+    try:
+        if request.method == 'GET' and request.headers.get('Accept') == 'application/json':
+            # Pagination parametrlari
+            page = int(request.GET.get('page', 1))
+            page_size = int(request.GET.get('page_size', 100))  # 100 ta test/sahifa
             
-            # Qo'shimcha filterlar (o'quvchi o'z sinfidagi testlarni filtrlash uchun)
-            if subject_filter:
-                tests = tests.filter(subject=subject_filter)
-            if search_filter:
-                tests = tests.filter(
-                    Q(title__icontains=search_filter) |
-                    Q(description__icontains=search_filter)
-                )
+            # Filter parametrlari
+            grade_filter = request.GET.get('grade', '')
+            subject_filter = request.GET.get('subject', '')
+            status_filter = request.GET.get('status', '')
+            search_filter = request.GET.get('search', '')
             
-            # Bulk query optimizatsiyasi - N+1 query muammosini hal qilish
-            test_ids = list(tests.values_list('id', flat=True))
-            
-            # Barcha attempt'larni bir marta olish
-            attempts_dict = {}
-            if test_ids:
-                attempts = TestAttempt.objects.filter(
-                    test_id__in=test_ids,
-                    student=request.user
-                ).values('test_id', 'id', 'is_completed', 'percentage')
-                
-                for att in attempts:
-                    test_id = att['test_id']
-                    if test_id not in attempts_dict:
-                        attempts_dict[test_id] = {
-                            'id': att['id'],
-                            'is_completed': att['is_completed'],
-                            'percentage': att.get('percentage')
+            if request.user.role == 'student':
+                # O'quvchi sinfini tekshirish
+                if not request.user.grade:
+                    return JsonResponse({
+                        'error': 'Sizning sinfingiz belgilanmagan. Admin bilan bog\'laning.',
+                        'tests': [],
+                        'user_role': 'student',
+                        'pagination': {
+                            'page': page,
+                            'page_size': page_size,
+                            'total': 0,
+                            'total_pages': 0
                         }
-            
-            # Barcha retake request'larni bir marta olish
-            retake_permissions = set()
-            if test_ids:
-                retakes = TestRetakeRequest.objects.filter(
-                    student=request.user,
-                    test_id__in=test_ids,
-                    status='approved',
-                    is_used=False
-                ).values_list('test_id', flat=True)
-                retake_permissions = set(retakes)
-            
-            test_data = []
-            for test in tests:
-                # Attempt ma'lumotlari
-                attempt_data = attempts_dict.get(test.id)
-                attempt = None
-                if attempt_data:
-                    class MinimalAttempt:
-                        def __init__(self, data):
-                            self.id = data['id']
-                            self.is_completed = data['is_completed']
-                            self.percentage = data.get('percentage')
-                    attempt = MinimalAttempt(attempt_data)
+                    }, status=400)
                 
-                # Qayta ishlash ruxsati bormi tekshirish
-                has_retake_permission = test.id in retake_permissions
+                tests = Test.objects.filter(
+                    is_active=True,
+                    grade=request.user.grade
+                ).select_related('created_by').prefetch_related('questions').order_by('-created_at')
                 
-                # O'quvchi testni yecha oladimi?
-                can_attempt = test.is_active and (
-                    attempt is None or  # Hali yechmagan
-                    not attempt.is_completed or  # Davom ettirmoqda
-                    has_retake_permission  # Qayta ishlash ruxsati bor
-                )
+                # Qo'shimcha filterlar (o'quvchi o'z sinfidagi testlarni filtrlash uchun)
+                if subject_filter:
+                    tests = tests.filter(subject=subject_filter)
+                if search_filter:
+                    tests = tests.filter(
+                        Q(title__icontains=search_filter) |
+                        Q(description__icontains=search_filter)
+                    )
                 
-                test_data.append({
-                    'id': test.id,
-                    'title': test.title,
-                    'subject': test.subject,
-                    'description': test.description,
-                    'grade': test.grade,
-                    'time_limit': test.time_limit,
-                    'max_attempts': test.max_attempts,
-                    'total_questions': test.total_questions,
-                    'has_attempted': attempt is not None,
-                    'attempt_score': round(attempt.percentage, 1) if attempt and attempt.is_completed and attempt.percentage else None,
-                    'can_attempt': can_attempt,
-                    'has_retake_permission': has_retake_permission,
-                    'created_by': test.created_by.get_full_name() or test.created_by.username,
-                    'created_at': test.created_at.isoformat(),
-                    'start_time': test.start_time.isoformat() if test.start_time else None,
-                    'end_time': test.end_time.isoformat() if test.end_time else None,
+                # Bulk query optimizatsiyasi - N+1 query muammosini hal qilish
+                test_ids = list(tests.values_list('id', flat=True))
+                
+                # Barcha attempt'larni bir marta olish
+                attempts_dict = {}
+                if test_ids:
+                    attempts = TestAttempt.objects.filter(
+                        test_id__in=test_ids,
+                        student=request.user
+                    ).values('test_id', 'id', 'is_completed', 'percentage')
+                    
+                    for att in attempts:
+                        test_id = att['test_id']
+                        if test_id not in attempts_dict:
+                            attempts_dict[test_id] = {
+                                'id': att['id'],
+                                'is_completed': att['is_completed'],
+                                'percentage': att.get('percentage')
+                            }
+                
+                # Barcha retake request'larni bir marta olish
+                retake_permissions = set()
+                if test_ids:
+                    retakes = TestRetakeRequest.objects.filter(
+                        student=request.user,
+                        test_id__in=test_ids,
+                        status='approved',
+                        is_used=False
+                    ).values_list('test_id', flat=True)
+                    retake_permissions = set(retakes)
+                
+                test_data = []
+                for test in tests:
+                    # Faqat savollari bo'lgan testlarni ko'rsatish
+                    if test.total_questions == 0:
+                        continue  # Savollari bo'lmagan testlarni o'tkazib yuborish
+                    
+                    # Attempt ma'lumotlari
+                    attempt_data = attempts_dict.get(test.id)
+                    attempt = None
+                    if attempt_data:
+                        class MinimalAttempt:
+                            def __init__(self, data):
+                                self.id = data['id']
+                                self.is_completed = data['is_completed']
+                                self.percentage = data.get('percentage')
+                        attempt = MinimalAttempt(attempt_data)
+                    
+                    # Qayta ishlash ruxsati bormi tekshirish
+                    has_retake_permission = test.id in retake_permissions
+                    
+                    # Vaqt cheklovlarini tekshirish
+                    now = timezone.now()
+                    is_within_time = True
+                    if test.start_time and now < test.start_time:
+                        is_within_time = False
+                    if test.end_time and now > test.end_time:
+                        is_within_time = False
+                    
+                    # O'quvchi testni yecha oladimi?
+                    can_attempt = test.is_active and is_within_time and test.total_questions > 0 and (
+                        attempt is None or  # Hali yechmagan
+                        not attempt.is_completed or  # Davom ettirmoqda
+                        has_retake_permission  # Qayta ishlash ruxsati bor
+                    )
+                    
+                    test_data.append({
+                        'id': test.id,
+                        'title': test.title,
+                        'subject': test.subject,
+                        'description': test.description,
+                        'grade': test.grade,
+                        'time_limit': test.time_limit,
+                        'max_attempts': test.max_attempts,
+                        'total_questions': test.total_questions,
+                        'has_attempted': attempt is not None,
+                        'attempt_score': round(attempt.percentage, 1) if attempt and attempt.is_completed and attempt.percentage else None,
+                        'can_attempt': can_attempt,
+                        'has_retake_permission': has_retake_permission,
+                        'created_by': test.created_by.get_full_name() or test.created_by.username,
+                        'created_at': test.created_at.isoformat(),
+                        'start_time': test.start_time.isoformat() if test.start_time else None,
+                        'end_time': test.end_time.isoformat() if test.end_time else None,
+                    })
+                
+                # Pagination
+                start = (page - 1) * page_size
+                end = start + page_size
+                total_count = len(test_data)
+                paginated_data = test_data[start:end]
+                
+                return JsonResponse({
+                    'tests': paginated_data,
+                    'user_role': 'student',
+                    'pagination': {
+                        'page': page,
+                        'page_size': page_size,
+                        'total': total_count,
+                        'total_pages': (total_count + page_size - 1) // page_size
+                    }
                 })
             
-            # Pagination
-            start = (page - 1) * page_size
-            end = start + page_size
-            total_count = len(test_data)
-            paginated_data = test_data[start:end]
-            
-            return JsonResponse({
-                'tests': paginated_data,
-                'user_role': 'student',
-                'pagination': {
-                    'page': page,
-                    'page_size': page_size,
-                    'total': total_count,
-                    'total_pages': (total_count + page_size - 1) // page_size
-                }
-            })
-            
-        elif request.user.role == 'teacher':
-            # Teacher sees ALL tests (not just their own) - LIMIT to first 100
-            tests = Test.objects.all().select_related('created_by').order_by('-created_at')
-            
-            # Filterlar qo'shish
-            if grade_filter:
-                tests = tests.filter(grade=int(grade_filter))
-            if subject_filter:
-                tests = tests.filter(subject=subject_filter)
-            if status_filter == 'active':
-                tests = tests.filter(is_active=True)
-            elif status_filter == 'inactive':
-                tests = tests.filter(is_active=False)
-            if search_filter:
-                tests = tests.filter(
-                    Q(title__icontains=search_filter) |
-                    Q(description__icontains=search_filter)
-                )
-            
-            # Get total count first
-            total_count = tests.count()
-            
-            # Apply pagination
-            start = (page - 1) * page_size
-            tests_page = tests[start:start + page_size]
-            
-            test_data = []
-            for test in tests_page:
-                attempt_count = TestAttempt.objects.filter(test=test, is_completed=True).count()
-                test_data.append({
-                    'id': test.id,
-                    'title': test.title,
-                    'subject': test.subject,
-                    'description': test.description,
-                    'grade': test.grade,
-                    'total_questions': test.total_questions,
-                    'is_active': test.is_active,
-                    'created_at': test.created_at.isoformat(),
-                    'created_by': test.created_by.get_full_name() or test.created_by.username,
-                    'attempt_count': attempt_count,
-                    'max_attempts': test.max_attempts,
-                    'time_limit': test.time_limit,
+            elif request.user.role == 'teacher':
+                # Teacher sees ALL tests (not just their own) - LIMIT to first 100
+                tests = Test.objects.all().select_related('created_by').order_by('-created_at')
+                
+                # Filterlar qo'shish
+                if grade_filter:
+                    tests = tests.filter(grade=int(grade_filter))
+                if subject_filter:
+                    tests = tests.filter(subject=subject_filter)
+                if status_filter == 'active':
+                    tests = tests.filter(is_active=True)
+                elif status_filter == 'inactive':
+                    tests = tests.filter(is_active=False)
+                if search_filter:
+                    tests = tests.filter(
+                        Q(title__icontains=search_filter) |
+                        Q(description__icontains=search_filter)
+                    )
+                
+                # Get total count first
+                total_count = tests.count()
+                
+                # Apply pagination
+                start = (page - 1) * page_size
+                tests_page = tests[start:start + page_size]
+                
+                test_data = []
+                for test in tests_page:
+                    attempt_count = TestAttempt.objects.filter(test=test, is_completed=True).count()
+                    test_data.append({
+                        'id': test.id,
+                        'title': test.title,
+                        'subject': test.subject,
+                        'description': test.description,
+                        'grade': test.grade,
+                        'total_questions': test.total_questions,
+                        'is_active': test.is_active,
+                        'created_at': test.created_at.isoformat(),
+                        'created_by': test.created_by.get_full_name() or test.created_by.username,
+                        'attempt_count': attempt_count,
+                        'max_attempts': test.max_attempts,
+                        'time_limit': test.time_limit,
+                    })
+                
+                return JsonResponse({
+                    'tests': test_data,
+                    'user_role': 'teacher',
+                    'pagination': {
+                        'page': page,
+                        'page_size': page_size,
+                        'total': total_count,
+                        'total_pages': (total_count + page_size - 1) // page_size
+                    }
                 })
             
-            return JsonResponse({
-                'tests': test_data,
-                'user_role': 'teacher',
-                'pagination': {
-                    'page': page,
-                    'page_size': page_size,
-                    'total': total_count,
-                    'total_pages': (total_count + page_size - 1) // page_size
-                }
-            })
+            elif request.user.role == 'admin':
+                # Admin sees ALL tests - LIMIT to first 100
+                tests = Test.objects.all().select_related('created_by').order_by('-created_at')
+                
+                # Filterlar qo'shish
+                if grade_filter:
+                    tests = tests.filter(grade=int(grade_filter))
+                if subject_filter:
+                    tests = tests.filter(subject=subject_filter)
+                if status_filter == 'active':
+                    tests = tests.filter(is_active=True)
+                elif status_filter == 'inactive':
+                    tests = tests.filter(is_active=False)
+                if search_filter:
+                    tests = tests.filter(
+                        Q(title__icontains=search_filter) |
+                        Q(description__icontains=search_filter)
+                    )
+                
+                # Get total count first
+                total_count = tests.count()
+                
+                # Apply pagination
+                start = (page - 1) * page_size
+                tests_page = tests[start:start + page_size]
+                
+                test_data = []
+                for test in tests_page:
+                    attempt_count = TestAttempt.objects.filter(test=test, is_completed=True).count()
+                    test_data.append({
+                        'id': test.id,
+                        'title': test.title,
+                        'subject': test.subject,
+                        'description': test.description,
+                        'grade': test.grade,
+                        'total_questions': test.total_questions,
+                        'is_active': test.is_active,
+                        'created_at': test.created_at.isoformat(),
+                        'created_by': test.created_by.get_full_name() or test.created_by.username,
+                        'attempt_count': attempt_count,
+                        'max_attempts': test.max_attempts,
+                        'time_limit': test.time_limit,
+                    })
+                
+                return JsonResponse({
+                    'tests': test_data,
+                    'user_role': 'admin',
+                    'pagination': {
+                        'page': page,
+                        'page_size': page_size,
+                        'total': total_count,
+                        'total_pages': (total_count + page_size - 1) // page_size
+                    }
+                })
+            else:
+                # Noma'lum rol uchun xatolik
+                return JsonResponse({
+                    'error': f'Noma\'lum foydalanuvchi roli: {request.user.role}',
+                    'tests': [],
+                    'user_role': request.user.role if hasattr(request.user, 'role') else 'unknown',
+                    'pagination': {
+                        'page': page,
+                        'page_size': page_size,
+                        'total': 0,
+                        'total_pages': 0
+                    }
+                }, status=403)
         
-        elif request.user.role == 'admin':
-            # Admin sees ALL tests - LIMIT to first 100
-            tests = Test.objects.all().select_related('created_by').order_by('-created_at')
-            
-            # Filterlar qo'shish
-            if grade_filter:
-                tests = tests.filter(grade=int(grade_filter))
-            if subject_filter:
-                tests = tests.filter(subject=subject_filter)
-            if status_filter == 'active':
-                tests = tests.filter(is_active=True)
-            elif status_filter == 'inactive':
-                tests = tests.filter(is_active=False)
-            if search_filter:
-                tests = tests.filter(
-                    Q(title__icontains=search_filter) |
-                    Q(description__icontains=search_filter)
-                )
-            
-            # Get total count first
-            total_count = tests.count()
-            
-            # Apply pagination
-            start = (page - 1) * page_size
-            tests_page = tests[start:start + page_size]
-            
-            test_data = []
-            for test in tests_page:
-                attempt_count = TestAttempt.objects.filter(test=test, is_completed=True).count()
-                test_data.append({
-                    'id': test.id,
-                    'title': test.title,
-                    'subject': test.subject,
-                    'description': test.description,
-                    'grade': test.grade,
-                    'total_questions': test.total_questions,
-                    'is_active': test.is_active,
-                    'created_at': test.created_at.isoformat(),
-                    'created_by': test.created_by.get_full_name() or test.created_by.username,
-                    'attempt_count': attempt_count,
-                    'max_attempts': test.max_attempts,
-                    'time_limit': test.time_limit,
-                })
-            
+        # Agar JSON so'rovi bo'lmasa, HTML sahifani ko'rsatish
+        return render(request, 'tests_app/test_list.html')
+    except Exception as e:
+        import traceback
+        error_traceback = traceback.format_exc()
+        print(f"Error in test_list_view: {str(e)}")
+        print(error_traceback)
+        
+        # Agar JSON so'rovi bo'lsa, JSON xatolik qaytarish
+        if request.method == 'GET' and request.headers.get('Accept') == 'application/json':
             return JsonResponse({
-                'tests': test_data,
-                'user_role': 'admin',
+                'error': f'Testlarni yuklashda xatolik: {str(e)}',
+                'tests': [],
+                'user_role': request.user.role if request.user.is_authenticated else 'anonymous',
                 'pagination': {
-                    'page': page,
-                    'page_size': page_size,
-                    'total': total_count,
-                    'total_pages': (total_count + page_size - 1) // page_size
+                    'page': 1,
+                    'page_size': 100,
+                    'total': 0,
+                    'total_pages': 0
                 }
-            })
-    
-    return render(request, 'tests_app/test_list.html')
+            }, status=500)
+        
+        # HTML so'rovi bo'lsa, sahifani ko'rsatish
+        return render(request, 'tests_app/test_list.html')
 
 @login_required
 @require_http_methods(["POST"])
@@ -319,8 +384,10 @@ def take_test_view(request, test_id):
     
     test = get_object_or_404(Test, id=test_id, is_active=True)
     
-    if test.grade != request.user.grade:
-        return JsonResponse({'error': 'This test is not for your grade'}, status=403)
+    # Grade tekshiruvi - agar o'quvchining grade None bo'lsa yoki test grade None bo'lsa, ruxsat berish
+    if request.user.grade is not None and test.grade is not None:
+        if test.grade != request.user.grade:
+            return JsonResponse({'error': 'This test is not for your grade'}, status=403)
     
     now = timezone.now()
     if test.start_time and now < test.start_time:
@@ -330,77 +397,162 @@ def take_test_view(request, test_id):
         return JsonResponse({'error': 'Test has ended'}, status=403)
     
     if request.method == 'POST':
-        # correct_answers maydoni database'da yo'qligi uchun values() ishlatamiz
-        existing_attempt_data = TestAttempt.objects.filter(
-            test=test, 
-            student=request.user
-        ).values('id', 'is_completed').first()
-        
-        existing_attempt_id = None
-        existing_attempt_completed = False
-        if existing_attempt_data:
-            existing_attempt_id = existing_attempt_data['id']
-            existing_attempt_completed = existing_attempt_data['is_completed']
-        
-        # Agar test tugallangan bo'lsa, qayta ishlash ruxsati bormi tekshiramiz
-        if existing_attempt_id and existing_attempt_completed:
-            # Qayta ishlash ruxsati bormi?
-            approved_retake = TestRetakeRequest.objects.filter(
-                student=request.user,
-                test=test,
-                status='approved',
-                is_used=False
-            ).first()
+        try:
+            # correct_answers maydoni database'da yo'qligi uchun values() ishlatamiz
+            existing_attempt_data = TestAttempt.objects.filter(
+                test=test, 
+                student=request.user
+            ).values('id', 'is_completed').first()
             
-            if not approved_retake:
-                return JsonResponse({'error': 'Siz allaqachon bu testni topshirgansiz. Qayta topshirish uchun admin ruxsati kerak.'}, status=400)
+            existing_attempt_id = None
+            existing_attempt_completed = False
+            if existing_attempt_data:
+                existing_attempt_id = existing_attempt_data['id']
+                existing_attempt_completed = existing_attempt_data['is_completed']
             
-            # Qayta ishlash ruxsati bor, yangi attempt yaratamiz (is_retake=True bilan)
-            attempt = TestAttempt.objects.create(test=test, student=request.user, is_retake=True)
-        elif not existing_attempt_id:
-            # Birinchi marta test yechmoqda
-            attempt = TestAttempt.objects.create(test=test, student=request.user)
-        else:
-            # Test tugallanmagan, davom ettirmoqda - to'liq obyektni yuklash
-            attempt = TestAttempt.objects.filter(id=existing_attempt_id).only(
-                'id', 'test', 'student', 'started_at', 'is_completed'
-            ).first()
-            if not attempt:
-                # Agar topilmasa, yangi yaratamiz
-                attempt = TestAttempt.objects.create(test=test, student=request.user)
-        
-        # Har bir o'quvchiga savollar random tartibda ko'rsatiladi
-        # Query optimallashtirish - select_related va prefetch_related
-        questions = list(test.questions.select_related().prefetch_related('choices').order_by('order'))
-        
-        # Shuffle questions for this student (har bir o'quvchi uchun boshqacha tartib)
-        random.shuffle(questions)
-        
-        questions_data = []
-        for question in questions:
-            q_data = {
-                'id': question.id,
-                'question_text': question.question_text,
-                'question_type': question.question_type,
-                'points': question.points,
-                'image': question.image.url if question.image and question.image.url else None
-            }
+            # Agar test tugallangan bo'lsa, qayta ishlash ruxsati bormi tekshiramiz
+            if existing_attempt_id and existing_attempt_completed:
+                # Qayta ishlash ruxsati bormi?
+                approved_retake = TestRetakeRequest.objects.filter(
+                    student=request.user,
+                    test=test,
+                    status='approved',
+                    is_used=False
+                ).first()
+                
+                if not approved_retake:
+                    return JsonResponse({'error': 'Siz allaqachon bu testni topshirgansiz. Qayta topshirish uchun admin ruxsati kerak.'}, status=400)
+                
+                # Qayta ishlash ruxsati bor, yangi attempt yaratamiz (is_retake=True bilan)
+                # Database'da hali ham mavjud bo'lgan maydonlar (correct_answers, incorrect_answers, unanswered, termination_reason) NOT NULL
+                # Shuning uchun raw SQL orqali INSERT qilamiz
+                from django.db import connection
+                db_backend = connection.vendor
+                with connection.cursor() as cursor:
+                    if db_backend == 'sqlite':
+                        # SQLite uchun - parametrlarni to'g'ri formatlash
+                        # Django debug_sql muammosini oldini olish uchun query'ni to'g'ridan-to'g'ri formatlash
+                        sql_query = "INSERT INTO tests_app_testattempt (test_id, student_id, started_at, is_retake, correct_answers, incorrect_answers, unanswered, total_points, attempt_number, is_completed, current_question_index, is_terminated, termination_reason) VALUES (?, ?, ?, 1, 0, 0, 0, 0, 1, 0, 0, 0, ?)"
+                        cursor.execute(sql_query, [test.id, request.user.id, timezone.now(), ''])
+                        attempt_id = cursor.lastrowid
+                    else:
+                        # PostgreSQL uchun RETURNING ishlatamiz
+                        sql_query = "INSERT INTO tests_app_testattempt (test_id, student_id, started_at, is_retake, correct_answers, incorrect_answers, unanswered, total_points, attempt_number, is_completed, current_question_index, is_terminated, termination_reason) VALUES (%s, %s, %s, TRUE, 0, 0, 0, 0, 1, FALSE, 0, FALSE, %s) RETURNING id"
+                        cursor.execute(sql_query, [test.id, request.user.id, timezone.now(), ''])
+                        attempt_id = cursor.fetchone()[0]
+                    attempt = TestAttempt.objects.get(id=attempt_id)
+            elif not existing_attempt_id:
+                # Birinchi marta test yechmoqda
+                # Database'da hali ham mavjud bo'lgan maydonlar (correct_answers, incorrect_answers, unanswered, termination_reason) NOT NULL
+                # Shuning uchun raw SQL orqali INSERT qilamiz
+                from django.db import connection
+                db_backend = connection.vendor
+                with connection.cursor() as cursor:
+                    if db_backend == 'sqlite':
+                        # SQLite uchun - parametrlarni to'g'ri formatlash
+                        sql_query = "INSERT INTO tests_app_testattempt (test_id, student_id, started_at, is_retake, correct_answers, incorrect_answers, unanswered, total_points, attempt_number, is_completed, current_question_index, is_terminated, termination_reason) VALUES (?, ?, ?, 0, 0, 0, 0, 0, 1, 0, 0, 0, ?)"
+                        cursor.execute(sql_query, [test.id, request.user.id, timezone.now(), ''])
+                        attempt_id = cursor.lastrowid
+                    else:
+                        # PostgreSQL uchun RETURNING ishlatamiz
+                        sql_query = "INSERT INTO tests_app_testattempt (test_id, student_id, started_at, is_retake, correct_answers, incorrect_answers, unanswered, total_points, attempt_number, is_completed, current_question_index, is_terminated, termination_reason) VALUES (%s, %s, %s, FALSE, 0, 0, 0, 0, 1, FALSE, 0, FALSE, %s) RETURNING id"
+                        cursor.execute(sql_query, [test.id, request.user.id, timezone.now(), ''])
+                        attempt_id = cursor.fetchone()[0]
+                    attempt = TestAttempt.objects.get(id=attempt_id)
+            else:
+                # Test tugallanmagan, davom ettirmoqda - to'liq obyektni yuklash
+                attempt = TestAttempt.objects.filter(id=existing_attempt_id).only(
+                    'id', 'test', 'student', 'started_at', 'is_completed'
+                ).first()
+                if not attempt:
+                    # Agar topilmasa, yangi yaratamiz
+                    # Database'da hali ham mavjud bo'lgan maydonlar (correct_answers, incorrect_answers, unanswered, termination_reason) NOT NULL
+                    # Shuning uchun raw SQL orqali INSERT qilamiz
+                    from django.db import connection
+                    db_backend = connection.vendor
+                    with connection.cursor() as cursor:
+                        if db_backend == 'sqlite':
+                            # SQLite uchun - parametrlarni to'g'ri formatlash
+                            sql_query = "INSERT INTO tests_app_testattempt (test_id, student_id, started_at, is_retake, correct_answers, incorrect_answers, unanswered, total_points, attempt_number, is_completed, current_question_index, is_terminated, termination_reason) VALUES (?, ?, ?, 0, 0, 0, 0, 0, 1, 0, 0, 0, ?)"
+                            cursor.execute(sql_query, [test.id, request.user.id, timezone.now(), ''])
+                            attempt_id = cursor.lastrowid
+                        else:
+                            # PostgreSQL uchun RETURNING ishlatamiz
+                            sql_query = "INSERT INTO tests_app_testattempt (test_id, student_id, started_at, is_retake, correct_answers, incorrect_answers, unanswered, total_points, attempt_number, is_completed, current_question_index, is_terminated, termination_reason) VALUES (%s, %s, %s, FALSE, 0, 0, 0, 0, 1, FALSE, 0, FALSE, %s) RETURNING id"
+                            cursor.execute(sql_query, [test.id, request.user.id, timezone.now(), ''])
+                            attempt_id = cursor.fetchone()[0]
+                        attempt = TestAttempt.objects.get(id=attempt_id)
             
-            if question.question_type in ['single_choice', 'multiple_choice']:
-                q_data['choices'] = [{
-                    'id': choice.id,
-                    'text': choice.choice_text
-                } for choice in question.choices.all()]
+            # Har bir o'quvchiga savollar random tartibda ko'rsatiladi
+            # Query optimallashtirish - select_related va prefetch_related
+            questions = list(test.questions.select_related().prefetch_related('choices').order_by('order'))
             
-            questions_data.append(q_data)
-        
-        return JsonResponse({
-            'attempt_id': attempt.id,
-            'questions': questions_data,
-            'time_limit': test.time_limit,
-            'started_at': attempt.started_at.isoformat(),
-            'server_time': timezone.now().isoformat()  # Hozirgi server vaqti
-        })
+            # Savollar mavjudligini tekshirish
+            if not questions:
+                return JsonResponse({
+                    'error': 'Testda savollar topilmadi. Iltimos, admin bilan bog\'laning.'
+                }, status=400)
+            
+            # Shuffle questions for this student (har bir o'quvchi uchun boshqacha tartib)
+            if test.shuffle_questions:
+                random.shuffle(questions)
+            
+            questions_data = []
+            for question in questions:
+                q_data = {
+                    'id': question.id,
+                    'question_text': question.question_text,
+                    'question_type': question.question_type,
+                    'points': question.points,
+                    'image': question.image.url if question.image and hasattr(question.image, 'url') else None
+                }
+                
+                if question.question_type in ['single_choice', 'multiple_choice']:
+                    # Variantlarni olish - prefetch_related ishlatilgan bo'lsa, choices allaqachon yuklangan
+                    choices_list = list(question.choices.all())
+                    if not choices_list:
+                        # Agar variantlar bo'lmasa, xatolik
+                        return JsonResponse({
+                            'error': f'Savol #{question.order} uchun javob variantlari topilmadi. Iltimos, admin bilan bog\'laning.'
+                        }, status=400)
+                    
+                    q_data['choices'] = [{
+                        'id': choice.id,
+                        'text': choice.choice_text
+                    } for choice in choices_list]
+                
+                questions_data.append(q_data)
+            
+            # Savollar va variantlar mavjudligini tekshirish
+            if not questions_data:
+                return JsonResponse({
+                    'error': 'Testda savollar topilmadi. Iltimos, admin bilan bog\'laning.'
+                }, status=400)
+            
+            # Har bir savol uchun variantlarni tekshirish
+            for q_data in questions_data:
+                if q_data['question_type'] in ['single_choice', 'multiple_choice']:
+                    if not q_data.get('choices') or len(q_data['choices']) == 0:
+                        return JsonResponse({
+                            'error': f'Savol #{q_data.get("id", "Noma\'lum")} uchun javob variantlari topilmadi. Iltimos, admin bilan bog\'laning.'
+                        }, status=400)
+            
+            return JsonResponse({
+                'attempt_id': attempt.id,
+                'questions': questions_data,
+                'time_limit': test.time_limit,
+                'started_at': attempt.started_at.isoformat(),
+                'server_time': timezone.now().isoformat(),  # Hozirgi server vaqti
+                'total_questions': len(questions_data)
+            })
+        except Exception as e:
+            import traceback
+            error_traceback = traceback.format_exc()
+            print(f"Error in take_test_view POST: {str(e)}")
+            print(error_traceback)
+            return JsonResponse({
+                'error': f'Testni boshlashda xatolik: {str(e)}'
+            }, status=500)
     
     # GET so'rovi - sahifa yuklash
     # Avval tugallangan testni tekshiramiz
@@ -573,8 +725,9 @@ def finish_test(request, attempt_id):
             # Har bir o'quvchining eng yaxshi natijasini olish
             from django.db.models import Max, Q
             # Har bir o'quvchi uchun eng yaxshi percentage va score ni topish
+            test_obj = attempt.test  # test o'zgaruvchisini attempt.test dan olamiz
             best_attempts = TestAttempt.objects.filter(
-                test=test,
+                test=test_obj,
                 is_completed=True,
                 student__grade=request.user.grade
             ).values('student_id').annotate(
@@ -651,8 +804,10 @@ def test_results_view(request, test_id):
     
     if request.headers.get('Accept') == 'application/json':
         if request.user.role == 'student':
-            if test.grade != request.user.grade:
-                return JsonResponse({'error': 'Access denied'}, status=403)
+            # Grade tekshiruvi - agar o'quvchining grade None bo'lsa yoki test grade None bo'lsa, ruxsat berish
+            if request.user.grade is not None and test.grade is not None:
+                if test.grade != request.user.grade:
+                    return JsonResponse({'error': 'Access denied'}, status=403)
             
             # correct_answers maydoni database'da yo'qligi uchun values() ishlatamiz
             attempt_data = TestAttempt.objects.filter(
@@ -935,11 +1090,15 @@ def export_results(request, test_id):
 
 @login_required
 def upload_questions(request, test_id):
-    """Upload questions from Excel file - Teachers only"""
-    if request.user.role != 'teacher':
+    """Upload questions from Excel file - Teachers and Admins"""
+    if request.user.role not in ['teacher', 'admin']:
         return JsonResponse({'error': 'Access denied'}, status=403)
     
-    test = get_object_or_404(Test, id=test_id, created_by=request.user)
+    # Admin barcha testlarni ko'ra oladi, o'qituvchi faqat o'z testlarini
+    if request.user.role == 'admin':
+        test = get_object_or_404(Test, id=test_id)
+    else:
+        test = get_object_or_404(Test, id=test_id, created_by=request.user)
     
     if request.method == 'POST':
         try:
@@ -1002,14 +1161,543 @@ def upload_questions(request, test_id):
             return JsonResponse({'message': f'{questions_created} questions uploaded successfully'})
             
         except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
+            import traceback
+            print(f"Excel upload error: {str(e)}")
+            print(traceback.format_exc())
+            return JsonResponse({'error': f'Excel fayl yuklashda xatolik: {str(e)}'}, status=500)
+    
+    return render(request, 'tests_app/upload_questions.html', {'test': test})
+
+
+@login_required
+def download_word_template(request):
+    """Word formatida namuna fayl yuklab olish - Admin va O'qituvchilar uchun"""
+    if request.user.role not in ['teacher', 'admin']:
+        return JsonResponse({'error': 'Access denied'}, status=403)
+    
+    try:
+        from docx import Document
+        from docx.shared import Pt, RGBColor
+        from docx.enum.text import WD_ALIGN_PARAGRAPH
+    except ImportError:
+        return JsonResponse({
+            'error': 'python-docx kutubxonasi o\'rnatilmagan. Quyidagi buyruqni bajaring: pip install python-docx'
+        }, status=500)
+    
+    # Yangi Word hujjat yaratish
+    doc = Document()
+    
+    # Sarlavha
+    title = doc.add_heading('Test Savollari Namuna Fayli', 0)
+    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+    # Qo'llanma
+    doc.add_paragraph('Bu fayl Word formatida test savollarini yaratish uchun namuna hisoblanadi.')
+    doc.add_paragraph('')
+    
+    instruction_heading = doc.add_heading('📋 Qo\'llanma:', level=1)
+    
+    instructions = [
+        '📋 FORMAT QOIDASI (Bitta Oddiy Qoida):',
+        '',
+        '1️⃣ SAVOL: Raqam + nuqta + bo\'sh joy + savol matni',
+        '   Masalan: 1. Matematikada 2+2 nechaga teng?',
+        '',
+        '2️⃣ VARIANTLAR: Harf + qavs + bo\'sh joy + variant matni',
+        '   Masalan: a) 3',
+        '           b) 4 (✓)',
+        '           c) 5',
+        '           d) 6',
+        '',
+        '3️⃣ TO\'G\'RI JAVOB: Variant matnidan keyin (✓) belgisini qo\'shing',
+        '   Faqat: (✓)',
+        '',
+        '4️⃣ BO\'SH QATOR: Har bir savoldan keyin bo\'sh qator qoldiring',
+        '',
+        '⚠️ MUHIM: Formatga qat\'iy rioya qiling!'
+    ]
+    
+    for instruction in instructions:
+        p = doc.add_paragraph(instruction)
+        p.style.font.size = Pt(11)
+    
+    doc.add_paragraph('')
+    doc.add_paragraph('=' * 50)
+    doc.add_paragraph('')
+    
+    # Namuna savollar
+    example_heading = doc.add_heading('📝 Namuna Savollar:', level=1)
+    
+    # Namuna 1
+    doc.add_paragraph('1. Matematikada 2+2 nechaga teng?', style='List Number')
+    doc.add_paragraph('')
+    doc.add_paragraph('a) 3')
+    doc.add_paragraph('b) 4 (✓)')
+    doc.add_paragraph('c) 5')
+    doc.add_paragraph('d) 6')
+    doc.add_paragraph('')
+    
+    # Namuna 2
+    doc.add_paragraph('2. Fizikada tezlik formulasi qanday?', style='List Number')
+    doc.add_paragraph('')
+    doc.add_paragraph('a) v = s/t (✓)')
+    doc.add_paragraph('b) v = s*t')
+    doc.add_paragraph('c) v = t/s')
+    doc.add_paragraph('d) v = s+t')
+    doc.add_paragraph('')
+    
+    # Namuna 3
+    doc.add_paragraph('3. Kimyoda suv formulasi qanday?', style='List Number')
+    doc.add_paragraph('')
+    doc.add_paragraph('a) H2O (✓)')
+    doc.add_paragraph('b) CO2')
+    doc.add_paragraph('c) O2')
+    doc.add_paragraph('d) N2')
+    doc.add_paragraph('')
+    
+    # Namuna 4
+    doc.add_paragraph('4. O\'zbekiston poytaxti qayerda?', style='List Number')
+    doc.add_paragraph('')
+    doc.add_paragraph('a) Samarqand')
+    doc.add_paragraph('b) Toshkent (✓)')
+    doc.add_paragraph('c) Buxoro')
+    doc.add_paragraph('d) Andijon')
+    doc.add_paragraph('')
+    
+    # Namuna 5
+    doc.add_paragraph('5. Matnli javob savoli (to\'g\'ri javob belgilanmaydi)', style='List Number')
+    doc.add_paragraph('')
+    doc.add_paragraph('Bu savol matnli javob talab qiladi va variantlar bo\'lmaydi.')
+    doc.add_paragraph('')
+    
+    # Eslatma
+    doc.add_paragraph('')
+    doc.add_paragraph('=' * 50)
+    doc.add_paragraph('')
+    note_heading = doc.add_heading('⚠️ Eslatma:', level=2)
+    doc.add_paragraph('• To\'g\'ri javob belgilanmagan bo\'lsa, birinchi variant (a) avtomatik to\'g\'ri deb qabul qilinadi')
+    doc.add_paragraph('• Variantlar bo\'lmasa, savol matnli javob turiga o\'tadi')
+    doc.add_paragraph('• Har bir savoldan keyin bo\'sh qator qoldirish tavsiya etiladi')
+    
+    # Faylni saqlash
+    from io import BytesIO
+    output = BytesIO()
+    doc.save(output)
+    output.seek(0)
+    
+    filename = f"test_savollari_namuna_{timezone.now().strftime('%Y%m%d_%H%M%S')}.docx"
+    
+    response = HttpResponse(
+        output.getvalue(),
+        content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    )
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    
+    return response
+
+
+@login_required
+def word_import_guide(request):
+    """Word import qo'llanmasi sahifasi - Admin va O'qituvchilar uchun"""
+    if request.user.role not in ['teacher', 'admin']:
+        return HttpResponseForbidden('<h1>403 - Access Denied</h1><p>You do not have permission to access this page.</p>')
+    
+    return render(request, 'tests_app/word_import_guide.html')
+
+
+@login_required
+def upload_questions_from_word(request, test_id):
+    """Upload questions from Word file - Teachers and Admins"""
+    if request.user.role not in ['teacher', 'admin']:
+        return JsonResponse({'error': 'Access denied'}, status=403)
+    
+    test = get_object_or_404(Test, id=test_id, created_by=request.user)
+    
+    if request.method == 'POST':
+        try:
+            word_file = request.FILES.get('word_file')
+            if not word_file:
+                return JsonResponse({'error': 'Word fayl yuklanmadi'}, status=400)
+            
+            # Word faylini o'qish
+            try:
+                from docx import Document
+            except ImportError:
+                return JsonResponse({
+                    'error': 'python-docx kutubxonasi o\'rnatilmagan. Quyidagi buyruqni bajaring: pip install python-docx'
+                }, status=500)
+            
+            doc = Document(word_file)
+            
+            questions_created = 0
+            current_question = None
+            current_choices = []
+            question_number = 0
+            
+            # Barcha paragraflarni bir marta o'qish
+            all_paragraphs = [para.text.strip() for para in doc.paragraphs if para.text.strip()]
+            
+            with transaction.atomic():
+                for text in all_paragraphs:
+                    # Bo'sh qatorlarni o'tkazib yuborish
+                    if not text or not text.strip():
+                        continue
+                    
+                    # ANIQ FORMAT: Savol raqam bilan boshlanadi (1., 2., 3., ...)
+                    try:
+                        question_match = re.match(r'^(\d+)\.\s*(.+)$', text.strip())
+                    except Exception as e:
+                        print(f"Regex error for text: {text[:50]}... Error: {str(e)}")
+                        continue
+                    
+                    if question_match:
+                        # Oldingi savolni saqlash (agar mavjud bo'lsa)
+                        if current_question:
+                            if current_choices:
+                                current_question.question_type = 'single_choice'
+                                current_question.save()
+                                
+                                # Agar to'g'ri javob belgilanmagan bo'lsa, birinchi variantni to'g'ri qilish
+                                has_correct = any(is_correct for _, is_correct in current_choices)
+                                if not has_correct and current_choices:
+                                    current_choices[0] = (current_choices[0][0], True)
+                                
+                                for choice_text, is_correct in current_choices:
+                                    Choice.objects.create(
+                                        question=current_question,
+                                        choice_text=choice_text,
+                                        is_correct=is_correct
+                                    )
+                            else:
+                                current_question.question_type = 'text_answer'
+                                current_question.save()
+                            
+                            questions_created += 1
+                        
+                        # Yangi savol yaratish
+                        question_number += 1
+                        question_text = question_match.group(2).strip()
+                        
+                        question = Question.objects.create(
+                            test=test,
+                            question_text=question_text,
+                            question_type='single_choice',  # Default, keyin o'zgartiriladi
+                            points=1.0,
+                            order=question_number,
+                            explanation=''
+                        )
+                        
+                        current_question = question
+                        current_choices = []
+                    
+                    # ANIQ FORMAT: Javob variantlari a), b), c), d) yoki A), B), C), D) bilan boshlanadi
+                    elif current_question:
+                        # Format: a) variant matni (✓) yoki a) variant matni
+                        try:
+                            choice_match = re.match(r'^([a-dA-D])[\)\.]\s*(.+)$', text.strip(), re.IGNORECASE)
+                        except Exception as e:
+                            print(f"Regex error for choice text: {text[:50]}... Error: {str(e)}")
+                            choice_match = None
+                        
+                        if choice_match:
+                            choice_text = choice_match.group(2).strip()
+                            
+                            # To'g'ri javobni aniqlash - faqat (✓) belgisi
+                            is_correct = False
+                            
+                            # Faqat (✓) belgisini qidirish
+                            if '(✓)' in choice_text:
+                                is_correct = True
+                                # Belgini matndan olib tashlash
+                                choice_text = choice_text.replace('(✓)', '').strip()
+                            
+                            current_choices.append((choice_text, is_correct))
+                
+                # Oxirgi savolni saqlash
+                if current_question:
+                    if current_choices:
+                        current_question.question_type = 'single_choice'
+                        current_question.save()
+                        
+                        # Agar to'g'ri javob belgilanmagan bo'lsa, birinchi variantni to'g'ri qilish
+                        has_correct = any(is_correct for _, is_correct in current_choices)
+                        if not has_correct and current_choices:
+                            current_choices[0] = (current_choices[0][0], True)
+                        
+                        for choice_text, is_correct in current_choices:
+                            Choice.objects.create(
+                                question=current_question,
+                                choice_text=choice_text,
+                                is_correct=is_correct
+                            )
+                    else:
+                        current_question.question_type = 'text_answer'
+                        current_question.save()
+                    
+                    questions_created += 1
+            
+            return JsonResponse({
+                'message': f'{questions_created} ta savol Word fayldan muvaffaqiyatli yuklandi!',
+                'questions_count': questions_created
+            })
+            
+        except Exception as e:
+            import traceback
+            error_traceback = traceback.format_exc()
+            print(f"Word upload error: {str(e)}")
+            print(error_traceback)
+            # Xatolik xabarini yaxshiroq formatlash
+            error_message = str(e)
+            if "expected pattern" in error_message.lower() or "match" in error_message.lower():
+                error_message = "Word fayl formatida xatolik. Iltimos, format qoidalariga rioya qiling: 1. Savol? → a) Variant (✓)"
+            return JsonResponse({
+                'error': f'Word fayl yuklashda xatolik: {error_message}',
+                'details': error_traceback if settings.DEBUG else None
+            }, status=500)
     
     return render(request, 'tests_app/upload_questions.html', {'test': test})
 
 @login_required
+def create_test_from_word(request):
+    """Create test from Word file - Teachers and Admins"""
+    if request.user.role not in ['teacher', 'admin']:
+        return JsonResponse({'error': 'Access denied'}, status=403)
+    
+    if request.method == 'POST':
+        try:
+            word_file = request.FILES.get('word_file')
+            if not word_file:
+                return JsonResponse({'error': 'Word fayl yuklanmadi'}, status=400)
+            
+            # Word faylini o'qish
+            try:
+                from docx import Document
+            except ImportError:
+                return JsonResponse({
+                    'error': 'python-docx kutubxonasi o\'rnatilmagan. Quyidagi buyruqni bajaring: pip install python-docx'
+                }, status=500)
+            
+            doc = Document(word_file)
+            
+            # Barcha paragraflarni o'qish
+            all_paragraphs = [para.text.strip() for para in doc.paragraphs if para.text.strip()]
+            
+            # Test ma'lumotlarini olish
+            test_title = ''
+            test_description = ''
+            test_subject = ''
+            test_grade = ''
+            test_time_limit = 45
+            test_max_attempts = 1
+            test_show_results = True
+            test_is_active = True
+            test_shuffle_questions = False
+            
+            # Agar formdan sinf kelsa, uni ishlatish
+            if request.POST.get('grade'):
+                test_grade = request.POST.get('grade').strip()
+            
+            # Test nomini topish (birinchi katta sarlavha yoki "Test nomi:" dan keyin)
+            for i, para in enumerate(all_paragraphs):
+                if 'test nomi' in para.lower() or 'test nomi:' in para.lower():
+                    if i + 1 < len(all_paragraphs):
+                        test_title = all_paragraphs[i + 1]
+                        break
+                elif i == 0 and len(para) > 5 and len(para) < 100:
+                    test_title = para
+                    break
+            
+            # Fan va sinf ma'lumotlarini topish (faqat agar formdan kelmagan bo'lsa)
+            for para in all_paragraphs:
+                if 'fan:' in para.lower() or 'subject:' in para.lower():
+                    parts = para.split(':')
+                    if len(parts) > 1:
+                        test_subject = parts[1].strip()
+                elif not test_grade and ('sinf:' in para.lower() or 'grade:' in para.lower()):
+                    # Agar formdan sinf kelmagan bo'lsa, Word fayldan o'qish
+                    parts = para.split(':')
+                    if len(parts) > 1:
+                        test_grade = parts[1].strip().replace('-sinf', '').replace('sinf', '').strip()
+                elif 'vaqt:' in para.lower() or 'time:' in para.lower():
+                    parts = para.split(':')
+                    if len(parts) > 1:
+                        try:
+                            test_time_limit = int(parts[1].strip().replace('daqiqa', '').replace('min', '').strip())
+                        except:
+                            pass
+            
+            # Agar test nomi topilmasa, default
+            if not test_title:
+                test_title = 'Word fayldan yaratilgan test'
+            
+            # Savollarni topish va yaratish
+            questions_data = []
+            current_question = None
+            current_choices = []
+            question_number = 0
+            
+            for text in all_paragraphs:
+                # Bo'sh qatorlarni o'tkazib yuborish
+                if not text or not text.strip():
+                    continue
+                
+                # Savolni aniqlash
+                try:
+                    question_match = re.match(r'^(\d+)\.\s*(.+)$', text.strip())
+                except Exception as e:
+                    print(f"Regex error for text: {text[:50]}... Error: {str(e)}")
+                    continue
+                
+                if question_match:
+                    # Oldingi savolni saqlash
+                    if current_question:
+                        questions_data.append({
+                            'question_text': current_question,
+                            'question_type': 'single_choice' if current_choices else 'text_answer',
+                            'points': 1.0,
+                            'choices': current_choices,
+                            'explanation': ''
+                        })
+                    
+                    # Yangi savol
+                    question_number += 1
+                    current_question = question_match.group(2).strip()
+                    current_choices = []
+                
+                # Javob variantlarini aniqlash
+                elif current_question:
+                    try:
+                        choice_match = re.match(r'^([a-dA-D])[\)\.]\s*(.+)$', text.strip(), re.IGNORECASE)
+                    except Exception as e:
+                        print(f"Regex error for choice text: {text[:50]}... Error: {str(e)}")
+                        choice_match = None
+                    
+                    if choice_match:
+                        choice_text = choice_match.group(2).strip()
+                        is_correct = False
+                        
+                        if '(✓)' in choice_text:
+                            is_correct = True
+                            choice_text = choice_text.replace('(✓)', '').strip()
+                        
+                        current_choices.append({
+                            'text': choice_text,
+                            'is_correct': is_correct
+                        })
+            
+            # Oxirgi savolni saqlash
+            if current_question:
+                questions_data.append({
+                    'question_text': current_question,
+                    'question_type': 'single_choice' if current_choices else 'text_answer',
+                    'points': 1.0,
+                    'choices': current_choices,
+                    'explanation': ''
+                })
+            
+            if not questions_data:
+                return JsonResponse({
+                    'error': 'Word faylda savollar topilmadi. Formatga rioya qiling.',
+                    'details': 'Format: 1. Savol? → a) Variant (✓)'
+                }, status=400)
+            
+            # Test yaratish
+            with transaction.atomic():
+                # Grade ni to'g'ri o'rnatish
+                if test_grade and test_grade.strip() and test_grade.strip().isdigit():
+                    final_grade = int(test_grade.strip())
+                else:
+                    # Agar grade topilmasa, default 1
+                    final_grade = 1
+                
+                test = Test.objects.create(
+                    title=test_title,
+                    description=test_description,
+                    subject=test_subject or 'Umumiy',
+                    grade=final_grade,
+                    time_limit=test_time_limit,
+                    max_attempts=test_max_attempts,
+                    show_results=test_show_results,
+                    is_active=True,  # Har doim faollashtirish - o'quvchilar ko'ra olishi uchun
+                    shuffle_questions=test_shuffle_questions,
+                    created_by=request.user
+                )
+                
+                # Savollarni yaratish
+                for i, q_data in enumerate(questions_data):
+                    question = Question.objects.create(
+                        test=test,
+                        question_text=q_data['question_text'],
+                        question_type=q_data['question_type'],
+                        points=q_data['points'],
+                        order=i + 1,
+                        explanation=q_data['explanation']
+                    )
+                    
+                    # Variantlarni yaratish
+                    if q_data['choices'] and len(q_data['choices']) > 0:
+                        # Agar to'g'ri javob belgilanmagan bo'lsa, birinchi variantni to'g'ri qilish
+                        has_correct = any(c['is_correct'] for c in q_data['choices'])
+                        if not has_correct and q_data['choices']:
+                            q_data['choices'][0]['is_correct'] = True
+                        
+                        for choice_data in q_data['choices']:
+                            if choice_data.get('text', '').strip():  # Faqat bo'sh bo'lmagan variantlarni qo'shish
+                                Choice.objects.create(
+                                    question=question,
+                                    choice_text=choice_data['text'].strip(),
+                                    is_correct=choice_data['is_correct']
+                                )
+                    elif q_data['question_type'] in ['single_choice', 'multiple_choice']:
+                        # Agar single_choice yoki multiple_choice bo'lsa, lekin variantlar bo'lmasa, xatolik
+                        raise ValueError(f"Savol #{i + 1} uchun javob variantlari topilmadi. Formatga rioya qiling: a) Variant (✓)")
+                
+                # Test yaratilganidan keyin, savollar va variantlar sonini tekshirish
+                created_questions = test.questions.count()
+                total_choices = sum(q.choices.count() for q in test.questions.all())
+                
+                return JsonResponse({
+                    'success': True,
+                    'message': f'✅ Test muvaffaqiyatli yaratildi va faollashtirildi!<br>📝 {created_questions} ta savol<br>🔘 {total_choices} ta variant<br>👥 O\'quvchilar endi testni yecha oladi.',
+                    'test_id': test.id,
+                    'auto_created': True,
+                    'questions_count': created_questions,
+                    'choices_count': total_choices,
+                    'test_data': {
+                        'title': test.title,
+                        'description': test.description,
+                        'subject': test.subject,
+                        'grade': test.grade,
+                        'time_limit': test.time_limit,
+                        'max_attempts': test.max_attempts,
+                        'show_results': test.show_results,
+                        'is_active': test.is_active,
+                        'shuffle_questions': test.shuffle_questions
+                    }
+                })
+                
+        except Exception as e:
+            import traceback
+            error_traceback = traceback.format_exc()
+            print(f"Word test creation error: {str(e)}")
+            print(error_traceback)
+            # Xatolik xabarini yaxshiroq formatlash
+            error_message = str(e)
+            if "expected pattern" in error_message.lower() or "match" in error_message.lower():
+                error_message = "Word fayl formatida xatolik. Iltimos, format qoidalariga rioya qiling: 1. Savol? → a) Variant (✓)"
+            return JsonResponse({
+                'success': False,
+                'error': f'Word fayldan test yaratishda xatolik: {error_message}',
+                'details': error_traceback if settings.DEBUG else 'Iltimos, formatga rioya qiling: 1. Savol? → a) Variant (✓)'
+            }, status=500)
+    
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+
+@login_required
 def create_test_view(request):
-    """Create new test - only for teachers"""
-    if request.user.role != 'teacher':
+    """Create new test - Teachers and Admins"""
+    if request.user.role not in ['teacher', 'admin']:
         return JsonResponse({'error': 'Access denied'}, status=403)
     
     if request.method == 'GET':
@@ -1425,12 +2113,22 @@ def open_test_for_student(request, test_id, student_id):
         ).count()
         
         # Yangi urinish yaratish (qayta ishlash imkoniyati)
-        new_attempt = TestAttempt.objects.create(
-            student=student,
-            test=test,
-            attempt_number=previous_attempts + 1,
-            is_retake=True
-        )
+        # Database'da hali ham mavjud bo'lgan maydonlar (correct_answers, incorrect_answers, unanswered, termination_reason) NOT NULL
+        # Shuning uchun raw SQL orqali INSERT qilamiz
+        from django.db import connection
+        db_backend = connection.vendor
+        with connection.cursor() as cursor:
+            if db_backend == 'sqlite':
+                # SQLite uchun - parametrlarni to'g'ri formatlash
+                sql_query = "INSERT INTO tests_app_testattempt (test_id, student_id, started_at, is_retake, correct_answers, incorrect_answers, unanswered, total_points, attempt_number, is_completed, current_question_index, is_terminated, termination_reason) VALUES (?, ?, ?, 1, 0, 0, 0, 0, ?, 0, 0, 0, ?)"
+                cursor.execute(sql_query, [test.id, student.id, timezone.now(), previous_attempts + 1, ''])
+                attempt_id = cursor.lastrowid
+            else:
+                # PostgreSQL uchun RETURNING ishlatamiz
+                sql_query = "INSERT INTO tests_app_testattempt (test_id, student_id, started_at, is_retake, correct_answers, incorrect_answers, unanswered, total_points, attempt_number, is_completed, current_question_index, is_terminated, termination_reason) VALUES (%s, %s, %s, TRUE, 0, 0, 0, 0, %s, FALSE, 0, FALSE, %s) RETURNING id"
+                cursor.execute(sql_query, [test.id, student.id, timezone.now(), previous_attempts + 1, ''])
+                attempt_id = cursor.fetchone()[0]
+            new_attempt = TestAttempt.objects.get(id=attempt_id)
         
         # Agar qayta ishlash so'rovi mavjud bo'lsa, uni tasdiqlangan deb belgilash
         retake_request = TestRetakeRequest.objects.filter(

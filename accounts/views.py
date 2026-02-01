@@ -379,7 +379,36 @@ def profile_view(request):
             data = json.loads(request.body)
             user = request.user
             
-            # Update allowed fields
+            # Parol o'zgartirish (alohida action)
+            if data.get('action') == 'change_password':
+                current_password = data.get('current_password')
+                new_password = data.get('new_password')
+                confirm_password = data.get('confirm_password')
+                
+                if not current_password or not new_password or not confirm_password:
+                    return JsonResponse({'error': "Barcha maydonlarni to'ldiring"}, status=400)
+                
+                if new_password != confirm_password:
+                    return JsonResponse({'error': "Yangi parollar mos kelmaydi"}, status=400)
+                
+                if len(new_password) < 8:
+                    return JsonResponse({'error': "Yangi parol kamida 8 ta belgidan iborat bo'lishi kerak"}, status=400)
+                
+                # Joriy parolni tekshirish
+                if not user.check_password(current_password):
+                    return JsonResponse({'error': 'Joriy parol noto\'g\'ri'}, status=400)
+                
+                # Parolni o'zgartirish - set_password() temporary_password ni ham yangilaydi (export uchun)
+                user.set_password(new_password)
+                user.save()
+                
+                # Sessiyani yangilash (parol o'zgargach login qilish kerak emas)
+                from django.contrib.auth import update_session_auth_hash
+                update_session_auth_hash(request, user)
+                
+                return JsonResponse({'message': 'Parol muvaffaqiyatli o\'zgartirildi!'})
+            
+            # Profil ma'lumotlarini yangilash
             user.first_name = data.get('first_name', user.first_name)
             user.last_name = data.get('last_name', user.last_name)
             user.phone_number = data.get('phone_number', user.phone_number)

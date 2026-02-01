@@ -168,6 +168,17 @@
         </a>
     {% endif %}
     
+    <!-- Word Import Guide - Admin va O'qituvchilar uchun -->
+    {% if user.role == 'admin' or user.role == 'teacher' %}
+    <a href="{% url 'tests:word_import_guide' %}" 
+       class="sidebar-nav-icon {% if 'word-import-guide' in request.path %}active{% endif %}" 
+       title="Word Formatida Test Yaratish Qo'llanmasi"
+       data-bs-toggle="tooltip" 
+       data-bs-placement="right">
+        <i class="fas fa-file-word"></i>
+    </a>
+    {% endif %}
+    
     <!-- Natijalarim - FAQAT O'QUVCHI uchun -->
     {% if user.role == 'student' %}
     <a href="{% url 'tests:overall_results' %}" 

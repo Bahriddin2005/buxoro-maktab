@@ -1,0 +1,13 @@
+[tool.pyright]
+reportMissingImports = "none"
+reportMissingTypeStubs = false
+reportUndefinedVariable = "none"
+typeCheckingMode = "off"
+pythonVersion = "3.8"
+
+[tool.basedpyright]
+reportMissingImports = "none"
+reportMissingTypeStubs = false
+reportUndefinedVariable = "none"
+typeCheckingMode = "off"
+pythonVersion = "3.8"

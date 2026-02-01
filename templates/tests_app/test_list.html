@@ -375,16 +375,30 @@ async function loadTests(page = 1) {
         
         const response = await fetch(`/tests/?${params.toString()}`, {
             headers: {
-                'Accept': 'application/json'
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
             },
             cache: 'no-cache'  // Force no cache
         });
         
         console.log('📡 Response status:', response.status);
+        console.log('📡 Response headers:', response.headers.get('Content-Type'));
         
         if (!response.ok) {
             console.error('❌ Response not OK:', response.status, response.statusText);
+            // Response matnini o'qish (xatolik xabarini ko'rish uchun)
+            const errorText = await response.text();
+            console.error('❌ Error response:', errorText.substring(0, 500));
             throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        // Content-Type ni tekshirish
+        const contentType = response.headers.get('Content-Type') || '';
+        if (!contentType.includes('application/json')) {
+            const text = await response.text();
+            console.error('❌ Expected JSON but got:', contentType);
+            console.error('❌ Response text (first 500 chars):', text.substring(0, 500));
+            throw new Error(`Server HTML qaytardi, JSON kutilyapti. Content-Type: ${contentType}`);
         }
         
         const data = await response.json();
