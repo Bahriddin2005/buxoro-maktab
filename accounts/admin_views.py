@@ -110,13 +110,20 @@ def export_teachers_credentials_view(request):
     for idx, user in enumerate(teachers, 1):
         row = header_row + idx
         
-        # Faqat mavjud (saqlangan) parolni ko'rsatish - ro'yxatdan o'tgan paytda kiritilgan parol
-        password = "(Parol saqlanmagan)"
+        # Parol: o'zgargan, yangi qo'shilgan yoki parolsiz (avtomatik yangi parol)
+        password = None
         try:
             if hasattr(user, 'temporary_password') and user.temporary_password:
                 password = user.temporary_password
         except (AttributeError, Exception):
-            password = "(Parol saqlanmagan)"
+            pass
+        
+        # Parolsiz bo'lsa - avtomatik yangi parol yaratib saqlash
+        if not password:
+            password = generate_secure_password()
+            user.set_password(password)
+            user.temporary_password = password
+            user.save()
         
         data = [
             idx,
@@ -129,10 +136,6 @@ def export_teachers_credentials_view(request):
             cell = ws.cell(row=row, column=col, value=value)
             cell.alignment = Alignment(horizontal='left', vertical='center')
             cell.border = thin_border
-            
-            # Parol saqlanmagan bo'lsa, qizil rangda ko'rsatish
-            if col == 4 and value == "(Parol saqlanmagan)":
-                cell.font = Font(italic=True, color="FF0000")
             
             if row % 2 == 0:
                 cell.fill = PatternFill(start_color="E7E6E6", end_color="E7E6E6", fill_type="solid")
@@ -220,13 +223,20 @@ def export_students_credentials_view(request):
     for idx, user in enumerate(students, 1):
         row = header_row + idx
         
-        # Faqat mavjud (saqlangan) parolni ko'rsatish
-        password = "(Parol saqlanmagan)"
+        # Parol: o'zgargan, yangi qo'shilgan yoki parolsiz (avtomatik yangi parol)
+        password = None
         try:
             if hasattr(user, 'temporary_password') and user.temporary_password:
                 password = user.temporary_password
         except (AttributeError, Exception):
-            password = "(Parol saqlanmagan)"
+            pass
+        
+        # Parolsiz bo'lsa - avtomatik yangi parol yaratib saqlash
+        if not password:
+            password = generate_secure_password()
+            user.set_password(password)
+            user.temporary_password = password
+            user.save()
         
         data = [
             idx,
@@ -239,10 +249,6 @@ def export_students_credentials_view(request):
             cell = ws.cell(row=row, column=col, value=value)
             cell.alignment = Alignment(horizontal='left', vertical='center')
             cell.border = thin_border
-            
-            # Parol saqlanmagan bo'lsa, qizil rangda ko'rsatish
-            if col == 4 and value == "(Parol saqlanmagan)":
-                cell.font = Font(italic=True, color="FF0000")
             
             if row % 2 == 0:
                 cell.fill = PatternFill(start_color="E7E6E6", end_color="E7E6E6", fill_type="solid")
