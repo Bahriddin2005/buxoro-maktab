@@ -1,6 +1,38 @@
 # Server Yangilash Ko'rsatmasi
 
-## Muammo
+## python-docx xatosi (Word import ishlamasa)
+
+**Xatolik:** `python-docx kutubxonasi o'rnatilmagan`
+
+**Yechim — serverni SSH orqali ulang va quyidagilarni bajaring:**
+
+```bash
+# 1. Projekt papkasiga o'ting
+cd /home/baxadev/my_test   # yoki loyihangiz joylashuvi
+
+# 2. Virtual environment aktivlashtiring
+source venv/bin/activate
+
+# 3. python-docx o'rnating
+pip install python-docx
+
+# Yoki barcha requirements ni qayta o'rnating:
+pip install -r requirements.txt
+
+# 4. Gunicorn qayta ishga tushiring
+sudo systemctl restart buxoro-test
+```
+
+Yoki script ishlatish:
+```bash
+chmod +x install_python_docx.sh
+./install_python_docx.sh
+sudo systemctl restart buxoro-test
+```
+
+---
+
+## Muammo (oldingi)
 `/tests/grade-results/` sahifasi local'da ko'rinmoqda, serverda ko'rinmayapti.
 
 ## Yechim

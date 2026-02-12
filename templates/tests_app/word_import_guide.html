@@ -3,229 +3,536 @@
 
 {% block title %}Word Formatida Test Yaratish Qo'llanmasi{% endblock %}
 
+{% block extra_css %}
+<style>
+/* ========== Word Import Guide — Chiroyli To'liq Dizayn ========== */
+.word-guide-page .container-fluid { max-width: 1200px; margin: 0 auto; }
+
+/* Hero section */
+.word-guide-hero {
+    background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.06) 100%);
+    backdrop-filter: blur(24px);
+    border-radius: 24px;
+    border: 1px solid rgba(255,255,255,0.2);
+    padding: 2.5rem 3rem;
+    text-align: center;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+}
+.word-guide-hero::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #667eea, #764ba2, #f093fb);
+}
+.word-guide-hero-icon {
+    width: 72px;
+    height: 72px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: #fff;
+    margin-bottom: 1rem;
+    box-shadow: 0 12px 30px rgba(102,126,234,0.4);
+}
+.word-guide-hero h1 { color: #fff; font-weight: 700; font-size: 1.75rem; margin: 0 0 0.5rem; letter-spacing: -0.03em; }
+.word-guide-hero p { color: rgba(255,255,255,0.8); margin: 0; font-size: 1.05rem; }
+
+/* Glass cards — umumiy */
+.word-guide-card {
+    background: linear-gradient(145deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.04) 100%);
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.15);
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+}
+.word-guide-card:hover { transform: translateY(-3px); box-shadow: 0 16px 48px rgba(0,0,0,0.15); }
+.word-guide-card-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: #fff;
+    font-weight: 600;
+    font-size: 1.25rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.word-guide-card-title i { opacity: 0.9; }
+
+/* Step blocks */
+.word-guide-step {
+    background: rgba(255,255,255,0.05);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 1.25rem;
+    border-left: 4px solid rgba(102,126,234,0.6);
+}
+.word-guide-step:last-child { margin-bottom: 0; }
+.word-guide-step-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 12px;
+    color: #fff;
+    font-weight: 700;
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+}
+.word-guide-step h5 { color: #fff; font-weight: 600; margin: 0 0 0.5rem; font-size: 1.05rem; }
+.word-guide-step p, .word-guide-step li { color: rgba(255,255,255,0.85); margin-bottom: 0.5rem; }
+.word-guide-step ol { padding-left: 1.25rem; margin-bottom: 0; }
+.word-guide-step code {
+    background: rgba(102,126,234,0.2);
+    color: #a5b4fc;
+    padding: 0.2em 0.5em;
+    border-radius: 6px;
+    font-size: 0.9em;
+}
+
+/* Format code block */
+.word-guide-code {
+    background: rgba(15,23,42,0.7);
+    border-radius: 16px;
+    padding: 1.5rem;
+    border: 1px solid rgba(255,255,255,0.08);
+    font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+    font-size: 0.9rem;
+    line-height: 1.9;
+    color: #e2e8f0;
+    overflow-x: auto;
+    white-space: pre;
+}
+.word-guide-code .correct { color: #4ade80; }
+
+/* Alerts — moslashtirilgan */
+.word-guide-alert {
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    border: none;
+}
+.word-guide-alert-warning { background: rgba(251,191,36,0.2); color: #fef3c7; }
+.word-guide-alert-success { background: rgba(74,222,128,0.15); color: #bbf7d0; }
+.word-guide-alert-info { background: rgba(56,189,248,0.15); color: #bae6fd; }
+
+/* Sidebar cards */
+.word-guide-sidebar-card {
+    background: linear-gradient(145deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.04) 100%);
+    backdrop-filter: blur(20px);
+    border-radius: 18px;
+    border: 1px solid rgba(255,255,255,0.15);
+    padding: 1.5rem;
+    margin-bottom: 1.25rem;
+    transition: all 0.3s ease;
+}
+.word-guide-sidebar-card:hover {
+    border-color: rgba(102,126,234,0.4);
+    box-shadow: 0 12px 36px rgba(0,0,0,0.12);
+}
+.word-guide-sidebar-card h5 {
+    color: #fff;
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.word-guide-sidebar-card .btn {
+    border-radius: 12px;
+    font-weight: 500;
+    padding: 0.65rem 1rem;
+}
+.word-guide-sidebar-card .btn-primary {
+    background: linear-gradient(135deg, #667eea, #764ba2) !important;
+    border: none !important;
+}
+.word-guide-sidebar-card .btn-outline-light {
+    border-color: rgba(255,255,255,0.3);
+    color: rgba(255,255,255,0.9);
+}
+.word-guide-sidebar-card .btn-outline-light:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.5);
+    color: #fff;
+}
+.word-guide-tips ul { padding-left: 1.25rem; margin-bottom: 0; }
+.word-guide-tips li { color: rgba(255,255,255,0.8); margin-bottom: 0.4rem; font-size: 0.9rem; }
+
+/* Word Upload Card */
+.word-upload-card {
+    background: linear-gradient(145deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.06) 100%);
+    backdrop-filter: blur(24px);
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.2);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1);
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.word-upload-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 24px 70px rgba(0,0,0,0.25);
+}
+.word-upload-header {
+    background: linear-gradient(90deg, rgba(102,126,234,0.4) 0%, rgba(118,75,162,0.4) 100%);
+    padding: 1.5rem 2rem;
+    text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.word-upload-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 16px;
+    margin-bottom: 0.75rem;
+    font-size: 1.75rem;
+    color: #fff;
+    box-shadow: 0 8px 24px rgba(102,126,234,0.4);
+}
+.word-upload-title {
+    color: #fff;
+    font-weight: 600;
+    font-size: 1.35rem;
+    margin: 0 0 0.25rem 0;
+    letter-spacing: -0.02em;
+}
+.word-upload-subtitle {
+    color: rgba(255,255,255,0.75);
+    font-size: 0.9rem;
+    margin: 0;
+}
+.word-upload-body {
+    padding: 2rem;
+}
+.word-upload-dropzone {
+    position: relative;
+    border: 2px dashed rgba(255,255,255,0.35);
+    border-radius: 16px;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    background: rgba(255,255,255,0.03);
+    margin-bottom: 1.5rem;
+}
+.word-upload-dropzone:hover,
+.word-upload-dropzone.dragover {
+    border-color: rgba(102,126,234,0.7);
+    background: rgba(102,126,234,0.08);
+}
+.word-upload-label {
+    display: block;
+    cursor: pointer;
+    padding: 0.5rem;
+}
+.word-upload-cloud {
+    font-size: 2.5rem;
+    color: rgba(255,255,255,0.6);
+    display: block;
+    margin-bottom: 0.75rem;
+    transition: color 0.3s ease;
+}
+.word-upload-dropzone:hover .word-upload-cloud {
+    color: #667eea;
+}
+.word-upload-text {
+    color: rgba(255,255,255,0.95);
+    font-weight: 500;
+    font-size: 1.05rem;
+    display: block;
+    margin-bottom: 0.35rem;
+}
+.word-upload-hint {
+    color: rgba(255,255,255,0.5);
+    font-size: 0.8rem;
+    display: block;
+}
+.word-upload-filename {
+    margin-top: 0.75rem;
+    color: #4ade80;
+    font-size: 0.9rem;
+    font-weight: 500;
+    display: none;
+}
+.word-upload-filename.has-file {
+    display: block;
+}
+.word-upload-options {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-end;
+    flex-wrap: wrap;
+}
+.word-upload-field {
+    flex: 1;
+    min-width: 140px;
+}
+.word-upload-label-sm {
+    display: block;
+    color: rgba(255,255,255,0.85);
+    font-size: 0.85rem;
+    margin-bottom: 0.4rem;
+    font-weight: 500;
+}
+.word-upload-select {
+    background: rgba(255,255,255,0.1) !important;
+    border: 1px solid rgba(255,255,255,0.2) !important;
+    color: #fff !important;
+    border-radius: 12px;
+    padding: 0.65rem 1rem;
+}
+.word-upload-select:focus {
+    box-shadow: 0 0 0 2px rgba(102,126,234,0.4) !important;
+    border-color: rgba(102,126,234,0.6) !important;
+}
+.word-upload-select option {
+    background: #2c3e50;
+    color: #fff;
+}
+.word-upload-btn {
+    background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%) !important;
+    border: none !important;
+    color: #fff !important;
+    font-weight: 600;
+    padding: 0.75rem 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(74,222,128,0.35);
+    transition: all 0.25s ease;
+    white-space: nowrap;
+}
+.word-upload-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(74,222,128,0.45);
+    color: #fff !important;
+}
+.word-upload-btn:active {
+    transform: translateY(0);
+}
+.word-upload-result {
+    margin: 1rem 2rem 2rem;
+    border-radius: 12px;
+    overflow: hidden;
+}
+.word-upload-result .alert {
+    margin: 0;
+    border: none;
+    border-radius: 12px;
+}
+@media (max-width: 576px) {
+    .word-upload-body { padding: 1.25rem; }
+    .word-upload-dropzone { padding: 1.5rem; }
+    .word-upload-options { flex-direction: column; }
+    .word-upload-btn { width: 100%; }
+}
+/* Word guide responsive */
+@media (max-width: 768px) {
+    .word-guide-hero { padding: 1.75rem 1.5rem; }
+    .word-guide-hero h1 { font-size: 1.4rem; }
+    .word-guide-card, .word-guide-sidebar-card { padding: 1.35rem; }
+    .word-guide-code { font-size: 0.8rem; padding: 1rem; }
+}
+</style>
+{% endblock %}
+
 {% block content %}
+<div class="word-guide-page">
 <div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="glass-card p-4 mb-4">
-                <h2 class="text-white mb-3">
-                    <i class="fas fa-book text-primary me-2"></i>
-                    Word yoki TXT fayldan Test Yaratish
-                </h2>
-                <p class="text-white-50">
-                    Word (.docx) yoki TXT (.txt) faylni yuklang — avtomatik quiz test yaratiladi.
-                </p>
-            </div>
-        </div>
+    <!-- Hero -->
+    <div class="word-guide-hero">
+        <div class="word-guide-hero-icon"><i class="fas fa-file-word"></i></div>
+        <h1>Word yoki TXT fayldan Test Yaratish</h1>
+        <p>Faylni yuklang — savollar avtomatik ajratiladi va quiz test yaratiladi</p>
     </div>
 
     <!-- Word/TXT yuklash va test yaratish -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="glass-card p-4" style="border: 2px solid rgba(102, 126, 234, 0.5);">
-                <h4 class="text-white mb-4">
-                    <i class="fas fa-upload text-success me-2"></i>
-                    Faylni Yuklang va Test Yarating
-                </h4>
-                <form id="createQuizFromFileForm" enctype="multipart/form-data">
+            <div class="word-upload-card">
+                <div class="word-upload-header">
+                    <span class="word-upload-icon"><i class="fas fa-file-word"></i></span>
+                    <h4 class="word-upload-title">Faylni Yuklang va Test Yarating</h4>
+                    <p class="word-upload-subtitle">Word (.docx) yoki TXT (.txt) — avtomatik quiz test</p>
+                </div>
+                <form id="createQuizFromFileForm" enctype="multipart/form-data" class="word-upload-form">
                     {% csrf_token %}
-                    <div class="row g-3 align-items-end">
-                        <div class="col-md-5">
-                            <label for="word_file" class="form-label text-white">Word (.docx) yoki TXT (.txt) fayl</label>
-                            <input type="file" class="form-control" id="word_file" name="word_file" accept=".docx,.doc,.txt" required>
-                            <div class="form-text text-white-50">Format: 1. Savol? → a) Variant (✓)</div>
+                    <div class="word-upload-body">
+                        <div class="word-upload-dropzone" id="uploadDropzone">
+                            <input type="file" class="d-none" id="word_file" name="word_file" accept=".docx,.doc,.txt" required>
+                            <label for="word_file" class="word-upload-label">
+                                <i class="fas fa-cloud-upload-alt word-upload-cloud"></i>
+                                <span class="word-upload-text">Faylni tanlang yoki bu yerga tashlang</span>
+                                <span class="word-upload-hint">.docx, .doc, .txt — Format: 1. Savol? → a) Variant (✓)</span>
+                            </label>
+                            <div class="word-upload-filename" id="uploadFilename"></div>
                         </div>
-                        <div class="col-md-3">
-                            <label for="grade" class="form-label text-white">Sinf (ixtiyoriy)</label>
-                            <select class="form-select" id="grade" name="grade">
-                                <option value="">— Tanlang —</option>
-                                <option value="1">1-sinf</option>
-                                <option value="2">2-sinf</option>
-                                <option value="3">3-sinf</option>
-                                <option value="4">4-sinf</option>
-                                <option value="5">5-sinf</option>
-                                <option value="6">6-sinf</option>
-                                <option value="7">7-sinf</option>
-                                <option value="8">8-sinf</option>
-                                <option value="9">9-sinf</option>
-                                <option value="10">10-sinf</option>
-                                <option value="11">11-sinf</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <button type="submit" class="btn btn-success btn-lg w-100" id="createQuizBtn">
+                        <div class="word-upload-options">
+                            <div class="word-upload-field">
+                                <label for="grade" class="word-upload-label-sm">Sinf</label>
+                                <select class="form-select word-upload-select" id="grade" name="grade">
+                                    <option value="">— Tanlang —</option>
+                                    <option value="1">1-sinf</option>
+                                    <option value="2">2-sinf</option>
+                                    <option value="3">3-sinf</option>
+                                    <option value="4">4-sinf</option>
+                                    <option value="5">5-sinf</option>
+                                    <option value="6">6-sinf</option>
+                                    <option value="7">7-sinf</option>
+                                    <option value="8">8-sinf</option>
+                                    <option value="9">9-sinf</option>
+                                    <option value="10">10-sinf</option>
+                                    <option value="11">11-sinf</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="word-upload-btn" id="createQuizBtn">
                                 <i class="fas fa-magic me-2"></i>
                                 Test Yaratish
                             </button>
                         </div>
                     </div>
                 </form>
-                <div id="createQuizResult" class="mt-3" style="display: none;"></div>
+                <div id="createQuizResult" class="word-upload-result" style="display: none;"></div>
             </div>
         </div>
     </div>
 
-    <div class="row">
+    <div class="row g-4">
         <div class="col-lg-8">
             <!-- Qo'llanma -->
-            <div class="glass-card p-4 mb-4">
-                <h3 class="text-white mb-4">
-                    <i class="fas fa-list-ol text-info me-2"></i>
+            <div class="word-guide-card">
+                <h3 class="word-guide-card-title">
+                    <i class="fas fa-list-ol text-info"></i>
                     Qadam-baqadam Qo'llanma
                 </h3>
                 
-                <div class="text-white-50">
-                    <div class="mb-4">
-                        <h5 class="text-white mb-3">1️⃣ Namuna Fayl Yuklab Olish</h5>
-                        <p>Quyidagi tugma orqali Word formatida namuna faylni yuklab oling:</p>
-                        <a href="{% url 'tests:download_word_template' %}" class="btn btn-primary mb-3">
-                            <i class="fas fa-download me-2"></i>
-                            Namuna Word Fayl Yuklab Olish
-                        </a>
-                        <p class="small">Bu fayl Word formatida test yaratish uchun namunadir.</p>
-                    </div>
+                <div class="word-guide-step">
+                    <span class="word-guide-step-num">1</span>
+                    <h5>Namuna Fayl Yuklab Olish</h5>
+                    <p>Word formatida namuna faylni yuklab oling va o'zingizning savollaringiz bilan almashtiring.</p>
+                    <a href="{% url 'tests:download_word_template' %}" class="btn btn-primary">
+                        <i class="fas fa-download me-2"></i>
+                        Namuna Word Fayl
+                    </a>
+                </div>
+                
+                <div class="word-guide-step">
+                    <span class="word-guide-step-num">2</span>
+                    <h5>Word yoki TXT faylni tahrirlash</h5>
+                    <ol>
+                        <li>Faylni Microsoft Word yoki matn muharririda oching</li>
+                        <li>Savollarni o'chirib, o'zingiznikini kiriting</li>
+                        <li>Formatga rioya qiling: <code>1. Savol?</code> → <code>a) Variant (✓)</code></li>
+                    </ol>
+                </div>
                     
-                    <div class="mb-4">
-                        <h5 class="text-white mb-3">2️⃣ Word Faylni Ochish va Tuzatish</h5>
-                        <ol>
-                            <li>Yuklab olgan namuna faylni Microsoft Word yoki boshqa matn muharririda oching</li>
-                            <li>Namuna savollarni o'chirib, o'zingizning savollaringizni kiriting</li>
-                            <li><strong>Bitta qoidaga rioya qiling:</strong> <code>Raqam. Savol?</code> → <code>a) Variant (✓)</code></li>
-                        </ol>
+                <div class="word-guide-step">
+                    <span class="word-guide-step-num">3</span>
+                    <h5>Format qoidalari</h5>
+                    <div class="word-guide-alert word-guide-alert-warning mb-3">
+                        <strong>⚠️ MUHIM:</strong> Quyidagi formatga qat'iy rioya qiling!
                     </div>
-                    
-                    <div class="mb-4">
-                        <h5 class="text-white mb-3">3️⃣ Format Qoidasi (Bitta Oddiy Qoida)</h5>
-                        
-                        <div class="alert alert-warning mb-3">
-                            <strong>⚠️ MUHIM:</strong> Quyidagi formatga qat'iy rioya qiling!
-                        </div>
-                        
-                        <div class="bg-dark p-4 rounded mb-3">
-                            <pre class="text-white mb-0" style="font-size: 14px; line-height: 2; font-family: 'Courier New', monospace;">
+                    <div class="word-guide-code mb-3">
 1. Savol matni bu yerda?
 
 a) Birinchi javob varianti
 b) Ikkinchi javob varianti
-c) Uchinchi javob varianti (✓)
+c) Uchinchi javob varianti <span class="correct">(✓)</span>
 d) To'rtinchi javob varianti
 
 2. Ikkinchi savol matni?
 
 a) Variant 1
-b) Variant 2 (*)
+b) Variant 2 <span class="correct">(*)</span>
 c) Variant 3
 d) Variant 4
-                            </pre>
-                        </div>
-                        
-                        <div class="alert alert-success">
-                            <strong>✅ Bitta Qoida:</strong>
-                            <ol class="mb-0 mt-2">
-                                <li><strong>Savol:</strong> Raqam + nuqta + bo'sh joy + savol matni (masalan: <code>1. Savol matni?</code>)</li>
-                                <li><strong>Variantlar:</strong> Harf + qavs + bo'sh joy + variant matni (masalan: <code>a) Variant matni</code>)</li>
-                                <li><strong>To'g'ri javob:</strong> Variant matnidan keyin faqat <code>(✓)</code> belgisini qo'shing</li>
-                                <li><strong>Bo'sh qator:</strong> Har bir savoldan keyin bo'sh qator qoldiring</li>
-                            </ol>
-                        </div>
-                        
-                        <div class="alert alert-info mt-3">
-                            <strong>🔢 Matematika (kasrlar va darajalar):</strong> Unicode belgilar — nusxalab web saytga tashlasa hech qanday o'zgarishsiz tushadi:
-                            <ul class="mb-0 mt-2">
-                                <li><strong>Kasrlar:</strong> ½ ¼ ¾ ¹⁄₂ ²⁄₃ ³⁄₄ ¹⁄₄ (yoki ⅓ ⅔ ⅕ ⅗ ⅙ ⅛ ⅜ ⅝ ⅞)</li>
-                                <li><strong>Darajalar:</strong> x² x³ x⁴ x⁵ xⁿ (⁰ ¹ ² ³ ⁴ ⁵ ⁶ ⁷ ⁸ ⁹)</li>
-                                <li><strong>Boshqa:</strong> × ÷ ± √ π ∞</li>
-                                <li>Word: Insert → Symbol yoki platformada yuqoridagi tugmalardan foydalaning</li>
-                            </ul>
-                        </div>
                     </div>
-                    
-                    <div class="mb-4">
-                        <h5 class="text-white mb-3">4️⃣ Test Yaratish</h5>
-                        <ol>
-                            <li>Yuqoridagi <strong>"Faylni Yuklang va Test Yarating"</strong> bo'limida Word yoki TXT faylni tanlang</li>
-                            <li>Sinfni tanlang (ixtiyoriy)</li>
-                            <li>"Test Yaratish" tugmasini bosing</li>
-                            <li>Tizim avtomatik ravishda savollarni tahlil qiladi va quiz test yaratadi</li>
-                            <li>O'quvchilar endi testni yecha oladi</li>
-                        </ol>
+                    <div class="word-guide-alert word-guide-alert-success mb-3">
+                        <strong>✅ Qoidalar:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li><strong>Savol:</strong> Raqam. Savol matni</li>
+                            <li><strong>Variantlar:</strong> a) b) c) d)</li>
+                            <li><strong>To'g'ri javob:</strong> (✓) yoki (*)</li>
+                            <li><strong>Bo'sh qator:</strong> Savollar orasida</li>
+                        </ul>
                     </div>
+                    <div class="word-guide-alert word-guide-alert-info">
+                        <strong>🔢 Matematika:</strong> ½ ¼ x² x³ × ÷ ± √ — nusxalab qo'yish mumkin
+                    </div>
+                </div>
+                
+                <div class="word-guide-step">
+                    <span class="word-guide-step-num">4</span>
+                    <h5>Test Yaratish</h5>
+                    <ol>
+                        <li>Yuqorida faylni tanlang yoki tashlang</li>
+                        <li>Sinfni tanlang va "Test Yaratish" ni bosing</li>
+                        <li>Tizim avtomatik quiz test yaratadi</li>
+                    </ol>
                 </div>
             </div>
             
             <!-- Namuna savollar -->
-            <div class="glass-card p-4">
-                <h3 class="text-white mb-4">
-                    <i class="fas fa-lightbulb text-warning me-2"></i>
+            <div class="word-guide-card">
+                <h3 class="word-guide-card-title">
+                    <i class="fas fa-lightbulb text-warning"></i>
                     Namuna Savollar
                 </h3>
-                
-                <div class="text-white-50">
-                    <div class="mb-4">
-                        <h5 class="text-white mb-3">📝 Namuna Savollar (Bitta Qoida)</h5>
-                        
-                        <div class="alert alert-success mb-3">
-                            <strong>✅ Bitta Qoida:</strong><br>
-                            <code>Raqam. Savol?</code> → <code>a) Variant (✓)</code>
-                        </div>
-                        
-                        <div class="bg-dark p-4 rounded mb-3">
-                            <pre class="text-white mb-0" style="font-size: 13px; line-height: 1.8; font-family: 'Courier New', monospace;">
-1. Matematikada 2+2 nechaga teng? (x², ½ belgilari ham qo'llab-quvvatlanadi)
+                <div class="word-guide-alert word-guide-alert-success mb-3">
+                    <strong>✅ Bitta qoida:</strong> <code>Raqam. Savol?</code> → <code>a) Variant (✓)</code>
+                </div>
+                <div class="word-guide-code mb-3">
+1. Matematikada 2+2 nechaga teng?
 
 a) 3
-b) 4 (✓)
+b) 4 <span class="correct">(✓)</span>
 c) 5
 d) 6
 
 2. O'zbekiston poytaxti qayerda?
 
 a) Samarqand
-b) Toshkent (✓)
+b) Toshkent <span class="correct">(✓)</span>
 c) Buxoro
 d) Andijon
 
-3. Fizikada tezlik formulasi qanday?
+3. Fizikada tezlik formulasi?
 
-a) v = s/t (✓)
+a) v = s/t <span class="correct">(✓)</span>
 b) v = s*t
 c) v = t/s
 d) v = s+t
-                            </pre>
-                        </div>
-                        
-                        <div class="alert alert-info">
-                            <strong>💡 Eslatma:</strong>
-                            <ul class="mb-0 mt-2">
-                                <li>To'g'ri javob belgilanmagan bo'lsa, birinchi variant (a) avtomatik to'g'ri deb qabul qilinadi</li>
-                                <li>Variantlar bo'lmasa, savol matnli javob turiga o'tadi</li>
-                                <li>Har bir savoldan keyin bo'sh qator qoldirish majburiy emas, lekin tavsiya etiladi</li>
-                            </ul>
-                        </div>
-                    </div>
+                </div>
+                <div class="word-guide-alert word-guide-alert-info">
+                    <strong>💡</strong> To'g'ri javob belgilanmasa — birinchi variant (a) qabul qilinadi
                 </div>
             </div>
         </div>
         
         <div class="col-lg-4">
-            <!-- Tezkor havolalar -->
-            <div class="glass-card p-4 mb-4">
-                <h5 class="text-white mb-3">
-                    <i class="fas fa-link text-success me-2"></i>
-                    Tezkor Havolalar
-                </h5>
-                
+            <div class="word-guide-sidebar-card">
+                <h5><i class="fas fa-bolt text-success"></i> Tezkor Havolalar</h5>
                 <div class="d-grid gap-2">
                     <a href="{% url 'tests:download_word_template' %}" class="btn btn-primary">
                         <i class="fas fa-download me-2"></i>
                         Namuna Fayl Yuklab Olish
                     </a>
-                    
                     <a href="{% url 'tests:tests' %}" class="btn btn-outline-light">
                         <i class="fas fa-list me-2"></i>
                         Testlar Ro'yxati
                     </a>
-                    
                     <a href="{% url 'tests:create_test' %}" class="btn btn-outline-light">
                         <i class="fas fa-plus me-2"></i>
                         Yangi Test Yaratish
@@ -233,50 +540,32 @@ d) v = s+t
                 </div>
             </div>
             
-            <!-- Maslahatlar -->
-            <div class="glass-card p-4">
-                <h5 class="text-white mb-3">
-                    <i class="fas fa-tips text-warning me-2"></i>
-                    Maslahatlar
-                </h5>
-                
-                <div class="text-white-50 small">
-                    <div class="mb-3">
-                        <strong>✅ Qilish kerak:</strong>
-                        <ul class="mt-2">
-                            <li>Har bir savoldan keyin bo'sh qator qoldiring</li>
-                            <li>To'g'ri javobni aniq belgilang</li>
-                            <li>Variantlarni a), b), c), d) formatida yozing</li>
-                            <li>Faylni .docx formatida saqlang</li>
-                            <li>Matematika: ½ x² kabi belgilar — nusxalab saytga qo'yish mumkin</li>
-                        </ul>
-                    </div>
-                    
-                    <div>
-                        <strong>❌ Qilmaslik kerak:</strong>
-                        <ul class="mt-2">
-                            <li>Raqamdan keyin nuqta qo'yishni unutmang (1., 2.)</li>
-                            <li>Variantlarni boshqa formatda yozmaslik</li>
-                            <li>To'g'ri javobni belgilamaslik</li>
-                        </ul>
-                    </div>
-                </div>
+            <div class="word-guide-sidebar-card">
+                <h5><i class="fas fa-check-double text-success"></i> Qilish kerak</h5>
+                <ul class="word-guide-tips">
+                    <li>Bo'sh qator qoldiring</li>
+                    <li>To'g'ri javobni (✓) belgilang</li>
+                    <li>a), b), c), d) formatida yozing</li>
+                    <li>½ x² — nusxalab qo'yish mumkin</li>
+                </ul>
             </div>
             
-            <!-- Yordam -->
-            <div class="glass-card p-4 mt-4">
-                <h5 class="text-white mb-3">
-                    <i class="fas fa-question-circle text-info me-2"></i>
-                    Yordam
-                </h5>
-                
-                <p class="text-white-50 small">
-                    Agar muammo bo'lsa yoki qo'shimcha yordam kerak bo'lsa, 
-                    admin bilan bog'laning yoki qo'llanmani qayta o'qib chiqing.
-                </p>
+            <div class="word-guide-sidebar-card">
+                <h5><i class="fas fa-times-circle text-danger"></i> Qilmaslik kerak</h5>
+                <ul class="word-guide-tips">
+                    <li>1. dan keyin nuqta qo'yishni unutmang</li>
+                    <li>Boshqa variant formatlari</li>
+                    <li>To'g'ri javobni belgilamaslik</li>
+                </ul>
+            </div>
+            
+            <div class="word-guide-sidebar-card">
+                <h5><i class="fas fa-question-circle text-info"></i> Yordam</h5>
+                <p class="word-guide-tips mb-0">Muammo bo'lsa admin bilan bog'laning yoki qo'llanmani o'qing.</p>
             </div>
         </div>
     </div>
+</div>
 </div>
 {% endblock %}
 
@@ -286,6 +575,36 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('createQuizFromFileForm');
     const resultDiv = document.getElementById('createQuizResult');
     const submitBtn = document.getElementById('createQuizBtn');
+    const fileInput = document.getElementById('word_file');
+    const filenameEl = document.getElementById('uploadFilename');
+    const dropzone = document.getElementById('uploadDropzone');
+    
+    // Fayl tanlanganda nomini ko'rsatish
+    if (fileInput) {
+        fileInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                filenameEl.textContent = '✓ ' + this.files[0].name;
+                filenameEl.classList.add('has-file');
+            } else {
+                filenameEl.textContent = '';
+                filenameEl.classList.remove('has-file');
+            }
+        });
+        // Drag & drop
+        if (dropzone) {
+            dropzone.addEventListener('dragenter', function(e) { e.preventDefault(); dropzone.classList.add('dragover'); });
+            dropzone.addEventListener('dragover', function(e) { e.preventDefault(); });
+            dropzone.addEventListener('dragleave', function() { dropzone.classList.remove('dragover'); });
+            dropzone.addEventListener('drop', function(e) {
+                e.preventDefault();
+                dropzone.classList.remove('dragover');
+                if (e.dataTransfer.files.length) {
+                    fileInput.files = e.dataTransfer.files;
+                    fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            });
+        }
+    }
     
     if (form) {
         form.addEventListener('submit', function(e) {
@@ -321,6 +640,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (data.success) {
                     showResult(data.message + (data.test_id ? '<br><a href="/tests/' + data.test_id + '/results/" class="alert-link">Test natijalarini ko\'rish</a>' : ''), 'success');
                     form.reset();
+                    if (filenameEl) { filenameEl.textContent = ''; filenameEl.classList.remove('has-file'); }
                     if (data.test_id && typeof showAlert === 'function') {
                         showAlert('Test yaratildi! O\'quvchilar endi yecha oladi.', 'success');
                     }
