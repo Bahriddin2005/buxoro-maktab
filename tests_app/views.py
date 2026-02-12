@@ -1457,6 +1457,90 @@ def upload_questions_from_word(request, test_id):
     
     return render(request, 'tests_app/upload_questions.html', {'test': test})
 
+# Word Import Guide shablon formatiga mos parser
+# TEMPLATE_FORMAT: 1. Savol? -> a) Variant (✓), 4 ta variant, savollar orasida 1 bo'sh qator
+def _parse_raw_text_to_quiz(all_paragraphs):
+    """RAW_TEXT ni TEMPLATE_FORMAT ga mos QUIZ testga aylantirish"""
+    questions_data = []
+    current_question = None
+    current_choices = []
+    explicit_answer = None  # ANSWER: A/B/C/D format
+    
+    def _clean_text(s):
+        """Keraksiz belgilarni tozalash"""
+        if not s:
+            return ''
+        s = s.strip()
+        s = re.sub(r'^[\●\•\-\*\─\▪\►\▸]\s*', '', s)
+        s = re.sub(r'\s+', ' ', s)
+        return s.strip()
+    
+    def _finalize_question():
+        nonlocal current_question, current_choices, explicit_answer, questions_data
+        if not current_question:
+            return
+        choices = list(current_choices)
+        has_correct = any(c.get('is_correct') for c in choices)
+        if explicit_answer and not has_correct:
+            ans_map = {'a': 0, 'b': 1, 'c': 2, 'd': 3, 'A': 0, 'B': 1, 'C': 2, 'D': 3}
+            idx = ans_map.get(explicit_answer.strip())
+            if idx is not None and idx < len(choices):
+                choices[idx]['is_correct'] = True
+                has_correct = True
+        if not has_correct and choices:
+            choices[0]['is_correct'] = True
+        fill_labels = ['Boshqa variant', "Yuqoridagilardan boshqa", "To'g'ri javob yo'q", "Barchasi to'g'ri"]
+        while len(choices) < 4:
+            used = {c['text'] for c in choices}
+            for lbl in fill_labels:
+                if lbl not in used:
+                    choices.append({'text': lbl, 'is_correct': False})
+                    break
+            else:
+                choices.append({'text': f'Variant {len(choices)+1}', 'is_correct': False})
+        choices = choices[:4]
+        questions_data.append({
+            'question_text': _clean_text(current_question),
+            'question_type': 'single_choice',
+            'points': 1.0,
+            'choices': choices,
+            'explanation': ''
+        })
+        current_question = None
+        current_choices = []
+        explicit_answer = None
+    
+    for text in all_paragraphs:
+        text = _clean_text(text)
+        if not text:
+            continue
+        text_orig = text
+        answer_match = re.match(r'^(?:ANSWER|Javob|To\'g\'ri)\s*:\s*([A-Da-d])\.?$', text, re.IGNORECASE)
+        if answer_match:
+            explicit_answer = answer_match.group(1).upper()
+            if current_question and current_choices:
+                _finalize_question()
+            continue
+        question_match = re.match(r'^(\d+)[\.\)]\s*(.+)$', text)
+        if question_match:
+            _finalize_question()
+            current_question = question_match.group(2).strip()
+            current_choices = []
+            continue
+        if current_question:
+            choice_match = re.match(r'^([a-dA-D])[\)\.]\s*(.+)$', text, re.IGNORECASE)
+            if choice_match:
+                choice_text = choice_match.group(2).strip()
+                is_correct = '(✓)' in choice_text or '(*)' in choice_text or '✓' in choice_text
+                choice_text = re.sub(r'\(✓\)|\(\*\)|✓', '', choice_text).strip()
+                choice_text = _clean_text(choice_text)
+                if choice_text:
+                    current_choices.append({'text': choice_text, 'is_correct': is_correct})
+                continue
+    _finalize_question()
+    return questions_data
+
+
 @login_required
 def create_test_from_word(request):
     """Create test from Word file - Teachers and Admins"""
@@ -1465,22 +1549,37 @@ def create_test_from_word(request):
     
     if request.method == 'POST':
         try:
-            word_file = request.FILES.get('word_file')
-            if not word_file:
-                return JsonResponse({'error': 'Word fayl yuklanmadi'}, status=400)
+            # Word yoki TXT fayl
+            uploaded_file = request.FILES.get('word_file') or request.FILES.get('file')
+            if not uploaded_file:
+                return JsonResponse({'error': 'Word yoki TXT fayl yuklanmadi'}, status=400)
             
-            # Word faylini o'qish
-            try:
-                from docx import Document
-            except ImportError:
-                return JsonResponse({
-                    'error': 'python-docx kutubxonasi o\'rnatilmagan. Quyidagi buyruqni bajaring: pip install python-docx'
-                }, status=500)
+            # Fayl kengaytmasini tekshirish
+            filename = (uploaded_file.name or '').lower()
+            is_txt = filename.endswith('.txt')
             
-            doc = Document(word_file)
-            
-            # Barcha paragraflarni o'qish
-            all_paragraphs = [para.text.strip() for para in doc.paragraphs if para.text.strip()]
+            if is_txt:
+                # TXT faylni o'qish
+                try:
+                    content = uploaded_file.read().decode('utf-8')
+                except UnicodeDecodeError:
+                    try:
+                        content = uploaded_file.read().decode('latin-1')
+                    except Exception:
+                        return JsonResponse({'error': 'TXT fayl kodlashda xatolik. UTF-8 yoki Latin-1 formatida saqlang.'}, status=400)
+                # Qatorlarga bo'lish va bo'sh qatorlarni olib tashlash
+                all_paragraphs = [line.strip() for line in content.splitlines() if line.strip()]
+            else:
+                # Word faylini o'qish
+                try:
+                    from docx import Document
+                except ImportError:
+                    return JsonResponse({
+                        'error': 'python-docx kutubxonasi o\'rnatilmagan. Quyidagi buyruqni bajaring: pip install python-docx'
+                    }, status=500)
+                
+                doc = Document(uploaded_file)
+                all_paragraphs = [para.text.strip() for para in doc.paragraphs if para.text.strip()]
             
             # Test ma'lumotlarini olish
             test_title = ''
@@ -1528,76 +1627,17 @@ def create_test_from_word(request):
             
             # Agar test nomi topilmasa, default
             if not test_title:
-                test_title = 'Word fayldan yaratilgan test'
+                test_title = 'Word/TXT fayldan yaratilgan test'
             
-            # Savollarni topish va yaratish
-            questions_data = []
-            current_question = None
-            current_choices = []
-            question_number = 0
-            
-            for text in all_paragraphs:
-                # Bo'sh qatorlarni o'tkazib yuborish
-                if not text or not text.strip():
-                    continue
-                
-                # Savolni aniqlash
-                try:
-                    question_match = re.match(r'^(\d+)\.\s*(.+)$', text.strip())
-                except Exception as e:
-                    print(f"Regex error for text: {text[:50]}... Error: {str(e)}")
-                    continue
-                
-                if question_match:
-                    # Oldingi savolni saqlash
-                    if current_question:
-                        questions_data.append({
-                            'question_text': current_question,
-                            'question_type': 'single_choice' if current_choices else 'text_answer',
-                            'points': 1.0,
-                            'choices': current_choices,
-                            'explanation': ''
-                        })
-                    
-                    # Yangi savol
-                    question_number += 1
-                    current_question = question_match.group(2).strip()
-                    current_choices = []
-                
-                # Javob variantlarini aniqlash
-                elif current_question:
-                    try:
-                        choice_match = re.match(r'^([a-dA-D])[\)\.]\s*(.+)$', text.strip(), re.IGNORECASE)
-                    except Exception as e:
-                        print(f"Regex error for choice text: {text[:50]}... Error: {str(e)}")
-                        choice_match = None
-                    
-                    if choice_match:
-                        choice_text = choice_match.group(2).strip()
-                        is_correct = False
-                        
-                        if '(✓)' in choice_text:
-                            is_correct = True
-                            choice_text = choice_text.replace('(✓)', '').strip()
-                        
-                        current_choices.append({
-                            'text': choice_text,
-                            'is_correct': is_correct
-                        })
-            
-            # Oxirgi savolni saqlash
-            if current_question:
-                questions_data.append({
-                    'question_text': current_question,
-                    'question_type': 'single_choice' if current_choices else 'text_answer',
-                    'points': 1.0,
-                    'choices': current_choices,
-                    'explanation': ''
-                })
+            # TEMPLATE_FORMAT: Word Import Guide shabloniga mos parser
+            # 1. Savol: Raqam. Savol matni
+            # 2. Variantlar: a) b) c) d) — 4 ta, to'g'ri javob (✓) yoki (*)
+            # 3. Keraksiz belgilarni tozalash
+            questions_data = _parse_raw_text_to_quiz(all_paragraphs)
             
             if not questions_data:
                 return JsonResponse({
-                    'error': 'Word faylda savollar topilmadi. Formatga rioya qiling.',
+                    'error': 'Faylda savollar topilmadi. Formatga rioya qiling.',
                     'details': 'Format: 1. Savol? → a) Variant (✓)'
                 }, status=400)
             

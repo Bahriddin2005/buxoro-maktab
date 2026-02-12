@@ -10,11 +10,57 @@
             <div class="glass-card p-4 mb-4">
                 <h2 class="text-white mb-3">
                     <i class="fas fa-book text-primary me-2"></i>
-                    Word Formatida Test Yaratish Qo'llanmasi
+                    Word yoki TXT fayldan Test Yaratish
                 </h2>
                 <p class="text-white-50">
-                    Bu qo'llanmada Word fayldan test savollarini yaratish va import qilish haqida batafsil ma'lumot beriladi.
+                    Word (.docx) yoki TXT (.txt) faylni yuklang — avtomatik quiz test yaratiladi.
                 </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Word/TXT yuklash va test yaratish -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="glass-card p-4" style="border: 2px solid rgba(102, 126, 234, 0.5);">
+                <h4 class="text-white mb-4">
+                    <i class="fas fa-upload text-success me-2"></i>
+                    Faylni Yuklang va Test Yarating
+                </h4>
+                <form id="createQuizFromFileForm" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-5">
+                            <label for="word_file" class="form-label text-white">Word (.docx) yoki TXT (.txt) fayl</label>
+                            <input type="file" class="form-control" id="word_file" name="word_file" accept=".docx,.doc,.txt" required>
+                            <div class="form-text text-white-50">Format: 1. Savol? → a) Variant (✓)</div>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="grade" class="form-label text-white">Sinf (ixtiyoriy)</label>
+                            <select class="form-select" id="grade" name="grade">
+                                <option value="">— Tanlang —</option>
+                                <option value="1">1-sinf</option>
+                                <option value="2">2-sinf</option>
+                                <option value="3">3-sinf</option>
+                                <option value="4">4-sinf</option>
+                                <option value="5">5-sinf</option>
+                                <option value="6">6-sinf</option>
+                                <option value="7">7-sinf</option>
+                                <option value="8">8-sinf</option>
+                                <option value="9">9-sinf</option>
+                                <option value="10">10-sinf</option>
+                                <option value="11">11-sinf</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <button type="submit" class="btn btn-success btn-lg w-100" id="createQuizBtn">
+                                <i class="fas fa-magic me-2"></i>
+                                Test Yaratish
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                <div id="createQuizResult" class="mt-3" style="display: none;"></div>
             </div>
         </div>
     </div>
@@ -95,13 +141,13 @@ d) Variant 4
                     </div>
                     
                     <div class="mb-4">
-                        <h5 class="text-white mb-3">4️⃣ Test Yaratish va Import Qilish</h5>
+                        <h5 class="text-white mb-3">4️⃣ Test Yaratish</h5>
                         <ol>
-                            <li>Web saytga kirib, yangi test yarating yoki mavjud testni tahrirlang</li>
-                            <li>"Savollar Yuklash" bo'limiga o'ting</li>
-                            <li>"Word Fayl Yuklash" bo'limida tuzatilgan Word faylni tanlang</li>
-                            <li>"Word Yuklash va Avtomatik Tuzatish" tugmasini bosing</li>
-                            <li>Tizim avtomatik ravishda savollarni tahlil qiladi va testlarni tuzadi</li>
+                            <li>Yuqoridagi <strong>"Faylni Yuklang va Test Yarating"</strong> bo'limida Word yoki TXT faylni tanlang</li>
+                            <li>Sinfni tanlang (ixtiyoriy)</li>
+                            <li>"Test Yaratish" tugmasini bosing</li>
+                            <li>Tizim avtomatik ravishda savollarni tahlil qiladi va quiz test yaratadi</li>
+                            <li>O'quvchilar endi testni yecha oladi</li>
                         </ol>
                     </div>
                 </div>
@@ -232,4 +278,71 @@ d) v = s+t
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('createQuizFromFileForm');
+    const resultDiv = document.getElementById('createQuizResult');
+    const submitBtn = document.getElementById('createQuizBtn');
+    
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const fileInput = document.getElementById('word_file');
+            if (!fileInput || !fileInput.files[0]) {
+                showResult('Iltimos, Word (.docx) yoki TXT (.txt) fayl tanlang!', 'danger');
+                return;
+            }
+            
+            const ext = (fileInput.files[0].name || '').toLowerCase();
+            if (!ext.endsWith('.docx') && !ext.endsWith('.doc') && !ext.endsWith('.txt')) {
+                showResult('Faqat .docx, .doc yoki .txt formatidagi fayllar qabul qilinadi.', 'danger');
+                return;
+            }
+            
+            const formData = new FormData(form);
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Yuklanmoqda...';
+            submitBtn.disabled = true;
+            resultDiv.style.display = 'none';
+            
+            fetch("{% url 'tests:create_test_from_word' %}", {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showResult(data.message + (data.test_id ? '<br><a href="/tests/' + data.test_id + '/results/" class="alert-link">Test natijalarini ko\'rish</a>' : ''), 'success');
+                    form.reset();
+                    if (data.test_id && typeof showAlert === 'function') {
+                        showAlert('Test yaratildi! O\'quvchilar endi yecha oladi.', 'success');
+                    }
+                } else {
+                    showResult((data.error || 'Xatolik yuz berdi') + (data.details ? '<br><small>' + data.details + '</small>' : ''), 'danger');
+                }
+            })
+            .catch(error => {
+                showResult('Xatolik: ' + error.message, 'danger');
+            })
+            .finally(() => {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            });
+        });
+    }
+    
+    function showResult(message, type) {
+        resultDiv.innerHTML = '<div class="alert alert-' + (type === 'danger' ? 'danger' : 'success') + '">' +
+            '<i class="fas fa-' + (type === 'danger' ? 'exclamation-triangle' : 'check-circle') + ' me-2"></i>' + message + '</div>';
+        resultDiv.style.display = 'block';
+    }
+});
+</script>
 {% endblock %}
