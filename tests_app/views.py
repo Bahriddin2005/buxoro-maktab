@@ -534,7 +534,7 @@ def take_test_view(request, test_id):
                 if q_data['question_type'] in ['single_choice', 'multiple_choice']:
                     if not q_data.get('choices') or len(q_data['choices']) == 0:
                         return JsonResponse({
-                            'error': f'Savol #{q_data.get("id", "Noma\'lum")} uchun javob variantlari topilmadi. Iltimos, admin bilan bog\'laning.'
+                            'error': f'Savol #{q_data.get("id", "Noma\'lum")} uchun javob variantlari topilmadi. Iltimos, admin bilan bog`laning.'
                         }, status=400)
             
             return JsonResponse({
