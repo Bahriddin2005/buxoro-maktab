@@ -1,5 +1,58 @@
 /* Additional custom styles for the test platform */
 
+/* ═══════════════════════════════════════════════
+   Global Typography & Icon Dizayni
+   ═══════════════════════════════════════════════ */
+body {
+    font-feature-settings: "kern" 1, "liga" 1;
+}
+/* Sarlavha va matn ierarxiyasi */
+.page-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.3;
+}
+.page-subtitle {
+    font-size: 0.95rem;
+    opacity: 0.85;
+    margin-top: 0.25rem;
+}
+/* Belgilar (ikonlar) - site bo'ylab */
+.icon-accent {
+    color: #06b6d4 !important;
+}
+.icon-accent-sm {
+    font-size: 0.9em;
+    color: #06b6d4 !important;
+}
+/* Matn + ikon birgalikda */
+.label-with-icon {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: 500;
+}
+.label-with-icon .fas, .label-with-icon .far {
+    font-size: 0.9em;
+    opacity: 0.9;
+}
+/* Badge va tag matnlari */
+.badge, .tag {
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+/* Jadval matnlari */
+table th {
+    font-weight: 600;
+    font-size: 0.875rem;
+    letter-spacing: 0.01em;
+}
+table td {
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
     width: 8px;
@@ -197,7 +250,7 @@
     left: 0;
     right: 0;
     height: 4px;
-    background: linear-gradient(90deg, #667eea, #764ba2);
+    background: linear-gradient(90deg, #06b6d4, #0891b2);
     transform: scaleX(0);
     transition: transform 0.3s ease;
 }
@@ -290,8 +343,8 @@
 .btn:focus,
 .form-control:focus,
 .form-select:focus {
-    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25) !important;
-    border-color: #667eea !important;
+    box-shadow: 0 0 0 0.2rem rgba(6, 182, 212, 0.25) !important;
+    border-color: #06b6d4 !important;
 }
 
 /* High contrast mode support */

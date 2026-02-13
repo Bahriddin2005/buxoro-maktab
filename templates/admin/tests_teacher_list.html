@@ -3,25 +3,152 @@
 
 {% block title %}Admin — O'qituvchilar Testlari{% endblock %}
 
+{% block extra_css %}
+<style>
+.teacher-tests-wrap {
+    margin: -2rem -15px 0;
+    padding: 2.5rem 1.5rem 3rem;
+    background: linear-gradient(160deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+    border-radius: 24px;
+    border: 1px solid rgba(148, 163, 184, 0.1);
+    box-shadow: 0 25px 60px rgba(0,0,0,0.4);
+}
+.teacher-tests-wrap .page-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+.teacher-tests-wrap .page-header h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #f8fafc;
+    margin: 0 0 0.25rem 0;
+}
+.teacher-tests-wrap .page-header p {
+    color: #94a3b8;
+    font-size: 0.95rem;
+    margin: 0;
+}
+.teacher-tests-wrap .count-badge {
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+.teacher-tests-wrap .filter-card {
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid rgba(148, 163, 184, 0.15);
+    border-radius: 16px;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+.teacher-tests-wrap .filter-card .form-control,
+.teacher-tests-wrap .filter-card .form-select {
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    color: #f8fafc;
+    border-radius: 10px;
+}
+.teacher-tests-wrap .admin-table {
+    background: rgba(30, 41, 59, 0.5);
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(148, 163, 184, 0.12);
+}
+.teacher-tests-wrap .admin-table thead th {
+    background: rgba(15, 23, 42, 0.8);
+    color: #94a3b8;
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 14px 16px;
+    border-bottom: 2px solid rgba(6, 182, 212, 0.3);
+}
+.teacher-tests-wrap .admin-table tbody td {
+    padding: 14px 16px;
+    vertical-align: middle;
+    color: #e2e8f0;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+}
+.teacher-tests-wrap .admin-table tbody tr:hover {
+    background: rgba(6, 182, 212, 0.08);
+}
+.teacher-tests-wrap .badge-subject { background: linear-gradient(135deg, rgba(6, 182, 212, 0.25), rgba(34, 211, 238, 0.2)); color: #22d3ee; border-radius: 8px; padding: 5px 12px; }
+.teacher-tests-wrap .badge-grade { background: rgba(148, 163, 184, 0.2); color: #94a3b8; border-radius: 8px; padding: 5px 12px; }
+.teacher-tests-wrap .badge-count { background: rgba(6, 182, 212, 0.2); color: #22d3ee; border-radius: 8px; padding: 5px 12px; }
+.teacher-tests-wrap .badge-success { background: rgba(16, 185, 129, 0.2); color: #34d399; border-radius: 8px; padding: 5px 12px; }
+.teacher-tests-wrap .badge-inactive { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border-radius: 8px; padding: 5px 12px; }
+.teacher-tests-wrap .badge-attempts { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border-radius: 8px; padding: 5px 12px; }
+.teacher-tests-wrap .action-btn-sm {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 3px;
+    transition: all 0.2s;
+}
+.teacher-tests-wrap .action-btn-sm:hover { transform: translateY(-2px); }
+[data-theme="light"] .teacher-tests-wrap {
+    background: linear-gradient(160deg, #ffffff 0%, #f0fdfa 50%, #ecfeff 100%);
+    border-color: rgba(14, 165, 233, 0.15);
+}
+[data-theme="light"] .teacher-tests-wrap .page-header h1 { color: #0f172a; }
+[data-theme="light"] .teacher-tests-wrap .page-header p { color: #64748b; }
+[data-theme="light"] .teacher-tests-wrap .filter-card {
+    background: rgba(255,255,255,0.9);
+    border-color: rgba(14, 165, 233, 0.2);
+}
+[data-theme="light"] .teacher-tests-wrap .filter-card .form-control,
+[data-theme="light"] .teacher-tests-wrap .filter-card .form-select {
+    background: #fff;
+    border-color: #e2e8f0;
+    color: #0f172a;
+}
+[data-theme="light"] .teacher-tests-wrap .admin-table {
+    background: #fff;
+    border-color: rgba(14, 165, 233, 0.15);
+}
+[data-theme="light"] .teacher-tests-wrap .admin-table thead th { background: #f8fafc; color: #475569; }
+[data-theme="light"] .teacher-tests-wrap .admin-table tbody td { color: #334155; }
+[data-theme="light"] .teacher-tests-wrap .admin-table tbody tr:hover { background: rgba(6, 182, 212, 0.06); }
+[data-theme="light"] .teacher-tests-wrap .admin-table a.fw-bold { color: #0f172a !important; }
+[data-theme="light"] .teacher-tests-wrap .filter-card label { color: #64748b !important; }
+[data-theme="light"] .teacher-tests-wrap .count-badge { color: #fff !important; }
+</style>
+{% endblock %}
+
 {% block content %}
+<div class="teacher-tests-wrap">
 <div class="row">
   <div class="col-12">
-    <div class="glass-card p-4 mb-4" data-aos="fade-up">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="text-white mb-0"><i class="fas fa-file-alt me-2"></i> O'qituvchilar Yaratgan Testlar</h4>
-        <div>
-          <span class="badge bg-info">Jami: {{ teacher_tests.count }} ta test</span>
-        </div>
+    <div class="page-header" data-aos="fade-up">
+      <div>
+        <h1 class="page-title"><i class="fas fa-chalkboard-teacher me-2 icon-accent"></i>O'qituvchilar Testlari</h1>
+        <p class="page-subtitle">Barcha o'qituvchilar yaratgan testlarni ko'rish va boshqarish</p>
       </div>
-      
-      <!-- Filter controls -->
-      <div class="row mb-3">
+      <div>
+        <span class="count-badge" id="countBadge"><i class="fas fa-layer-group me-2"></i>Jami: {{ teacher_tests.count }} ta test</span>
+      </div>
+    </div>
+
+    <div class="filter-card" data-aos="fade-up">
+      <div class="row g-3 align-items-end">
         <div class="col-md-3">
-          <input type="text" class="form-control bg-transparent border-secondary text-white" 
-                 id="searchInput" placeholder="Test qidirish...">
+          <label class="form-label small mb-2" style="color: #94a3b8;">
+            <i class="fas fa-search me-1"></i> Qidirish
+          </label>
+          <input type="text" class="form-control" id="searchInput" placeholder="Test nomi bo'yicha...">
         </div>
         <div class="col-md-3">
-          <select class="form-select bg-transparent border-secondary text-white" id="teacherFilter">
+          <label class="form-label small mb-2" style="color: #94a3b8;">
+            <i class="fas fa-user-tie me-1"></i> O'qituvchi
+          </label>
+          <select class="form-select" id="teacherFilter">
             <option value="">Barcha o'qituvchilar</option>
             {% regroup teacher_tests by created_by as teachers_list %}
             {% for teacher_group in teachers_list %}
@@ -30,14 +157,20 @@
           </select>
         </div>
         <div class="col-md-2">
-          <select class="form-select bg-transparent border-secondary text-white" id="statusFilter">
+          <label class="form-label small mb-2" style="color: #94a3b8;">
+            <i class="fas fa-toggle-on me-1"></i> Holat
+          </label>
+          <select class="form-select" id="statusFilter">
             <option value="">Barcha holatlar</option>
             <option value="active">Faol</option>
             <option value="inactive">Nofaol</option>
           </select>
         </div>
         <div class="col-md-2">
-          <select class="form-select bg-transparent border-secondary text-white" id="gradeFilter">
+          <label class="form-label small mb-2" style="color: #94a3b8;">
+            <i class="fas fa-graduation-cap me-1"></i> Sinf
+          </label>
+          <select class="form-select" id="gradeFilter">
             <option value="">Barcha sinflar</option>
             <option value="5">5-sinf</option>
             <option value="6">6-sinf</option>
@@ -49,26 +182,27 @@
           </select>
         </div>
         <div class="col-md-2">
-          <button class="btn btn-outline-light w-100" onclick="clearFilters()">
-            <i class="fas fa-times me-1"></i>Tozalash
+          <button class="btn w-100" onclick="clearFilters()" style="border: 1px solid rgba(148,163,184,0.4); color: #94a3b8; border-radius: 10px;">
+            <i class="fas fa-times me-2"></i>Tozalash
           </button>
         </div>
       </div>
+    </div>
 
-      {% if teacher_tests %}
-      <div class="table-responsive">
-        <table class="table table-dark table-hover align-middle" id="testsTable">
+    {% if teacher_tests %}
+    <div class="table-responsive" data-aos="fade-up">
+      <table class="table admin-table align-middle" id="testsTable">
           <thead>
             <tr>
-              <th style="width: 5%">#</th>
-              <th style="width: 25%">Test Nomi</th>
-              <th class="text-center" style="width: 12%">Fan</th>
-              <th class="text-center" style="width: 8%">Sinf</th>
-              <th class="text-center" style="width: 15%">O'qituvchi</th>
-              <th class="text-center" style="width: 8%">Savollar</th>
-              <th class="text-center" style="width: 8%">Urinishlar</th>
+              <th style="width: 4%">#</th>
+              <th style="width: 26%">Test Nomi</th>
+              <th class="text-center" style="width: 11%">Fan</th>
+              <th class="text-center" style="width: 7%">Sinf</th>
+              <th class="text-center" style="width: 14%">O'qituvchi</th>
+              <th class="text-center" style="width: 7%">Savollar</th>
+              <th class="text-center" style="width: 7%">Urinishlar</th>
               <th class="text-center" style="width: 8%">Holat</th>
-              <th class="text-center" style="width: 11%">Amallar</th>
+              <th class="text-center" style="width: 10%">Amallar</th>
             </tr>
           </thead>
           <tbody>
@@ -77,37 +211,36 @@
                 data-teacher-id="{{ t.created_by.id }}"
                 data-status="{% if t.is_active %}active{% else %}inactive{% endif %}"
                 data-grade="{{ t.grade }}">
-              <td class="text-white-50">{{ forloop.counter }}</td>
+              <td style="color: #64748b; font-weight: 500;">{{ forloop.counter }}</td>
               <td>
-                <div class="d-flex align-items-center">
-                  <div>
-                    <a href="{% url 'tests:test_info' t.id %}" class="text-white text-decoration-none fw-bold">
-                  {{ t.title|default:"(Nomi yo'q)" }}
-                </a>
-                {% if t.description %}
-                    <div class="text-muted small mt-1">{{ t.description|truncatechars:60 }}</div>
-                {% endif %}
-                  </div>
+                <div>
+                  <a href="{% url 'tests:test_info' t.id %}" class="text-decoration-none fw-bold" style="color: #f8fafc;">
+                    <i class="fas fa-file-alt me-1" style="color: #06b6d4; font-size: 0.9em;"></i>
+                    {{ t.title|default:"(Nomi yo'q)" }}
+                  </a>
+                  {% if t.description %}
+                  <div class="small mt-1" style="color: #64748b;">{{ t.description|truncatechars:55 }}</div>
+                  {% endif %}
                 </div>
               </td>
               <td class="text-center">
-                <span class="badge bg-primary">{{ t.subject }}</span>
+                <span class="badge-subject">{{ t.subject }}</span>
               </td>
               <td class="text-center">
-                <span class="badge bg-secondary">{{ t.grade }}-sinf</span>
-              </td>
-              <td class="text-center text-white">
-                <i class="fas fa-user-tie me-1"></i>
-                {{ t.created_by.get_full_name|default:t.created_by.username }}
+                <span class="badge-grade">{{ t.grade }}-sinf</span>
               </td>
               <td class="text-center">
-                <span class="badge bg-info">{{ t.total_questions|default:0 }}</span>
+                <i class="fas fa-user-tie me-1" style="color: #06b6d4;"></i>
+                <span style="color: inherit;">{{ t.created_by.get_full_name|default:t.created_by.username }}</span>
               </td>
               <td class="text-center">
-                <span class="badge bg-warning text-dark">{{ t.attempts_count|default:0 }}</span>
+                <span class="badge-count">{{ t.total_questions|default:0 }} ta</span>
               </td>
               <td class="text-center">
-                <span class="badge {% if t.is_active %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                <span class="badge-attempts">{{ t.attempts_count|default:0 }} ta</span>
+              </td>
+              <td class="text-center">
+                <span class="{% if t.is_active %}badge-success{% else %}badge-inactive{% endif %}">
                   {% if t.is_active %}
                     <i class="fas fa-check-circle me-1"></i>Faol
                   {% else %}
@@ -116,43 +249,33 @@
                 </span>
               </td>
               <td class="text-center">
-                <div class="btn-group" role="group">
-                  <a href="/tests/{{ t.id }}/active-sessions/" 
-                     class="btn btn-sm btn-outline-success" 
-                     title="Real-time Monitoring">
-                    <i class="fas fa-desktop"></i>
-                  </a>
-                  <a href="{% url 'tests:edit_test' t.id %}" 
-                     class="btn btn-sm btn-outline-warning" 
-                     title="Tahrirlash">
-                    <i class="fas fa-edit"></i>
-                  </a>
-                  <a href="{% url 'tests:test_results' t.id %}" 
-                     class="btn btn-sm btn-outline-info" 
-                     title="Natijalar">
-                    <i class="fas fa-chart-bar"></i>
-                  </a>
-                  <button type="button"
-                          class="btn btn-sm btn-outline-danger delete-test-btn"
-                          title="O'chirish"
-                          data-test-id="{{ t.id }}"
-                          data-test-title="{{ t.title }}">
-                    <i class="fas fa-trash"></i>
-                  </button>
-                </div>
+                <a href="/tests/{{ t.id }}/active-sessions/" class="action-btn-sm btn btn-outline-success" title="Monitoring">
+                  <i class="fas fa-desktop"></i>
+                </a>
+                <a href="{% url 'tests:edit_test' t.id %}" class="action-btn-sm btn btn-outline-warning" title="Tahrirlash">
+                  <i class="fas fa-edit"></i>
+                </a>
+                <a href="{% url 'tests:test_results' t.id %}" class="action-btn-sm btn btn-outline-info" title="Natijalar">
+                  <i class="fas fa-chart-bar"></i>
+                </a>
+                <button type="button" class="action-btn-sm btn btn-outline-danger delete-test-btn" title="O'chirish"
+                        data-test-id="{{ t.id }}" data-test-title="{{ t.title }}">
+                  <i class="fas fa-trash"></i>
+                </button>
               </td>
             </tr>
             {% endfor %}
           </tbody>
         </table>
       </div>
-      {% else %}
-      <div class="text-center">
-        <p class="text-white-50">Hozircha hech qanday test topilmadi.</p>
-      </div>
-      {% endif %}
+    {% else %}
+    <div class="text-center py-5">
+      <i class="fas fa-clipboard-list fa-3x mb-3" style="color: #06b6d4; opacity: 0.5;"></i>
+      <p class="mb-0" style="color: #94a3b8;">Hozircha hech qanday test topilmadi.</p>
     </div>
+    {% endif %}
   </div>
+</div>
 </div>
 
 <script>
@@ -188,7 +311,8 @@ function applyFilters() {
     let visibleCount = 0;
     
     rows.forEach(row => {
-        const testName = row.querySelector('a').textContent.toLowerCase();
+        const titleLink = row.querySelector('td:nth-child(2) a, a.fw-bold');
+        const testName = (titleLink ? titleLink.textContent : '').toLowerCase();
         const rowTeacherId = row.getAttribute('data-teacher-id');
         const rowStatus = row.getAttribute('data-status');
         const rowGrade = row.getAttribute('data-grade');
@@ -216,23 +340,27 @@ function applyFilters() {
     });
     
     // Update counter
-    const badge = document.querySelector('.badge.bg-info');
+    const badge = document.getElementById('countBadge');
     if (badge) {
-        badge.textContent = `Ko'rsatilmoqda: ${visibleCount} ta test`;
+        badge.innerHTML = `<i class="fas fa-layer-group me-2"></i>Ko'rsatilmoqda: ${visibleCount} ta test`;
     }
 }
 
 function clearFilters() {
-    document.getElementById('searchInput').value = '';
-    document.getElementById('teacherFilter').value = '';
-    document.getElementById('statusFilter').value = '';
-    document.getElementById('gradeFilter').value = '';
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) searchInput.value = '';
+    const tf = document.getElementById('teacherFilter');
+    const sf = document.getElementById('statusFilter');
+    const gf = document.getElementById('gradeFilter');
+    if (tf) tf.value = '';
+    if (sf) sf.value = '';
+    if (gf) gf.value = '';
     applyFilters();
     
-    const badge = document.querySelector('.badge.bg-info');
+    const badge = document.getElementById('countBadge');
     if (badge) {
         const totalRows = document.querySelectorAll('.test-row').length;
-        badge.textContent = `Jami: ${totalRows} ta test`;
+        badge.innerHTML = `<i class="fas fa-layer-group me-2"></i>Jami: ${totalRows} ta test`;
     }
 }
 
@@ -289,43 +417,5 @@ function getCookie(name) {
 }
 </script>
 
-<style>
-.table-hover tbody tr:hover {
-    background-color: rgba(102, 126, 234, 0.1);
-}
-
-.btn-group .btn {
-    border-color: rgba(255, 255, 255, 0.2);
-}
-
-.btn-group .btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-.btn-outline-success {
-    color: #10b981;
-    border-color: #10b981;
-}
-
-.btn-outline-success:hover {
-    background-color: #10b981;
-    border-color: #10b981;
-    color: white;
-}
-
-.badge {
-    font-size: 0.85em;
-    padding: 0.4em 0.6em;
-}
-
-.test-row {
-    transition: all 0.3s ease;
-}
-
-.test-row:hover {
-    background-color: rgba(255, 255, 255, 0.05);
-}
-</style>
 
 {% endblock %}

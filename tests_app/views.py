@@ -1270,11 +1270,16 @@ def download_word_template(request):
 
 @login_required
 def word_import_guide(request):
-    """Word import qo'llanmasi sahifasi - Admin va O'qituvchilar uchun"""
-    if request.user.role not in ['teacher', 'admin']:
-        return HttpResponseForbidden('<h1>403 - Access Denied</h1><p>You do not have permission to access this page.</p>')
+    """Word import qo'llanmasi sahifasi - Barcha tizimga kirgan foydalanuvchilar ko'ra oladi"""
+    # Qo'llanmani barcha kirgan foydalanuvchilar ko'rashi mumkin. Test yaratish/qo'shish POST so'rovlari alohida tekshiriladi.
     
-    return render(request, 'tests_app/word_import_guide.html')
+    # O'qituvchi o'z testlarini, admin barcha testlarni oladi
+    if request.user.role == 'admin':
+        user_tests = Test.objects.all().order_by('-id')[:200]
+    else:
+        user_tests = Test.objects.filter(created_by=request.user).order_by('-id')[:200]
+    
+    return render(request, 'tests_app/word_import_guide.html', {'user_tests': user_tests})
 
 
 @login_required
@@ -1283,31 +1288,61 @@ def upload_questions_from_word(request, test_id):
     if request.user.role not in ['teacher', 'admin']:
         return JsonResponse({'error': 'Access denied'}, status=403)
     
-    test = get_object_or_404(Test, id=test_id, created_by=request.user)
+    # Admin barcha testlarni tahrirlashi mumkin, o'qituvchi faqat o'z testlarini
+    if request.user.role == 'admin':
+        test = get_object_or_404(Test, id=test_id)
+    else:
+        test = get_object_or_404(Test, id=test_id, created_by=request.user)
     
     if request.method == 'POST':
         try:
-            word_file = request.FILES.get('word_file')
+            word_file = request.FILES.get('word_file') or request.FILES.get('file')
             if not word_file:
-                return JsonResponse({'error': 'Word fayl yuklanmadi'}, status=400)
+                return JsonResponse({'error': 'Word yoki TXT fayl yuklanmadi'}, status=400)
             
-            # Word faylini o'qish
-            try:
-                from docx import Document
-            except ImportError:
-                return JsonResponse({
-                    'error': 'python-docx kutubxonasi o\'rnatilmagan. Quyidagi buyruqni bajaring: pip install python-docx'
-                }, status=500)
+            filename = (word_file.name or '').lower()
+            is_txt = filename.endswith('.txt')
             
-            doc = Document(word_file)
+            if is_txt:
+                try:
+                    content = word_file.read().decode('utf-8')
+                except UnicodeDecodeError:
+                    try:
+                        content = word_file.read().decode('latin-1')
+                    except Exception:
+                        return JsonResponse({'error': 'TXT fayl kodlashda xatolik. UTF-8 yoki Latin-1 formatida saqlang.'}, status=400)
+                all_paragraphs = [line.strip() for line in content.splitlines() if line.strip()]
+            else:
+                # Word faylini o'qish (faqat .docx qo'llab-quvvatlanadi)
+                if filename.endswith('.doc'):
+                    return JsonResponse({
+                        'error': 'Eski .doc format qo\'llab-quvvatlanmaydi. Faylni .docx yoki .txt formatida saqlang.'
+                    }, status=400)
+                try:
+                    from docx import Document
+                except ImportError:
+                    return JsonResponse({
+                        'error': 'python-docx kutubxonasi o\'rnatilmagan. Quyidagi buyruqni bajaring: pip install python-docx'
+                    }, status=500)
+                try:
+                    doc = Document(word_file)
+                    all_paragraphs = [para.text.strip() for para in doc.paragraphs if para.text.strip()]
+                except Exception as doc_err:
+                    return JsonResponse({
+                        'error': f'Word faylni o\'qishda xatolik: {str(doc_err)}. Faqat .docx formatini ishlatishingizni tavsiya qilamiz.'
+                    }, status=400)
             
             questions_created = 0
             current_question = None
             current_choices = []
-            question_number = 0
+            # Mavjud savollardan keyingi tartib raqamini olish
+            max_order = test.questions.aggregate(max_o=Max('order'))['max_o'] or 0
+            question_number = max_order
             
-            # Barcha paragraflarni bir marta o'qish
-            all_paragraphs = [para.text.strip() for para in doc.paragraphs if para.text.strip()]
+            if not all_paragraphs:
+                return JsonResponse({
+                    'error': 'Faylda savollar topilmadi. Formatga rioya qiling: 1. Savol? → a) Variant (✓)'
+                }, status=400)
             
             with transaction.atomic():
                 for text in all_paragraphs:
@@ -1374,14 +1409,14 @@ def upload_questions_from_word(request, test_id):
                         if choice_match:
                             choice_text = choice_match.group(2).strip()
                             
-                            # To'g'ri javobni aniqlash - faqat (✓) belgisi
+                            # To'g'ri javobni aniqlash: (✓) yoki (*)
                             is_correct = False
-                            
-                            # Faqat (✓) belgisini qidirish
                             if '(✓)' in choice_text:
                                 is_correct = True
-                                # Belgini matndan olib tashlash
                                 choice_text = choice_text.replace('(✓)', '').strip()
+                            elif '(*)' in choice_text:
+                                is_correct = True
+                                choice_text = choice_text.replace('(*)', '').strip()
                             
                             current_choices.append((choice_text, is_correct))
                 
@@ -1418,10 +1453,11 @@ def upload_questions_from_word(request, test_id):
             error_traceback = traceback.format_exc()
             print(f"Word upload error: {str(e)}")
             print(error_traceback)
-            # Xatolik xabarini yaxshiroq formatlash
             error_message = str(e)
             if "expected pattern" in error_message.lower() or "match" in error_message.lower():
                 error_message = "Word fayl formatida xatolik. Iltimos, format qoidalariga rioya qiling: 1. Savol? → a) Variant (✓)"
+            elif not error_message or error_message == "Xatolik yuz berdi":
+                error_message = f"Kutilmagan xatolik: {type(e).__name__}"
             return JsonResponse({
                 'error': f'Word fayl yuklashda xatolik: {error_message}',
                 'details': error_traceback if settings.DEBUG else None

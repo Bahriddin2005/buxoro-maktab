@@ -8,8 +8,8 @@
     <div class="row">
         <div class="col-12">
             <div class="glass-card p-4 mb-4">
-                <h2 class="text-white mb-3">
-                    <i class="fas fa-upload text-primary me-2"></i>
+                <h2 class="text-white mb-3 page-title">
+                    <i class="fas fa-upload icon-accent me-2"></i>
                     Savollar Yuklash
                 </h2>
                 <h3 class="text-white-50">{{ test.title }}</h3>
@@ -23,7 +23,7 @@
             <!-- Excel Upload -->
             <div class="glass-card p-4 mb-4">
                 <h4 class="text-white mb-4">
-                    <i class="fas fa-file-excel text-success me-2"></i>
+                    <i class="fas fa-file-excel icon-accent me-2"></i>
                     Excel Fayl Yuklash
                 </h4>
                 
@@ -51,17 +51,17 @@
             <!-- Word Upload -->
             <div class="glass-card p-4">
                 <h4 class="text-white mb-4">
-                    <i class="fas fa-file-word text-primary me-2"></i>
+                    <i class="fas fa-file-word icon-accent me-2"></i>
                     Word Fayl Yuklash (Avtomatik Tuzatish)
                 </h4>
                 
                 <form id="upload-word-form" enctype="multipart/form-data">
                     {% csrf_token %}
                     <div class="mb-4">
-                        <label for="word_file" class="form-label text-white-50">Word Fayl Tanlang</label>
-                        <input type="file" class="form-control" id="word_file" name="word_file" accept=".docx,.doc" required>
+                        <label for="word_file" class="form-label text-white-50">Word yoki TXT Fayl Tanlang</label>
+                        <input type="file" class="form-control" id="word_file" name="word_file" accept=".docx,.doc,.txt" required>
                         <div class="form-text text-white-50">
-                            Faqat .docx va .doc formatidagi fayllar qabul qilinadi
+                            .docx, .doc va .txt formatidagi fayllar qabul qilinadi
                         </div>
                     </div>
                     

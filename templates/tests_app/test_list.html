@@ -343,8 +343,8 @@
     <div class="col-12">
         <div class="tests-page-header" data-aos="fade-down">
             <div>
-                <h1>
-                    <i class="fas fa-{% if user.role == 'student' %}pen-fancy{% else %}folder-open{% endif %} me-2" style="color: #06b6d4;"></i>
+                <h1 class="page-title">
+                    <i class="fas fa-{% if user.role == 'student' %}pen-fancy{% else %}folder-open{% endif %} me-2 icon-accent"></i>
                     {% if user.role == 'student' %}
                         Mavjud Testlar
                     {% elif user.role == 'teacher' %}
@@ -353,7 +353,7 @@
                         Barcha Testlar
                     {% endif %}
                 </h1>
-                <p>
+                <p class="page-subtitle">
                     {% if user.role == 'student' %}
                         {{ user.grade }}-sinf uchun mavjud testlarni tanlang va yeching
                     {% elif user.role == 'teacher' %}

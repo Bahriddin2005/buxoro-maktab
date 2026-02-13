@@ -4,151 +4,237 @@
 {% block title %}Word Formatida Test Yaratish Qo'llanmasi{% endblock %}
 
 {% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-/* ========== Word Import Guide — Chiroyli To'liq Dizayn ========== */
+/* ========== Word Import Guide — Chiroyli va Ko'zga Tashlanuvchi Dizayn ========== */
+.word-guide-page {
+    font-family: 'Outfit', 'Segoe UI', sans-serif;
+    background: #f1f5f9;
+    padding: 2rem 0 3rem;
+    border-radius: 24px;
+}
 .word-guide-page .container-fluid { max-width: 1200px; margin: 0 auto; }
 
-/* Hero section */
+/* Hero section — Yirik va jozibali */
 .word-guide-hero {
-    background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.06) 100%);
+    background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
     backdrop-filter: blur(24px);
-    border-radius: 24px;
-    border: 1px solid rgba(255,255,255,0.2);
-    padding: 2.5rem 3rem;
+    border-radius: 28px;
+    border: 1px solid #e2e8f0;
+    padding: 3rem 3.5rem;
     text-align: center;
-    margin-bottom: 2rem;
+    margin-bottom: 2.5rem;
     position: relative;
     overflow: hidden;
-    box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+    box-shadow: 0 30px 60px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.15);
 }
 .word-guide-hero::before {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #06b6d4, #0891b2, #22d3ee);
+    height: 5px;
+    background: linear-gradient(90deg, #06b6d4, #22d3ee, #0891b2);
+    background-size: 200% auto;
+    animation: shimmer 3s ease-in-out infinite;
+}
+@keyframes shimmer {
+    0%, 100% { background-position: 0% center; }
+    50% { background-position: 100% center; }
 }
 .word-guide-hero-icon {
-    width: 72px;
-    height: 72px;
-    background: linear-gradient(135deg, #06b6d4, #0891b2);
-    border-radius: 20px;
+    width: 84px;
+    height: 84px;
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 50%, #22d3ee 100%);
+    border-radius: 24px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 2rem;
+    font-size: 2.25rem;
     color: #fff;
-    margin-bottom: 1rem;
-    box-shadow: 0 12px 30px rgba(102,126,234,0.4);
+    margin-bottom: 1.25rem;
+    box-shadow: 0 16px 40px rgba(6, 182, 212, 0.45), 0 0 0 1px rgba(255,255,255,0.2) inset;
+    animation: icon-pulse 4s ease-in-out infinite;
 }
-.word-guide-hero h1 { color: #fff; font-weight: 700; font-size: 1.75rem; margin: 0 0 0.5rem; letter-spacing: -0.03em; }
-.word-guide-hero p { color: rgba(255,255,255,0.8); margin: 0; font-size: 1.05rem; }
+@keyframes icon-pulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 16px 40px rgba(6, 182, 212, 0.45); }
+    50% { transform: scale(1.03); box-shadow: 0 20px 50px rgba(6, 182, 212, 0.55); }
+}
+.word-guide-hero h1 {
+    color: #171717;
+    font-weight: 800;
+    font-size: 2.1rem;
+    margin: 0 0 0.75rem 0;
+    letter-spacing: -0.04em;
+    line-height: 1.25;
+}
+.word-guide-hero p {
+    color: #374151;
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    line-height: 1.5;
+    max-width: 520px;
+    margin-left: auto;
+    margin-right: auto;
+}
 
 /* Glass cards — umumiy */
 .word-guide-card {
-    background: linear-gradient(145deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.04) 100%);
+    background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
     backdrop-filter: blur(20px);
-    border-radius: 20px;
-    border: 1px solid rgba(255,255,255,0.15);
-    padding: 2rem;
-    margin-bottom: 1.5rem;
+    border-radius: 22px;
+    border: 1px solid #e2e8f0;
+    padding: 2.25rem;
+    margin-bottom: 1.75rem;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.12);
 }
-.word-guide-card:hover { transform: translateY(-3px); box-shadow: 0 16px 48px rgba(0,0,0,0.15); }
+.word-guide-card:hover { transform: translateY(-4px); box-shadow: 0 20px 55px rgba(0,0,0,0.18); }
 .word-guide-card-title {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    color: #fff;
-    font-weight: 600;
-    font-size: 1.25rem;
-    margin-bottom: 1.5rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
+    gap: 1rem;
+    color: #171717;
+    font-weight: 700;
+    font-size: 1.4rem;
+    margin-bottom: 1.75rem;
+    padding-bottom: 1.15rem;
+    border-bottom: 2px solid rgba(6, 182, 212, 0.35);
+    letter-spacing: -0.02em;
 }
-.word-guide-card-title i { opacity: 0.9; }
+.word-guide-card-title i {
+    font-size: 1.5rem;
+    color: #0891b2;
+    filter: drop-shadow(0 2px 8px rgba(6, 182, 212, 0.4));
+}
 
-/* Step blocks */
+/* Step blocks — aniq va jozibali */
 .word-guide-step {
-    background: rgba(255,255,255,0.05);
-    border-radius: 16px;
-    padding: 1.5rem;
-    margin-bottom: 1.25rem;
-    border-left: 4px solid rgba(102,126,234,0.6);
+    background: #f8fafc;
+    border-radius: 18px;
+    padding: 1.75rem;
+    margin-bottom: 1.5rem;
+    border-left: 5px solid #06b6d4;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
 }
 .word-guide-step:last-child { margin-bottom: 0; }
 .word-guide-step-num {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
-    background: linear-gradient(135deg, #06b6d4, #0891b2);
-    border-radius: 12px;
+    width: 42px;
+    height: 42px;
+    background: linear-gradient(135deg, #06b6d4 0%, #22d3ee 100%);
+    border-radius: 14px;
     color: #fff;
-    font-weight: 700;
-    font-size: 1rem;
-    margin-bottom: 0.75rem;
+    font-weight: 800;
+    font-size: 1.15rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 6px 20px rgba(6, 182, 212, 0.4);
 }
-.word-guide-step h5 { color: #fff; font-weight: 600; margin: 0 0 0.5rem; font-size: 1.05rem; }
-.word-guide-step p, .word-guide-step li { color: rgba(255,255,255,0.85); margin-bottom: 0.5rem; }
-.word-guide-step ol { padding-left: 1.25rem; margin-bottom: 0; }
+.word-guide-step h5 {
+    color: #171717;
+    font-weight: 700;
+    margin: 0 0 0.6rem 0;
+    font-size: 1.15rem;
+    letter-spacing: -0.01em;
+}
+.word-guide-step p {
+    color: #374151;
+    margin-bottom: 0.75rem;
+    font-size: 1.02rem;
+    line-height: 1.7;
+}
+.word-guide-step li {
+    color: #374151;
+    margin-bottom: 0.6rem;
+    font-size: 1rem;
+    line-height: 1.6;
+}
+.word-guide-step ol { padding-left: 1.5rem; margin-bottom: 0; }
 .word-guide-step code {
-    background: rgba(102,126,234,0.2);
-    color: #a5b4fc;
-    padding: 0.2em 0.5em;
-    border-radius: 6px;
-    font-size: 0.9em;
+    background: rgba(6, 182, 212, 0.15);
+    color: #0e7490;
+    padding: 0.25em 0.6em;
+    border-radius: 8px;
+    font-size: 0.95em;
+    font-weight: 500;
 }
 
-/* Format code block */
+/* Format code block — o'qilishi oson */
 .word-guide-code {
-    background: rgba(15,23,42,0.7);
-    border-radius: 16px;
-    padding: 1.5rem;
-    border: 1px solid rgba(255,255,255,0.08);
+    background: #f1f5f9;
+    border-radius: 18px;
+    padding: 1.75rem;
+    border: 1px solid #e2e8f0;
     font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
-    font-size: 0.9rem;
-    line-height: 1.9;
-    color: #e2e8f0;
+    font-size: 0.95rem;
+    line-height: 2;
+    color: #171717;
     overflow-x: auto;
     white-space: pre;
+    letter-spacing: 0.02em;
 }
-.word-guide-code .correct { color: #4ade80; }
+.word-guide-code .correct {
+    color: #059669;
+    font-weight: 600;
+}
 
-/* Alerts — moslashtirilgan */
+/* Alerts — aniq va diqqatga sazovor */
 .word-guide-alert {
-    border-radius: 12px;
-    padding: 1rem 1.25rem;
+    border-radius: 14px;
+    padding: 1.15rem 1.5rem;
     border: none;
+    font-size: 1rem;
+    line-height: 1.65;
 }
-.word-guide-alert-warning { background: rgba(251,191,36,0.2); color: #fef3c7; }
-.word-guide-alert-success { background: rgba(74,222,128,0.15); color: #bbf7d0; }
-.word-guide-alert-info { background: rgba(56,189,248,0.15); color: #bae6fd; }
+.word-guide-alert strong {
+    font-weight: 700;
+}
+.word-guide-alert ul,
+.word-guide-alert li {
+    color: inherit;
+}
+.word-guide-alert-warning {
+    background: linear-gradient(135deg, rgba(251,191,36,0.25) 0%, rgba(245,158,11,0.15) 100%);
+    color: #78350f;
+    border: 1px solid rgba(251,191,36,0.4);
+}
+.word-guide-alert-success {
+    background: linear-gradient(135deg, rgba(74,222,128,0.2) 0%, rgba(34,197,94,0.1) 100%);
+    color: #14532d;
+    border: 1px solid rgba(74,222,128,0.3);
+}
+.word-guide-alert-info {
+    background: linear-gradient(135deg, rgba(56,189,248,0.2) 0%, rgba(6,182,212,0.1) 100%);
+    color: #0c4a6e;
+    border: 1px solid rgba(56,189,248,0.3);
+}
 
 /* Sidebar cards */
 .word-guide-sidebar-card {
-    background: linear-gradient(145deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.04) 100%);
+    background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
     backdrop-filter: blur(20px);
-    border-radius: 18px;
-    border: 1px solid rgba(255,255,255,0.15);
-    padding: 1.5rem;
-    margin-bottom: 1.25rem;
+    border-radius: 20px;
+    border: 1px solid #e2e8f0;
+    padding: 1.75rem;
+    margin-bottom: 1.5rem;
     transition: all 0.3s ease;
 }
 .word-guide-sidebar-card:hover {
-    border-color: rgba(102,126,234,0.4);
-    box-shadow: 0 12px 36px rgba(0,0,0,0.12);
+    border-color: rgba(6, 182, 212, 0.4);
+    box-shadow: 0 16px 45px rgba(0,0,0,0.15);
 }
 .word-guide-sidebar-card h5 {
-    color: #fff;
-    font-weight: 600;
-    font-size: 1.1rem;
-    margin-bottom: 1rem;
+    color: #171717;
+    font-weight: 700;
+    font-size: 1.2rem;
+    margin-bottom: 1.15rem;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.65rem;
+    letter-spacing: -0.01em;
 }
 .word-guide-sidebar-card .btn {
     border-radius: 12px;
@@ -160,79 +246,98 @@
     border: none !important;
 }
 .word-guide-sidebar-card .btn-outline-light {
-    border-color: rgba(255,255,255,0.3);
-    color: rgba(255,255,255,0.9);
+    border-color: #cbd5e1;
+    color: #334155;
 }
 .word-guide-sidebar-card .btn-outline-light:hover {
-    background: rgba(255,255,255,0.1);
-    border-color: rgba(255,255,255,0.5);
-    color: #fff;
+    background: #f1f5f9;
+    border-color: #94a3b8;
+    color: #171717;
 }
-.word-guide-tips ul { padding-left: 1.25rem; margin-bottom: 0; }
-.word-guide-tips li { color: rgba(255,255,255,0.8); margin-bottom: 0.4rem; font-size: 0.9rem; }
+.word-guide-tips ul {
+    padding-left: 1.5rem;
+    margin-bottom: 0;
+}
+.word-guide-tips li {
+    color: #374151;
+    margin-bottom: 0.6rem;
+    font-size: 1rem;
+    line-height: 1.6;
+    font-weight: 500;
+}
+.word-guide-sidebar-card .word-guide-tips + p,
+.word-guide-sidebar-card p.word-guide-tips {
+    color: #374151;
+    font-size: 1rem;
+    line-height: 1.65;
+}
 
-/* Word Upload Card */
+/* Word Upload Card — chiroyli dizayn, qora matn */
 .word-upload-card {
-    background: linear-gradient(145deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.06) 100%);
-    backdrop-filter: blur(24px);
-    border-radius: 20px;
-    border: 1px solid rgba(255,255,255,0.2);
-    box-shadow: 0 20px 60px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1);
+    background: #ffffff;
+    border-radius: 24px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
     overflow: hidden;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition: all 0.3s ease;
 }
 .word-upload-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 24px 70px rgba(0,0,0,0.25);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.08);
 }
 .word-upload-header {
-    background: linear-gradient(90deg, rgba(102,126,234,0.4) 0%, rgba(118,75,162,0.4) 100%);
-    padding: 1.5rem 2rem;
+    background: linear-gradient(135deg, #f0fdfa 0%, #ecfeff 100%);
+    padding: 2.25rem 2.5rem;
     text-align: center;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
+    border-bottom: 2px solid #e2e8f0;
 }
 .word-upload-icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 56px;
-    height: 56px;
-    background: linear-gradient(135deg, #06b6d4, #0891b2);
-    border-radius: 16px;
-    margin-bottom: 0.75rem;
-    font-size: 1.75rem;
+    width: 72px;
+    height: 72px;
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    border-radius: 20px;
+    margin-bottom: 1.25rem;
+    font-size: 2.25rem;
     color: #fff;
-    box-shadow: 0 8px 24px rgba(102,126,234,0.4);
+    box-shadow: 0 8px 24px rgba(6, 182, 212, 0.35);
+}
+.word-upload-icon i {
+    font-weight: 900;
 }
 .word-upload-title {
-    color: #fff;
-    font-weight: 600;
-    font-size: 1.35rem;
-    margin: 0 0 0.25rem 0;
-    letter-spacing: -0.02em;
+    color: #171717;
+    font-weight: 800;
+    font-size: 1.6rem;
+    margin: 0 0 0.5rem 0;
+    letter-spacing: -0.03em;
+    line-height: 1.3;
 }
 .word-upload-subtitle {
-    color: rgba(255,255,255,0.75);
-    font-size: 0.9rem;
+    color: #374151;
+    font-size: 1.05rem;
     margin: 0;
+    font-weight: 500;
+    line-height: 1.5;
 }
 .word-upload-body {
-    padding: 2rem;
+    padding: 2rem 2.5rem;
 }
 .word-upload-dropzone {
     position: relative;
-    border: 2px dashed rgba(255,255,255,0.35);
-    border-radius: 16px;
-    padding: 2rem;
+    border: 2px dashed #94a3b8;
+    border-radius: 18px;
+    padding: 2.25rem 2rem;
     text-align: center;
     transition: all 0.3s ease;
-    background: rgba(255,255,255,0.03);
+    background: #f8fafc;
     margin-bottom: 1.5rem;
 }
 .word-upload-dropzone:hover,
 .word-upload-dropzone.dragover {
-    border-color: rgba(102,126,234,0.7);
-    background: rgba(102,126,234,0.08);
+    border-color: #06b6d4;
+    background: #f0fdfa;
 }
 .word-upload-label {
     display: block;
@@ -240,30 +345,43 @@
     padding: 0.5rem;
 }
 .word-upload-cloud {
-    font-size: 2.5rem;
-    color: rgba(255,255,255,0.6);
+    font-size: 3rem;
+    color: #0891b2;
     display: block;
-    margin-bottom: 0.75rem;
-    transition: color 0.3s ease;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
 }
 .word-upload-dropzone:hover .word-upload-cloud {
     color: #06b6d4;
+    transform: scale(1.08);
 }
 .word-upload-text {
-    color: rgba(255,255,255,0.95);
-    font-weight: 500;
-    font-size: 1.05rem;
+    color: #171717;
+    font-weight: 700;
+    font-size: 1.2rem;
     display: block;
-    margin-bottom: 0.35rem;
+    margin-bottom: 0.6rem;
+    letter-spacing: -0.02em;
+    line-height: 1.4;
 }
 .word-upload-hint {
-    color: rgba(255,255,255,0.5);
-    font-size: 0.8rem;
+    color: #475569;
+    font-size: 0.95rem;
     display: block;
+    font-weight: 500;
+    line-height: 1.5;
+}
+.word-upload-hint code {
+    background: rgba(6, 182, 212, 0.12);
+    color: #0e7490;
+    padding: 0.2em 0.5em;
+    border-radius: 6px;
+    font-size: 0.9em;
+    font-weight: 600;
 }
 .word-upload-filename {
     margin-top: 0.75rem;
-    color: #4ade80;
+    color: #059669;
     font-size: 0.9rem;
     font-weight: 500;
     display: none;
@@ -283,15 +401,15 @@
 }
 .word-upload-label-sm {
     display: block;
-    color: rgba(255,255,255,0.85);
-    font-size: 0.85rem;
-    margin-bottom: 0.4rem;
-    font-weight: 500;
+    color: #171717;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
 }
 .word-upload-select {
-    background: rgba(255,255,255,0.1) !important;
-    border: 1px solid rgba(255,255,255,0.2) !important;
-    color: #fff !important;
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    color: #171717 !important;
     border-radius: 12px;
     padding: 0.65rem 1rem;
 }
@@ -300,28 +418,42 @@
     border-color: rgba(102,126,234,0.6) !important;
 }
 .word-upload-select option {
-    background: #2c3e50;
-    color: #fff;
+    background: #fff;
+    color: #171717;
 }
 .word-upload-btn {
-    background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%) !important;
+    background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
     border: none !important;
     color: #fff !important;
-    font-weight: 600;
-    padding: 0.75rem 2rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(74,222,128,0.35);
+    font-weight: 700;
+    font-size: 1.05rem;
+    padding: 0.85rem 2rem;
+    border-radius: 14px;
+    box-shadow: 0 4px 16px rgba(5, 150, 105, 0.35);
     transition: all 0.25s ease;
     white-space: nowrap;
 }
+.word-upload-btn i {
+    font-size: 1.1em;
+}
 .word-upload-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 28px rgba(74,222,128,0.45);
+    box-shadow: 0 8px 24px rgba(5, 150, 105, 0.4);
     color: #fff !important;
 }
 .word-upload-btn:active {
     transform: translateY(0);
 }
+.cursor-pointer { cursor: pointer; }
+.word-upload-mode {
+    color: #171717;
+}
+.word-upload-mode label,
+.word-upload-mode span,
+.word-upload-mode .word-upload-label-sm {
+    color: #171717 !important;
+}
+.word-upload-mode .form-check-input { cursor: pointer; }
 .word-upload-result {
     margin: 1rem 2rem 2rem;
     border-radius: 12px;
@@ -340,10 +472,13 @@
 }
 /* Word guide responsive */
 @media (max-width: 768px) {
-    .word-guide-hero { padding: 1.75rem 1.5rem; }
-    .word-guide-hero h1 { font-size: 1.4rem; }
-    .word-guide-card, .word-guide-sidebar-card { padding: 1.35rem; }
-    .word-guide-code { font-size: 0.8rem; padding: 1rem; }
+    .word-guide-hero { padding: 2rem 1.5rem; }
+    .word-guide-hero h1 { font-size: 1.6rem; }
+    .word-guide-hero p { font-size: 1rem; }
+    .word-guide-hero-icon { width: 72px; height: 72px; font-size: 1.75rem; }
+    .word-guide-card, .word-guide-sidebar-card { padding: 1.5rem; }
+    .word-guide-code { font-size: 0.85rem; padding: 1.25rem; }
+    .word-guide-card-title { font-size: 1.25rem; }
 }
 </style>
 {% endblock %}
@@ -355,7 +490,7 @@
     <div class="word-guide-hero">
         <div class="word-guide-hero-icon"><i class="fas fa-file-word"></i></div>
         <h1>Word yoki TXT fayldan Test Yaratish</h1>
-        <p>Faylni yuklang — savollar avtomatik ajratiladi va quiz test yaratiladi</p>
+        <p>Faylni yuklang — savollar avtomatik ajratiladi va bir necha soniyada quiz test tayyor bo'ladi</p>
     </div>
 
     <!-- Word/TXT yuklash va test yaratish -->
@@ -364,8 +499,8 @@
             <div class="word-upload-card">
                 <div class="word-upload-header">
                     <span class="word-upload-icon"><i class="fas fa-file-word"></i></span>
-                    <h4 class="word-upload-title">Faylni Yuklang va Test Yarating</h4>
-                    <p class="word-upload-subtitle">Word (.docx) yoki TXT (.txt) — avtomatik quiz test</p>
+                    <h4 class="word-upload-title">Faylni Yuklang va Test Yarating yoki Mavjud Testga Qo'shing</h4>
+                    <p class="word-upload-subtitle">Word (.docx) yoki TXT (.txt) — yangi test yarating yoki mavjud testga savol qo'shing</p>
                 </div>
                 <form id="createQuizFromFileForm" enctype="multipart/form-data" class="word-upload-form">
                     {% csrf_token %}
@@ -375,13 +510,26 @@
                             <label for="word_file" class="word-upload-label">
                                 <i class="fas fa-cloud-upload-alt word-upload-cloud"></i>
                                 <span class="word-upload-text">Faylni tanlang yoki bu yerga tashlang</span>
-                                <span class="word-upload-hint">.docx, .doc, .txt — Format: 1. Savol? → a) Variant (✓)</span>
+                                <span class="word-upload-hint">Qabul qilinadi: <code>.docx</code>, <code>.doc</code>, <code>.txt</code> — Format: <code>1. Savol?</code> <code>a) Variant (✓)</code></span>
                             </label>
                             <div class="word-upload-filename" id="uploadFilename"></div>
                         </div>
+                        <div class="word-upload-mode mb-4 p-3 rounded-3" style="background: #f0fdfa; border: 1px solid #99f6e4;">
+                            <label class="word-upload-label-sm mb-2 d-block"><i class="fas fa-cogs me-2" style="color: #0891b2;"></i>Qanday qilamiz?</label>
+                            <div class="d-flex flex-wrap gap-4">
+                                <label class="d-flex align-items-center gap-2 cursor-pointer">
+                                    <input type="radio" name="upload_mode" value="new" checked class="form-check-input">
+                                    <span class="fw-medium">Yangi test yaratish</span>
+                                </label>
+                                <label class="d-flex align-items-center gap-2 cursor-pointer">
+                                    <input type="radio" name="upload_mode" value="add" class="form-check-input">
+                                    <span class="fw-medium">Mavjud testga savol qo'shish</span>
+                                </label>
+                            </div>
+                        </div>
                         <div class="word-upload-options">
-                            <div class="word-upload-field">
-                                <label for="grade" class="word-upload-label-sm">Sinf</label>
+                            <div class="word-upload-field" id="gradeField">
+                                <label for="grade" class="word-upload-label-sm"><i class="fas fa-layer-group me-2" style="color: #0891b2;"></i>Sinf (yangi test uchun)</label>
                                 <select class="form-select word-upload-select" id="grade" name="grade">
                                     <option value="">— Tanlang —</option>
                                     <option value="1">1-sinf</option>
@@ -397,9 +545,37 @@
                                     <option value="11">11-sinf</option>
                                 </select>
                             </div>
+                            <div class="word-upload-field d-none" id="addModeGradeField">
+                                <label for="addModeGrade" class="word-upload-label-sm"><i class="fas fa-layer-group me-2" style="color: #0891b2;"></i>1. Sinfni tanlang</label>
+                                <select class="form-select word-upload-select" id="addModeGrade">
+                                    <option value="">— Sinfni tanlang —</option>
+                                    <option value="1">1-sinf</option>
+                                    <option value="2">2-sinf</option>
+                                    <option value="3">3-sinf</option>
+                                    <option value="4">4-sinf</option>
+                                    <option value="5">5-sinf</option>
+                                    <option value="6">6-sinf</option>
+                                    <option value="7">7-sinf</option>
+                                    <option value="8">8-sinf</option>
+                                    <option value="9">9-sinf</option>
+                                    <option value="10">10-sinf</option>
+                                    <option value="11">11-sinf</option>
+                                </select>
+                            </div>
+                            <div class="word-upload-field d-none" id="testSelectField">
+                                <label for="existing_test" class="word-upload-label-sm"><i class="fas fa-folder-open me-2" style="color: #0891b2;"></i>2. Testni tanlang</label>
+                                <select class="form-select word-upload-select" id="existing_test" name="existing_test">
+                                    <option value="">— Avval sinfni tanlang —</option>
+                                    {% for t in user_tests %}
+                                    <option value="{{ t.id }}" data-grade="{{ t.grade }}">{{ t.title }} ({{ t.subject }})</option>
+                                    {% empty %}
+                                    <option value="" disabled>— Sizda hali test yo'q. Avval yangi test yarating —</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
                             <button type="submit" class="word-upload-btn" id="createQuizBtn">
                                 <i class="fas fa-magic me-2"></i>
-                                Test Yaratish
+                                <span id="submitBtnText">Test Yaratish</span>
                             </button>
                         </div>
                     </div>
@@ -475,11 +651,12 @@ d) Variant 4
                 
                 <div class="word-guide-step">
                     <span class="word-guide-step-num">4</span>
-                    <h5>Test Yaratish</h5>
+                    <h5>Test Yaratish yoki Savol Qo'shish</h5>
                     <ol>
                         <li>Yuqorida faylni tanlang yoki tashlang</li>
-                        <li>Sinfni tanlang va "Test Yaratish" ni bosing</li>
-                        <li>Tizim avtomatik quiz test yaratadi</li>
+                        <li><strong>Yangi test</strong> uchun: sinfni tanlang va "Test Yaratish" ni bosing</li>
+                        <li><strong>Mavjud testga</strong> qo'shish uchun: "Mavjud testga savol qo'shish"ni tanlang, avval <strong>1) sinfni</strong> tanlang, keyin <strong>2) testni</strong> tanlang va "Savollarni Qo'shish" ni bosing</li>
+                        <li>Tizim avtomatik savollarni qo'shadi</li>
                     </ol>
                 </div>
             </div>
@@ -575,9 +752,59 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('createQuizFromFileForm');
     const resultDiv = document.getElementById('createQuizResult');
     const submitBtn = document.getElementById('createQuizBtn');
+    const submitBtnText = document.getElementById('submitBtnText');
     const fileInput = document.getElementById('word_file');
     const filenameEl = document.getElementById('uploadFilename');
     const dropzone = document.getElementById('uploadDropzone');
+    const gradeField = document.getElementById('gradeField');
+    const addModeGradeField = document.getElementById('addModeGradeField');
+    const addModeGradeSelect = document.getElementById('addModeGrade');
+    const testSelectField = document.getElementById('testSelectField');
+    const gradeSelect = document.getElementById('grade');
+    const existingTestSelect = document.getElementById('existing_test');
+    
+    // Sinf bo'yicha testlarni filtrlash
+    function filterTestsByGrade() {
+        if (!existingTestSelect || !addModeGradeSelect) return;
+        const selectedGrade = addModeGradeSelect.value;
+        const options = existingTestSelect.querySelectorAll('option[data-grade]');
+        const firstOpt = existingTestSelect.options[0];
+        
+        if (!selectedGrade) {
+            options.forEach(opt => { opt.style.display = 'none'; opt.disabled = true; });
+            existingTestSelect.value = '';
+            if (firstOpt) { firstOpt.textContent = '— Avval sinfni tanlang —'; firstOpt.disabled = false; }
+            return;
+        }
+        
+        let hasVisible = false;
+        options.forEach(opt => {
+            const match = String(opt.getAttribute('data-grade')) === String(selectedGrade);
+            opt.style.display = match ? '' : 'none';
+            opt.disabled = !match;
+            if (match) hasVisible = true;
+        });
+        existingTestSelect.value = '';
+        if (firstOpt) { firstOpt.textContent = hasVisible ? '— Testni tanlang —' : '— Bu sinfda test yo\'q —'; firstOpt.disabled = false; }
+    }
+    
+    // Rejimni o'zgartirish: yangi test vs mavjud testga qo'shish
+    const modeRadios = document.querySelectorAll('input[name="upload_mode"]');
+    function updateMode() {
+        const mode = document.querySelector('input[name="upload_mode"]:checked')?.value || 'new';
+        const isAdd = mode === 'add';
+        if (gradeField) gradeField.classList.toggle('d-none', isAdd);
+        if (addModeGradeField) addModeGradeField.classList.toggle('d-none', !isAdd);
+        if (testSelectField) testSelectField.classList.toggle('d-none', !isAdd);
+        if (submitBtnText) submitBtnText.textContent = isAdd ? 'Savollarni Qo\'shish' : 'Test Yaratish';
+        if (existingTestSelect) existingTestSelect.required = isAdd;
+        if (gradeSelect) gradeSelect.required = !isAdd;
+        if (addModeGradeSelect) addModeGradeSelect.required = isAdd;
+        if (isAdd) filterTestsByGrade();
+    }
+    modeRadios.forEach(r => r.addEventListener('change', updateMode));
+    addModeGradeSelect?.addEventListener('change', filterTestsByGrade);
+    updateMode();
     
     // Fayl tanlanganda nomini ko'rsatish
     if (fileInput) {
@@ -622,37 +849,85 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
+            const isAddMode = document.querySelector('input[name="upload_mode"]:checked')?.value === 'add';
+            if (isAddMode) {
+                if (!addModeGradeSelect?.value) {
+                    showResult('Avval sinfni tanlang!', 'danger');
+                    return;
+                }
+                const testId = existingTestSelect?.value;
+                if (!testId) {
+                    showResult('Iltimos, testni tanlang! (Tanlangan sinfda test bo\'lmasa, boshqa sinfni tanlang)', 'danger');
+                    return;
+                }
+            } else if (!gradeSelect?.value) {
+                showResult('Yangi test uchun sinfni tanlang!', 'danger');
+                return;
+            }
+            
             const formData = new FormData(form);
-            const originalText = submitBtn.innerHTML;
+            if (isAddMode) {
+                formData.delete('grade');
+            }
+            
+            const originalHtml = submitBtn.innerHTML;
             submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Yuklanmoqda...';
             submitBtn.disabled = true;
             resultDiv.style.display = 'none';
             
-            fetch("{% url 'tests:create_test_from_word' %}", {
+            const url = isAddMode 
+                ? '/tests/' + existingTestSelect.value + '/upload-questions-word/' 
+                : "{% url 'tests:create_test_from_word' %}";
+            
+            fetch(url, {
                 method: 'POST',
                 body: formData,
                 headers: {
                     'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
                 }
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showResult(data.message + (data.test_id ? '<br><a href="/tests/' + data.test_id + '/results/" class="alert-link">Test natijalarini ko\'rish</a>' : ''), 'success');
-                    form.reset();
-                    if (filenameEl) { filenameEl.textContent = ''; filenameEl.classList.remove('has-file'); }
-                    if (data.test_id && typeof showAlert === 'function') {
-                        showAlert('Test yaratildi! O\'quvchilar endi yecha oladi.', 'success');
+            .then(async r => {
+                let data = {};
+                const contentType = r.headers.get('content-type');
+                try {
+                    if (contentType && contentType.includes('application/json')) {
+                        data = await r.json();
+                    } else {
+                        const text = await r.text();
+                        data = { error: r.ok ? 'Noma\'lum javob' : ('Server xatolik: ' + r.status + (text ? ' - ' + text.substring(0, 200) : '')) };
+                    }
+                } catch (_) {
+                    data = { error: 'Server javobini o\'qib bo\'lmadi (status: ' + r.status + ')' };
+                }
+                return { ok: r.ok, data };
+            })
+            .then(({ ok, data }) => {
+                if (isAddMode) {
+                    if (ok && (data.questions_count !== undefined || data.message)) {
+                        showResult((data.message || (data.questions_count || 0) + ' ta savol qo\'shildi!') + 
+                            '<br><a href="/tests/' + existingTestSelect.value + '/edit/" class="alert-link">Testni tahrirlash</a>', 'success');
+                        form.reset();
+                        if (filenameEl) { filenameEl.textContent = ''; filenameEl.classList.remove('has-file'); }
+                        updateMode();
+                    } else {
+                        showResult((data.error || 'Xatolik yuz berdi') + (data.details ? '<br><small>' + data.details + '</small>' : ''), 'danger');
                     }
                 } else {
-                    showResult((data.error || 'Xatolik yuz berdi') + (data.details ? '<br><small>' + data.details + '</small>' : ''), 'danger');
+                    if (data.success) {
+                        showResult(data.message + (data.test_id ? '<br><a href="/tests/' + data.test_id + '/results/" class="alert-link">Test natijalarini ko\'rish</a>' : ''), 'success');
+                        form.reset();
+                        if (filenameEl) { filenameEl.textContent = ''; filenameEl.classList.remove('has-file'); }
+                        updateMode();
+                    } else {
+                        showResult((data.error || 'Xatolik yuz berdi') + (data.details ? '<br><small>' + data.details + '</small>' : ''), 'danger');
+                    }
                 }
             })
             .catch(error => {
                 showResult('Xatolik: ' + error.message, 'danger');
             })
             .finally(() => {
-                submitBtn.innerHTML = originalText;
+                submitBtn.innerHTML = originalHtml;
                 submitBtn.disabled = false;
             });
         });
