@@ -6,7 +6,7 @@
 {% block extra_css %}
 <style>
     body {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
         min-height: 100vh;
     }
 
@@ -67,7 +67,7 @@
     .student-avatar {
         width: 60px;
         height: 60px;
-        background: linear-gradient(135deg, #667eea, #764ba2);
+        background: linear-gradient(135deg, #06b6d4, #0891b2);
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -121,7 +121,7 @@
         border-radius: 10px;
         padding: 15px;
         margin-bottom: 10px;
-        border-left: 4px solid #667eea;
+        border-left: 4px solid #06b6d4;
     }
 
     .active-test-item.late {
@@ -161,7 +161,7 @@
 
     .progress-bar-mini-fill {
         height: 100%;
-        background: linear-gradient(90deg, #667eea, #764ba2);
+        background: linear-gradient(90deg, #06b6d4, #0891b2);
         transition: width 0.5s ease;
     }
 
@@ -238,7 +238,7 @@
 
     .filter-input:focus {
         outline: none;
-        border-color: #667eea;
+        border-color: #06b6d4;
         background: white;
     }
 
@@ -652,7 +652,7 @@ function selectTimeAction(action) {
         btn.style.borderColor = '#e2e8f0';
         btn.style.background = 'white';
     });
-    event.target.closest('.time-control-btn').style.borderColor = '#667eea';
+    event.target.closest('.time-control-btn').style.borderColor = '#06b6d4';
     event.target.closest('.time-control-btn').style.background = '#eef2ff';
     
     if (action === 'add' || action === 'reduce') {

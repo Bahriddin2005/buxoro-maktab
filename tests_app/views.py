@@ -424,41 +424,22 @@ def take_test_view(request, test_id):
                     return JsonResponse({'error': 'Siz allaqachon bu testni topshirgansiz. Qayta topshirish uchun admin ruxsati kerak.'}, status=400)
                 
                 # Qayta ishlash ruxsati bor, yangi attempt yaratamiz (is_retake=True bilan)
-                # Database'da hali ham mavjud bo'lgan maydonlar (correct_answers, incorrect_answers, unanswered, termination_reason) NOT NULL
-                # Shuning uchun raw SQL orqali INSERT qilamiz
-                from django.db import connection
-                db_backend = connection.vendor
-                with connection.cursor() as cursor:
-                    if db_backend == 'sqlite':
-                        # SQLite uchun - parametrlarni to'g'ri formatlash
-                        # Django debug_sql muammosini oldini olish uchun query'ni to'g'ridan-to'g'ri formatlash
-                        sql_query = "INSERT INTO tests_app_testattempt (test_id, student_id, started_at, is_retake, correct_answers, incorrect_answers, unanswered, total_points, attempt_number, is_completed, current_question_index, is_terminated, termination_reason) VALUES (?, ?, ?, 1, 0, 0, 0, 0, 1, 0, 0, 0, ?)"
-                        cursor.execute(sql_query, [test.id, request.user.id, timezone.now(), ''])
-                        attempt_id = cursor.lastrowid
-                    else:
-                        # PostgreSQL uchun RETURNING ishlatamiz
-                        sql_query = "INSERT INTO tests_app_testattempt (test_id, student_id, started_at, is_retake, correct_answers, incorrect_answers, unanswered, total_points, attempt_number, is_completed, current_question_index, is_terminated, termination_reason) VALUES (%s, %s, %s, TRUE, 0, 0, 0, 0, 1, FALSE, 0, FALSE, %s) RETURNING id"
-                        cursor.execute(sql_query, [test.id, request.user.id, timezone.now(), ''])
-                        attempt_id = cursor.fetchone()[0]
-                    attempt = TestAttempt.objects.get(id=attempt_id)
+                attempt = TestAttempt.objects.create(
+                    test=test,
+                    student=request.user,
+                    is_retake=True,
+                    attempt_number=1,
+                    termination_reason=''
+                )
             elif not existing_attempt_id:
                 # Birinchi marta test yechmoqda
-                # Database'da hali ham mavjud bo'lgan maydonlar (correct_answers, incorrect_answers, unanswered, termination_reason) NOT NULL
-                # Shuning uchun raw SQL orqali INSERT qilamiz
-                from django.db import connection
-                db_backend = connection.vendor
-                with connection.cursor() as cursor:
-                    if db_backend == 'sqlite':
-                        # SQLite uchun - parametrlarni to'g'ri formatlash
-                        sql_query = "INSERT INTO tests_app_testattempt (test_id, student_id, started_at, is_retake, correct_answers, incorrect_answers, unanswered, total_points, attempt_number, is_completed, current_question_index, is_terminated, termination_reason) VALUES (?, ?, ?, 0, 0, 0, 0, 0, 1, 0, 0, 0, ?)"
-                        cursor.execute(sql_query, [test.id, request.user.id, timezone.now(), ''])
-                        attempt_id = cursor.lastrowid
-                    else:
-                        # PostgreSQL uchun RETURNING ishlatamiz
-                        sql_query = "INSERT INTO tests_app_testattempt (test_id, student_id, started_at, is_retake, correct_answers, incorrect_answers, unanswered, total_points, attempt_number, is_completed, current_question_index, is_terminated, termination_reason) VALUES (%s, %s, %s, FALSE, 0, 0, 0, 0, 1, FALSE, 0, FALSE, %s) RETURNING id"
-                        cursor.execute(sql_query, [test.id, request.user.id, timezone.now(), ''])
-                        attempt_id = cursor.fetchone()[0]
-                    attempt = TestAttempt.objects.get(id=attempt_id)
+                attempt = TestAttempt.objects.create(
+                    test=test,
+                    student=request.user,
+                    is_retake=False,
+                    attempt_number=1,
+                    termination_reason=''
+                )
             else:
                 # Test tugallanmagan, davom ettirmoqda - to'liq obyektni yuklash
                 attempt = TestAttempt.objects.filter(id=existing_attempt_id).only(
@@ -466,22 +447,13 @@ def take_test_view(request, test_id):
                 ).first()
                 if not attempt:
                     # Agar topilmasa, yangi yaratamiz
-                    # Database'da hali ham mavjud bo'lgan maydonlar (correct_answers, incorrect_answers, unanswered, termination_reason) NOT NULL
-                    # Shuning uchun raw SQL orqali INSERT qilamiz
-                    from django.db import connection
-                    db_backend = connection.vendor
-                    with connection.cursor() as cursor:
-                        if db_backend == 'sqlite':
-                            # SQLite uchun - parametrlarni to'g'ri formatlash
-                            sql_query = "INSERT INTO tests_app_testattempt (test_id, student_id, started_at, is_retake, correct_answers, incorrect_answers, unanswered, total_points, attempt_number, is_completed, current_question_index, is_terminated, termination_reason) VALUES (?, ?, ?, 0, 0, 0, 0, 0, 1, 0, 0, 0, ?)"
-                            cursor.execute(sql_query, [test.id, request.user.id, timezone.now(), ''])
-                            attempt_id = cursor.lastrowid
-                        else:
-                            # PostgreSQL uchun RETURNING ishlatamiz
-                            sql_query = "INSERT INTO tests_app_testattempt (test_id, student_id, started_at, is_retake, correct_answers, incorrect_answers, unanswered, total_points, attempt_number, is_completed, current_question_index, is_terminated, termination_reason) VALUES (%s, %s, %s, FALSE, 0, 0, 0, 0, 1, FALSE, 0, FALSE, %s) RETURNING id"
-                            cursor.execute(sql_query, [test.id, request.user.id, timezone.now(), ''])
-                            attempt_id = cursor.fetchone()[0]
-                        attempt = TestAttempt.objects.get(id=attempt_id)
+                    attempt = TestAttempt.objects.create(
+                        test=test,
+                        student=request.user,
+                        is_retake=False,
+                        attempt_number=1,
+                        termination_reason=''
+                    )
             
             # Har bir o'quvchiga savollar random tartibda ko'rsatiladi
             # Query optimallashtirish - select_related va prefetch_related
@@ -2153,22 +2125,13 @@ def open_test_for_student(request, test_id, student_id):
         ).count()
         
         # Yangi urinish yaratish (qayta ishlash imkoniyati)
-        # Database'da hali ham mavjud bo'lgan maydonlar (correct_answers, incorrect_answers, unanswered, termination_reason) NOT NULL
-        # Shuning uchun raw SQL orqali INSERT qilamiz
-        from django.db import connection
-        db_backend = connection.vendor
-        with connection.cursor() as cursor:
-            if db_backend == 'sqlite':
-                # SQLite uchun - parametrlarni to'g'ri formatlash
-                sql_query = "INSERT INTO tests_app_testattempt (test_id, student_id, started_at, is_retake, correct_answers, incorrect_answers, unanswered, total_points, attempt_number, is_completed, current_question_index, is_terminated, termination_reason) VALUES (?, ?, ?, 1, 0, 0, 0, 0, ?, 0, 0, 0, ?)"
-                cursor.execute(sql_query, [test.id, student.id, timezone.now(), previous_attempts + 1, ''])
-                attempt_id = cursor.lastrowid
-            else:
-                # PostgreSQL uchun RETURNING ishlatamiz
-                sql_query = "INSERT INTO tests_app_testattempt (test_id, student_id, started_at, is_retake, correct_answers, incorrect_answers, unanswered, total_points, attempt_number, is_completed, current_question_index, is_terminated, termination_reason) VALUES (%s, %s, %s, TRUE, 0, 0, 0, 0, %s, FALSE, 0, FALSE, %s) RETURNING id"
-                cursor.execute(sql_query, [test.id, student.id, timezone.now(), previous_attempts + 1, ''])
-                attempt_id = cursor.fetchone()[0]
-            new_attempt = TestAttempt.objects.get(id=attempt_id)
+        new_attempt = TestAttempt.objects.create(
+            test=test,
+            student=student,
+            is_retake=True,
+            attempt_number=previous_attempts + 1,
+            termination_reason=''
+        )
         
         # Agar qayta ishlash so'rovi mavjud bo'lsa, uni tasdiqlangan deb belgilash
         retake_request = TestRetakeRequest.objects.filter(

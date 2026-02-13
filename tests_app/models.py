@@ -39,7 +39,7 @@ class Question(models.Model):
     
     test = models.ForeignKey(Test, on_delete=models.CASCADE, related_name='questions')
     question_text = models.TextField()
-    question_type = models.CharField(max_length=15, choices=QUESTION_TYPES)
+    question_type = models.CharField(max_length=15, choices=QUESTION_TYPES, default='single_choice')
     points = models.FloatField(default=1.0)
     order = models.IntegerField(default=0)
     explanation = models.TextField(blank=True, help_text="Explanation for the correct answer")
@@ -85,8 +85,10 @@ class TestAttempt(models.Model):
     time_taken = models.DurationField(null=True, blank=True)
     attempt_number = models.IntegerField(default=1)  # Qayta ishlash raqami
     is_retake = models.BooleanField(default=False)  # Qayta ishlashmi
-    # correct_answers, incorrect_answers, unanswered maydonlari TestResult model'ida saqlanadi
-    # Database'da bu ustunlar yo'qligi uchun model'dan olib tashlandi
+    # Database'da NOT NULL — INSERT uchun kerak (aslida TestResult da saqlanadi)
+    correct_answers = models.IntegerField(default=0)
+    incorrect_answers = models.IntegerField(default=0)
+    unanswered = models.IntegerField(default=0)
     current_question_index = models.IntegerField(default=0)  # Hozir qaysi savolda
     is_terminated = models.BooleanField(default=False)  # O'qituvchi tomonidan to'xtatilganmi
     terminated_by = models.ForeignKey(

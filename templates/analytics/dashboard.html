@@ -11,6 +11,7 @@
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
@@ -23,27 +24,27 @@
         }
 
         body {
-            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            font-family: 'Outfit', 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(160deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
             min-height: 100vh;
             overflow-x: hidden;
             padding: 0;
             margin: 0;
         }
 
-        /* Light Glassmorphism Sidebar - Rasmga o'xshash */
+        /* Slate + Cyan Sidebar */
         .sidebar {
             position: fixed;
             left: 20px;
             top: 50%;
             transform: translateY(-50%);
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(15, 23, 42, 0.9);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border-radius: 30px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            border: 1px solid rgba(148, 163, 184, 0.2);
             padding: 20px 15px;
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
             z-index: 1000;
             width: 70px;
             display: flex;
@@ -74,8 +75,8 @@
         }
 
         .sidebar-icon.active {
-            background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
-            box-shadow: 0 4px 15px rgba(90, 103, 216, 0.5);
+            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+            box-shadow: 0 4px 15px rgba(6, 182, 212, 0.5);
             color: white;
         }
 
@@ -102,24 +103,23 @@
             min-height: 100vh;
         }
 
-        /* Light Glass Cards - Rasmga o'xshash */
+        /* Slate Glass Cards */
         .glass-card {
-            background: rgba(255, 255, 255, 0.2);
+            background: linear-gradient(145deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.95) 100%);
             backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
             border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            border: 1px solid rgba(148, 163, 184, 0.15);
             padding: 25px;
             margin-bottom: 20px;
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
             transition: all 0.3s ease;
             height: 100%;
         }
 
         .glass-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.5);
-            border-color: rgba(255, 255, 255, 0.4);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+            border-color: rgba(6, 182, 212, 0.3);
         }
 
         .card-title {
@@ -159,9 +159,9 @@
         }
 
         .toggle-btn.active {
-            background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
             color: white;
-            box-shadow: 0 4px 12px rgba(90, 103, 216, 0.5);
+            box-shadow: 0 4px 12px rgba(6, 182, 212, 0.5);
         }
 
         /* Stats Numbers - Rasmga o'xshash */
@@ -184,7 +184,7 @@
         }
 
         .stat-change.positive {
-            color: #2ecc71;
+            color: #10b981;
         }
 
         .stat-change.negative {
@@ -221,11 +221,11 @@
         }
 
         .progress-fill.purple {
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(90deg, #06b6d4 0%, #0891b2 100%);
         }
 
         .progress-fill.green {
-            background: linear-gradient(90deg, #2ecc71 0%, #27ae60 100%);
+            background: linear-gradient(90deg, #10b981 0%, #059669 100%);
         }
 
         /* Circular Progress */
@@ -278,7 +278,7 @@
         }
 
         .day-btn.active {
-            background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
             color: white;
             box-shadow: 0 4px 12px rgba(90, 103, 216, 0.5);
         }
@@ -335,7 +335,7 @@
         }
 
         .activity-icon.purple {
-            background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
             box-shadow: 0 4px 12px rgba(90, 103, 216, 0.3);
         }
 
@@ -417,7 +417,7 @@
         }
 
         .badge-purple {
-            background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
             color: white;
             box-shadow: 0 4px 12px rgba(90, 103, 216, 0.4);
         }
@@ -1370,16 +1370,16 @@
             const tests = analyticsData.tests;
             
             // Tests completion rate
-            drawCircularProgress('circularProgress1', tests.completion_rate, '#667eea', '#764ba2');
+            drawCircularProgress('circularProgress1', tests.completion_rate, '#06b6d4', '#0891b2');
             document.getElementById('circular-text-1').textContent = tests.completion_rate + '%';
             
             // Students verification rate
             const users = analyticsData.users;
-            drawCircularProgress('circularProgress2', users.verification_rate, '#2ecc71', '#27ae60');
+            drawCircularProgress('circularProgress2', users.verification_rate, '#10b981', '#27ae60');
             document.getElementById('circular-text-2').textContent = users.verification_rate + '%';
             
             // Average score
-            drawCircularProgress('circularProgress3', tests.avg_score, '#667eea', '#764ba2');
+            drawCircularProgress('circularProgress3', tests.avg_score, '#06b6d4', '#0891b2');
             document.getElementById('circular-text-3').textContent = tests.avg_score + '%';
         }
 
@@ -1539,13 +1539,13 @@
                     datasets: [{
                         label: 'Kirganlar',
                         data: activityData.map(d => d.logins),
-                        borderColor: '#667eea',
+                        borderColor: '#06b6d4',
                         backgroundColor: 'rgba(102, 126, 234, 0.1)',
                         borderWidth: 3,
                         fill: true,
                         tension: 0.4,
                         pointRadius: 5,
-                        pointBackgroundColor: '#667eea',
+                        pointBackgroundColor: '#06b6d4',
                         pointBorderColor: '#fff',
                         pointBorderWidth: 2
                     }]
@@ -1581,7 +1581,7 @@
                 data: {
                     datasets: [{
                         data: [avgScore, 100 - avgScore],
-                        backgroundColor: ['#667eea', 'rgba(255, 255, 255, 0.1)'],
+                        backgroundColor: ['#06b6d4', 'rgba(255, 255, 255, 0.1)'],
                         borderWidth: 0
                     }]
                 },
@@ -1610,7 +1610,7 @@
                     labels: activityData.map(d => d.day),
                     datasets: [{
                         data: activityData.map(d => d.completed),
-                        backgroundColor: activityData.map((_, i) => i % 2 === 0 ? '#667eea' : '#2ecc71'),
+                        backgroundColor: activityData.map((_, i) => i % 2 === 0 ? '#06b6d4' : '#10b981'),
                         borderRadius: 10,
                         barThickness: 20
                     }]
@@ -1647,7 +1647,7 @@
                     labels: ['O\'quvchilar', 'O\'qituvchilar', 'Adminlar'],
                     datasets: [{
                         data: [users.students, users.teachers, users.admins],
-                        backgroundColor: ['#667eea', '#2ecc71', '#764ba2'],
+                        backgroundColor: ['#06b6d4', '#10b981', '#0891b2'],
                         borderWidth: 0
                     }]
                 },
@@ -1674,7 +1674,7 @@
                     datasets: [{
                         label: 'Urinishlar',
                         data: topTests.map(t => t.attempts),
-                        backgroundColor: '#667eea',
+                        backgroundColor: '#06b6d4',
                         borderRadius: 8,
                         barThickness: 15
                     }]
@@ -1763,13 +1763,13 @@
                 const avgPercent = dayData.completed > 0 ? Math.min((dayData.completed / 3) * 100, 100) : 0;
                 
                 // Update circular progress
-                drawCircularProgress('circularProgress1', testsPercent, '#667eea', '#764ba2');
+                drawCircularProgress('circularProgress1', testsPercent, '#06b6d4', '#0891b2');
                 document.getElementById('circular-text-1').textContent = Math.round(testsPercent) + '%';
                 
-                drawCircularProgress('circularProgress2', studentsPercent, '#2ecc71', '#27ae60');
+                drawCircularProgress('circularProgress2', studentsPercent, '#10b981', '#27ae60');
                 document.getElementById('circular-text-2').textContent = Math.round(studentsPercent) + '%';
                 
-                drawCircularProgress('circularProgress3', avgPercent, '#667eea', '#764ba2');
+                drawCircularProgress('circularProgress3', avgPercent, '#06b6d4', '#0891b2');
                 document.getElementById('circular-text-3').textContent = Math.round(avgPercent) + '%';
             }
         }
@@ -1799,7 +1799,7 @@
                 position: fixed;
                 top: 20px;
                 right: 20px;
-                background: ${type === 'info' ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 'linear-gradient(135deg, #2ecc71 0%, #27ae60 100%)'};
+                background: ${type === 'info' ? 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)' : 'linear-gradient(135deg, #10b981 0%, #27ae60 100%)'};
                 color: white;
                 padding: 15px 25px;
                 border-radius: 15px;
@@ -1911,7 +1911,7 @@
                         </div>
                         <div class="modal-stat-item">
                             <div class="modal-stat-label">O'sish Sur'ati</div>
-                            <div class="modal-stat-value" style="color: #2ecc71;">${weekly.login_growth || 0}%</div>
+                            <div class="modal-stat-value" style="color: #10b981;">${weekly.login_growth || 0}%</div>
                         </div>
                     </div>
                 </div>
@@ -2017,7 +2017,7 @@
                         </div>
                         <div class="modal-stat-item">
                             <div class="modal-stat-label">O'quvchilar Tasdiqlash Foizi</div>
-                            <div class="modal-stat-value" style="color: #2ecc71;">${users.verification_rate}%</div>
+                            <div class="modal-stat-value" style="color: #10b981;">${users.verification_rate}%</div>
                             <div class="modal-stat-change">${users.verified} / ${users.total}</div>
                         </div>
                         <div class="modal-stat-item">
@@ -2078,7 +2078,7 @@
                         <div class="modal-stat-item">
                             <div class="modal-stat-label"><i class="fas fa-sign-in-alt"></i> Kirganlar</div>
                             <div class="modal-stat-value">${today.logins}</div>
-                            <div class="modal-stat-change" style="color: #2ecc71;">+${weekly.login_growth || 0}%</div>
+                            <div class="modal-stat-change" style="color: #10b981;">+${weekly.login_growth || 0}%</div>
                         </div>
                         <div class="modal-stat-item">
                             <div class="modal-stat-label"><i class="fas fa-user-plus"></i> Ro'yxatdan O'tganlar</div>
@@ -2162,7 +2162,7 @@
                         </div>
                         <div class="modal-stat-item">
                             <div class="modal-stat-label">Tugallanish Foizi</div>
-                            <div class="modal-stat-value" style="color: #2ecc71;">${tests.completion_rate}%</div>
+                            <div class="modal-stat-value" style="color: #10b981;">${tests.completion_rate}%</div>
                             <div class="modal-stat-change">${tests.completed_attempts} / ${tests.total_attempts}</div>
                         </div>
                         <div class="modal-stat-item">
@@ -2199,7 +2199,7 @@
                                     <td>${test.subject}</td>
                                     <td>${test.grade}-sinf</td>
                                     <td><strong>${test.attempts}</strong></td>
-                                    <td style="color: ${test.avg_score >= 80 ? '#2ecc71' : test.avg_score >= 60 ? '#f39c12' : '#e74c3c'}">
+                                    <td style="color: ${test.avg_score >= 80 ? '#10b981' : test.avg_score >= 60 ? '#f39c12' : '#e74c3c'}">
                                         ${test.avg_score}%
                                     </td>
                                 </tr>
@@ -2237,7 +2237,7 @@
                         </div>
                         <div class="modal-stat-item">
                             <div class="modal-stat-label">O'sish Sur'ati</div>
-                            <div class="modal-stat-value" style="color: #2ecc71;">${weekly.login_growth || 0}%</div>
+                            <div class="modal-stat-value" style="color: #10b981;">${weekly.login_growth || 0}%</div>
                             <div class="modal-stat-change">Hafta/hafta</div>
                         </div>
                     </div>

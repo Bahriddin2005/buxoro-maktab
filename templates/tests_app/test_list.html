@@ -6,104 +6,384 @@
 {% endblock %}
 
 {% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* Test action buttons styling */
-.edit-test-btn {
-    background-color: transparent !important;
-    border-color: #ffc107 !important;
-    color: #ffc107 !important;
+/* ═══ TESTLAR SAHIFA — Yangi Dizayn ═══ */
+.tests-page-wrap {
+    font-family: 'Outfit', sans-serif;
+    margin: -2rem -15px 0;
+    padding: 2.5rem 1.5rem 3rem;
+    background: linear-gradient(160deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+    border-radius: 28px;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
+    position: relative;
+    overflow: hidden;
+}
+.tests-page-wrap::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 60%;
+    height: 150%;
+    background: radial-gradient(ellipse, rgba(6, 182, 212, 0.15) 0%, transparent 60%);
+    pointer-events: none;
+}
+.tests-page-wrap::after {
+    content: '';
+    position: absolute;
+    bottom: -30%;
+    left: -10%;
+    width: 40%;
+    height: 100%;
+    background: radial-gradient(ellipse, rgba(34, 211, 238, 0.08) 0%, transparent 60%);
+    pointer-events: none;
 }
 
-.edit-test-btn:hover {
-    background-color: #ffc107 !important;
-    border-color: #ffc107 !important;
-    color: #000 !important;
+/* Header */
+.tests-page-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    position: relative;
+    z-index: 1;
+}
+.tests-page-header h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #f8fafc;
+    letter-spacing: -0.02em;
+    margin: 0 0 0.35rem 0;
+}
+.tests-page-header p {
+    color: #94a3b8;
+    font-size: 0.95rem;
+    margin: 0;
+    font-weight: 400;
+}
+.tests-page-header .btn-new-test {
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    color: #fff;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.tests-page-header .btn-new-test:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(6, 182, 212, 0.4);
+    color: #fff;
 }
 
-.monitor-btn {
-    background-color: transparent !important;
-    border-color: #28a745 !important;
-    color: #28a745 !important;
+/* Filter Card */
+.tests-filter-card {
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid rgba(148, 163, 184, 0.15);
+    border-radius: 16px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 2rem;
+    position: relative;
+    z-index: 1;
+}
+.tests-filter-card h5 {
+    color: #f1f5f9;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.tests-filter-card .form-select,
+.tests-filter-card .form-control {
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    color: #f8fafc;
+    border-radius: 10px;
+    padding: 10px 14px;
+}
+.tests-filter-card .form-select:focus,
+.tests-filter-card .form-control:focus {
+    border-color: #06b6d4;
+    box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.2);
+}
+.tests-filter-card .btn-outline-light {
+    border-color: rgba(148, 163, 184, 0.4);
+    color: #94a3b8;
+}
+.tests-filter-card .btn-outline-light:hover {
+    background: rgba(148, 163, 184, 0.15);
+    border-color: rgba(148, 163, 184, 0.5);
+    color: #f8fafc;
+}
+.tests-filter-info {
+    color: #64748b;
+    font-size: 0.85rem;
+    margin-top: 0.75rem;
 }
 
-.monitor-btn:hover {
-    background-color: #28a745 !important;
-    border-color: #28a745 !important;
-    color: #fff !important;
-}
-
-.delete-test-btn {
-    background-color: transparent !important;
-    border-color: #dc3545 !important;
-    color: #dc3545 !important;
-}
-
-.delete-test-btn:hover {
-    background-color: #dc3545 !important;
-    border-color: #dc3545 !important;
-    color: #fff !important;
-}
-
-.test-actions .btn {
+/* Test Cards */
+.test-card-new {
+    background: linear-gradient(145deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.95) 100%);
+    border: 1px solid rgba(148, 163, 184, 0.12);
+    border-radius: 18px;
+    padding: 1.5rem;
+    height: 100%;
     transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
 }
+.test-card-new::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #06b6d4, #22d3ee);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+.test-card-new:hover {
+    transform: translateY(-6px);
+    border-color: rgba(6, 182, 212, 0.3);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+}
+.test-card-new:hover::before { opacity: 1; }
+
+.test-card-new .subject-badge {
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.25) 0%, rgba(34, 211, 238, 0.2) 100%);
+    color: #22d3ee;
+    border: 1px solid rgba(6, 182, 212, 0.3);
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+.test-card-new .grade-badge {
+    background: rgba(148, 163, 184, 0.15);
+    color: #94a3b8;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+}
+.test-card-new .test-title {
+    color: #f8fafc;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0.75rem 0 0.5rem;
+    line-height: 1.35;
+}
+.test-card-new .test-description {
+    color: #64748b;
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+    line-height: 1.5;
+}
+.test-card-new .stat-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: rgba(15, 23, 42, 0.5);
+    border-radius: 10px;
+    font-size: 0.8rem;
+    color: #94a3b8;
+}
+.test-card-new .stat-box i {
+    color: #06b6d4;
+    font-size: 0.9rem;
+}
+.test-card-new .card-footer-new {
+    border-top: 1px solid rgba(148, 163, 184, 0.1);
+    margin-top: 1rem;
+    padding-top: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+    color: #64748b;
+}
+.test-card-new .btn-success {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    padding: 10px 18px;
+}
+.test-card-new .btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
+.test-card-new .btn-info {
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    padding: 10px 18px;
+}
+.test-card-new .btn-info:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(6, 182, 212, 0.4);
+}
+.test-card-new .btn-warning {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    border: none;
+    color: #fff;
+}
+.test-card-new .edit-test-btn,
+.test-card-new .monitor-btn,
+.test-card-new .delete-test-btn {
+    border-radius: 10px;
+    font-weight: 600;
+    padding: 8px 16px;
+}
+.edit-test-btn { border-color: #f59e0b !important; color: #f59e0b !important; }
+.edit-test-btn:hover { background: #f59e0b !important; color: #0f172a !important; }
+.monitor-btn { border-color: #10b981 !important; color: #10b981 !important; }
+.monitor-btn:hover { background: #10b981 !important; color: #fff !important; }
+.delete-test-btn { border-color: #ef4444 !important; color: #ef4444 !important; }
+.delete-test-btn:hover { background: #ef4444 !important; color: #fff !important; }
+.test-card-new .completed-badge {
+    background: rgba(16, 185, 129, 0.2) !important;
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    color: #34d399 !important;
+    cursor: default;
+}
+
+/* Alert */
+.tests-page-wrap .alert-warning {
+    background: rgba(245, 158, 11, 0.15);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    color: #fcd34d;
+}
+
+/* Loading & Empty */
+.tests-loading, .tests-empty {
+    color: #94a3b8;
+}
+.tests-page-wrap .spinner-border.text-primary {
+    color: #06b6d4 !important;
+}
+
+/* Pagination */
+.tests-page-wrap #paginationInfo { color: #94a3b8; }
+.tests-page-wrap #loadMoreBtn {
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    border: none;
+    border-radius: 12px;
+    padding: 12px 24px;
+    font-weight: 600;
+}
+.tests-page-wrap #loadMoreBtn .badge {
+    background: rgba(255,255,255,0.3) !important;
+    color: #fff !important;
+}
+
+@media (max-width: 768px) {
+    .tests-page-wrap { margin: -1rem -12px 0; padding: 1.5rem 1rem; border-radius: 20px; }
+    .tests-page-header h1 { font-size: 1.4rem; }
+}
+
+/* ═══ KUNDUZKI TEMA - Testlar sahifasi ═══ */
+[data-theme="light"] .tests-page-wrap {
+    background: linear-gradient(160deg, #ffffff 0%, #f0fdfa 50%, #ecfeff 100%);
+    box-shadow: 0 10px 40px rgba(6, 182, 212, 0.1), inset 0 1px 0 rgba(255,255,255,0.8);
+}
+[data-theme="light"] .tests-page-wrap::before {
+    background: radial-gradient(ellipse, rgba(6, 182, 212, 0.12) 0%, transparent 60%);
+}
+[data-theme="light"] .tests-page-wrap::after {
+    background: radial-gradient(ellipse, rgba(34, 211, 238, 0.06) 0%, transparent 60%);
+}
+[data-theme="light"] .tests-page-header h1 { color: #0f172a; }
+[data-theme="light"] .tests-page-header p { color: #64748b; }
+[data-theme="light"] .tests-filter-card {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(14, 165, 233, 0.2);
+}
+[data-theme="light"] .tests-filter-card h5 { color: #334155; }
+[data-theme="light"] .tests-filter-card .form-select,
+[data-theme="light"] .tests-filter-card .form-control {
+    background: #fff;
+    border-color: #e2e8f0;
+    color: #0f172a;
+}
+[data-theme="light"] .tests-filter-info { color: #64748b; }
+[data-theme="light"] .test-card-new {
+    background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+    border: 1px solid rgba(14, 165, 233, 0.15);
+}
+[data-theme="light"] .test-card-new:hover { border-color: rgba(6, 182, 212, 0.4); }
+[data-theme="light"] .test-card-new .test-title { color: #0f172a; }
+[data-theme="light"] .test-card-new .test-description { color: #64748b; }
+[data-theme="light"] .test-card-new .stat-box {
+    background: rgba(241, 245, 249, 0.9);
+    color: #475569;
+}
+[data-theme="light"] .test-card-new .card-footer-new { color: #64748b; border-top-color: #e2e8f0; }
+[data-theme="light"] .test-card-new .grade-badge { background: rgba(148, 163, 184, 0.2); color: #475569; }
+[data-theme="light"] #paginationInfo,
+[data-theme="light"] .tests-loading,
+[data-theme="light"] .tests-empty { color: #64748b; }
 </style>
 {% endblock %}
 
 {% block content %}
+<div class="tests-page-wrap">
 <div class="row">
     <div class="col-12">
-        <div class="glass-card p-4 mb-4" data-aos="fade-down">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h2 class="text-white mb-1">
-                        <i class="fas fa-{% if user.role == 'student' %}tasks{% else %}file-alt{% endif %} me-2"></i>
-                        {% if user.role == 'student' %}
-                            Mavjud Testlar
-                        {% elif user.role == 'teacher' %}
-                            Mening Testlarim
-                        {% else %}
-                            Barcha Testlar
-                        {% endif %}
-                    </h2>
-                    <p class="text-white-50 mb-0">
-                        {% if user.role == 'student' %}
-                            {{ user.grade }}-sinf uchun mavjud testlarni tanlang va yeching
-                        {% elif user.role == 'teacher' %}
-                            Yaratgan testlaringizni boshqaring va natijalarni ko'ring
-                        {% else %}
-                            Barcha o'qituvchilar yaratgan testlarni ko'ring
-                        {% endif %}
-                    </p>
-                </div>
-                {% if user.role == 'teacher' %}
-                <div>
-                    <a href="{% url 'tests:create_test' %}" class="btn btn-primary me-2">
-                        <i class="fas fa-plus me-2"></i>
-                        Yangi Test
-                    </a>
-                </div>
-                {% elif user.role == 'admin' %}
-                <div>
-                </div>
-                {% endif %}
+        <div class="tests-page-header" data-aos="fade-down">
+            <div>
+                <h1>
+                    <i class="fas fa-{% if user.role == 'student' %}pen-fancy{% else %}folder-open{% endif %} me-2" style="color: #06b6d4;"></i>
+                    {% if user.role == 'student' %}
+                        Mavjud Testlar
+                    {% elif user.role == 'teacher' %}
+                        Mening Testlarim
+                    {% else %}
+                        Barcha Testlar
+                    {% endif %}
+                </h1>
+                <p>
+                    {% if user.role == 'student' %}
+                        {{ user.grade }}-sinf uchun mavjud testlarni tanlang va yeching
+                    {% elif user.role == 'teacher' %}
+                        Yaratgan testlaringizni boshqaring va natijalarni ko'ring
+                    {% else %}
+                        Barcha o'qituvchilar yaratgan testlarni ko'ring
+                    {% endif %}
+                </p>
             </div>
+            {% if user.role == 'teacher' %}
+            <div>
+                <a href="{% url 'tests:create_test' %}" class="btn-new-test">
+                    <i class="fas fa-plus"></i> Yangi Test
+                </a>
+            </div>
+            {% endif %}
         </div>
 
         <!-- Filters for Admin and Teacher -->
         {% if user.role == 'admin' or user.role == 'teacher' %}
-        <div class="glass-card p-4 mb-4" data-aos="fade-in">
-            <h5 class="text-white mb-3">
-                <i class="fas fa-filter me-2"></i>
-                Filterlash
+        <div class="tests-filter-card" data-aos="fade-in">
+            <h5>
+                <i class="fas fa-sliders-h"></i> Filterlash
             </h5>
             <div class="row g-3">
                 <div class="col-md-3">
-                    <label class="form-label text-white-50 small mb-2">
-                        <i class="fas fa-graduation-cap me-1"></i>
-                        Sinf
+                    <label class="form-label small mb-2" style="color: #94a3b8;">
+                        <i class="fas fa-graduation-cap me-1"></i> Sinf
                     </label>
-                    <select class="form-select bg-dark text-white border-secondary" id="gradeFilter" onchange="filterTests()">
+                    <select class="form-select" id="gradeFilter" onchange="filterTests()">
                         <option value="">Barcha sinflar</option>
                         <option value="4">4-sinf</option>
                         <option value="5">5-sinf</option>
@@ -120,7 +400,7 @@
                         <i class="fas fa-book me-1"></i>
                         Fan
                     </label>
-                    <select class="form-select bg-dark text-white border-secondary" id="subjectFilter" onchange="filterTests()">
+                    <select class="form-select" id="subjectFilter" onchange="filterTests()">
                         <option value="">Barcha fanlar</option>
                         <option value="Matematika">Matematika</option>
                         <option value="Informatika">Informatika</option>
@@ -136,26 +416,24 @@
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label text-white-50 small mb-2">
-                        <i class="fas fa-toggle-on me-1"></i>
-                        Status
+                    <label class="form-label small mb-2" style="color: #94a3b8;">
+                        <i class="fas fa-toggle-on me-1"></i> Status
                     </label>
-                    <select class="form-select bg-dark text-white border-secondary" id="statusFilter" onchange="filterTests()">
+                    <select class="form-select" id="statusFilter" onchange="filterTests()">
                         <option value="">Barcha testlar</option>
                         <option value="active">Faol testlar</option>
                         <option value="inactive">Faol emas</option>
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label text-white-50 small mb-2">
-                        <i class="fas fa-search me-1"></i>
-                        Qidirish
+                    <label class="form-label small mb-2" style="color: #94a3b8;">
+                        <i class="fas fa-search me-1"></i> Qidirish
                     </label>
-                    <input type="text" class="form-control bg-dark text-white border-secondary" 
+                    <input type="text" class="form-control" 
                            id="searchFilter" placeholder="Test nomi..." onkeyup="filterTests()">
                 </div>
             </div>
-            <div class="mt-3 text-white-50 small">
+            <div class="tests-filter-info">
                 <i class="fas fa-info-circle me-1"></i>
                 <span id="filterResults">Barcha testlar ko'rsatilmoqda</span>
             </div>
@@ -178,18 +456,14 @@
 
         <!-- Filter va Search -->
         {% if user.role == 'student' %}
-        <div class="glass-card p-4 mb-4" data-aos="fade-right">
-            <h5 class="text-white mb-3">
-                <i class="fas fa-filter me-2"></i>
-                Filterlash
-            </h5>
+        <div class="tests-filter-card" data-aos="fade-right">
+            <h5><i class="fas fa-sliders-h me-1"></i> Filterlash</h5>
             <div class="row g-3 align-items-end">
                 <div class="col-md-6">
-                    <label class="form-label text-white-50 small mb-2">
-                        <i class="fas fa-book me-1"></i>
-                        Fan
+                    <label class="form-label small mb-2" style="color: #94a3b8;">
+                        <i class="fas fa-book me-1"></i> Fan
                     </label>
-                    <select class="form-select bg-dark border-secondary text-white" id="subjectFilter" onchange="filterTests()">
+                    <select class="form-select" id="subjectFilter" onchange="filterTests()">
                         <option value="">Barcha fanlar</option>
                         <option value="Matematika">Matematika</option>
                         <option value="Informatika">Informatika</option>
@@ -210,7 +484,7 @@
                     </button>
                 </div>
             </div>
-            <div class="mt-3 text-white-50 small">
+            <div class="tests-filter-info">
                 <i class="fas fa-info-circle me-1"></i>
                 <span id="filterResultsStudent">Barcha testlar ko'rsatilmoqda</span>
             </div>
@@ -225,14 +499,14 @@
                     <div class="spinner-border text-primary" role="status">
                         <span class="visually-hidden">Yuklanmoqda...</span>
                     </div>
-                    <p class="text-white mt-3">Testlar yuklanmoqda...</p>
+                    <p class="mt-3" style="color: #94a3b8;">Testlar yuklanmoqda...</p>
                 </div>
             </div>
             
             <!-- Pagination Info & Load More -->
             <div class="row mt-4 d-none" id="paginationSection">
                 <div class="col-12 text-center">
-                    <p class="text-white-50 mb-3" id="paginationInfo">
+                    <p class="mb-3" id="paginationInfo" style="color: #94a3b8;">
                         <i class="fas fa-info-circle me-2"></i>
                         <span id="showingCount">0</span> dan <span id="totalCount">0</span> ta test ko'rsatilmoqda
                     </p>
@@ -246,49 +520,44 @@
         </div>
     </div>
 </div>
+</div><!-- /tests-page-wrap -->
 
 <!-- Test Card Template -->
 <template id="testCardTemplate">
     <div class="col-lg-6 col-xl-4 test-item" data-aos="fade-up">
-        <div class="glass-card h-100 test-card">
-            <div class="card-body p-4">
+        <div class="test-card-new test-card h-100">
+            <div class="card-body p-0">
                 <!-- Subject Badge -->
                 <div class="d-flex justify-content-between align-items-start mb-3">
-                    <span class="badge bg-primary subject-badge"></span>
-                    <span class="badge bg-secondary grade-badge"></span>
+                    <span class="subject-badge"></span>
+                    <span class="grade-badge"></span>
                 </div>
 
                 <!-- Test Title -->
-                <h5 class="card-title text-white mb-2 test-title"></h5>
+                <h5 class="test-title"></h5>
                 
                 <!-- Test Description -->
-                <p class="card-text text-white-50 small test-description"></p>
+                <p class="test-description"></p>
 
                 <!-- Test Stats -->
-                <div class="row text-center mb-3">
-                    <div class="col-4">
-                        <div class="stat-item">
-                            <i class="fas fa-question-circle text-info mb-1"></i>
-                            <div class="small text-white questions-count">- savol</div>
-                        </div>
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <div class="stat-box">
+                        <i class="fas fa-question-circle"></i>
+                        <span class="questions-count">- savol</span>
                     </div>
-                    <div class="col-4">
-                        <div class="stat-item">
-                            <i class="fas fa-clock text-warning mb-1"></i>
-                            <div class="small text-white time-limit">- daq</div>
-                        </div>
+                    <div class="stat-box">
+                        <i class="fas fa-clock"></i>
+                        <span class="time-limit">- daq</span>
                     </div>
-                    <div class="col-4">
-                        <div class="stat-item">
-                            <i class="fas fa-redo text-success mb-1"></i>
-                            <div class="small text-white attempts-left">- ta</div>
-                        </div>
+                    <div class="stat-box">
+                        <i class="fas fa-redo"></i>
+                        <span class="attempts-left">- ta</span>
                     </div>
                 </div>
 
                 <!-- Progress Bar (if attempted) -->
-                <div class="progress mb-3 d-none test-progress">
-                    <div class="progress-bar" role="progressbar"></div>
+                <div class="progress mb-3 d-none test-progress" style="height: 6px; background: rgba(15,23,42,0.5); border-radius: 6px;">
+                    <div class="progress-bar" role="progressbar" style="background: linear-gradient(90deg, #06b6d4, #10b981);"></div>
                 </div>
 
                 <!-- Action Buttons -->
@@ -316,14 +585,9 @@
             </div>
             
             <!-- Test Info Footer -->
-            <div class="card-footer bg-transparent border-top border-secondary">
-                <div class="d-flex justify-content-between align-items-center">
-                    <small class="text-white-50">
-                        <i class="fas fa-user me-1"></i>
-                        <span class="teacher-name">O'qituvchi</span>
-                    </small>
-                    <small class="text-white-50 created-date">Sana</small>
-                </div>
+            <div class="card-footer-new">
+                <span><i class="fas fa-user me-1"></i><span class="teacher-name">O'qituvchi</span></span>
+                <span class="created-date">Sana</span>
             </div>
         </div>
     </div>
@@ -432,12 +696,12 @@ async function loadTests(page = 1) {
     } catch (error) {
         console.error('❌ Error loading tests:', error);
         document.getElementById('testsList').innerHTML = `
-            <div class="col-12 text-center py-5">
-                <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
-                <h4 class="text-white">Testlarni yuklashda xatolik</h4>
-                <p class="text-white-50">Xato: ${error.message}</p>
-                <p class="text-white-50 small">Sahifani qayta yuklang (F5)</p>
-                <button class="btn btn-primary mt-3" onclick="location.reload()">
+            <div class="col-12 text-center py-5" style="color: #94a3b8;">
+                <i class="fas fa-exclamation-triangle fa-3x mb-3" style="color: #f59e0b;"></i>
+                <h4 style="color: #f8fafc;">Testlarni yuklashda xatolik</h4>
+                <p>Xato: ${error.message}</p>
+                <p class="small">Sahifani qayta yuklang (F5)</p>
+                    <button class="btn mt-3" onclick="location.reload()" style="background: linear-gradient(135deg, #06b6d4, #0891b2); border: none; color: #fff;">
                     <i class="fas fa-redo me-2"></i>Qayta yuklash
                 </button>
             </div>
@@ -500,11 +764,11 @@ function displayTests(tests, userRole = 'student') {
             
         console.log('⚠️ No tests found, showing message');
         container.innerHTML = `
-            <div class="col-12 text-center py-5" data-aos="fade-in">
-                <i class="fas fa-clipboard-list fa-3x text-info mb-3"></i>
-                <h4 class="text-white">Testlar topilmadi</h4>
-                <p class="text-white-50">${message}</p>
-                ${userRole === 'admin' ? '<p class="text-white-50 small">Database\'da 6370 ta test bor, lekin ko\'rinmayapti</p>' : ''}
+            <div class="col-12 text-center py-5" data-aos="fade-in" style="color: #94a3b8;">
+                <i class="fas fa-clipboard-list fa-3x mb-3" style="color: #06b6d4;"></i>
+                <h4 style="color: #f8fafc;">Testlar topilmadi</h4>
+                <p>${message}</p>
+                ${userRole === 'admin' ? '<p class="small">Database\'da 6370 ta test bor, lekin ko\'rinmayapti</p>' : ''}
             </div>
         `;
         return;
@@ -858,91 +1122,4 @@ function getCookie(name) {
     return cookieValue;
 }
 </script>
-
-<style>
-.test-card {
-    transition: all 0.3s ease;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.test-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-    border-color: rgba(102, 126, 234, 0.3);
-}
-
-.stat-item {
-    padding: 8px;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.05);
-    transition: all 0.2s ease;
-}
-
-.stat-item:hover {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.subject-badge {
-    font-size: 0.75em;
-    padding: 4px 8px;
-}
-
-.grade-badge {
-    font-size: 0.75em;
-    padding: 4px 8px;
-}
-
-.progress {
-    height: 6px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 3px;
-}
-
-.progress-bar {
-    background: linear-gradient(90deg, var(--bs-success), var(--bs-info));
-    border-radius: 3px;
-    font-size: 0.7em;
-    line-height: 1;
-}
-
-/* Button animations */
-.btn {
-    transition: all 0.2s ease;
-}
-
-.btn:hover {
-    transform: translateY(-2px);
-}
-
-.btn:active {
-    transform: translateY(0);
-}
-
-/* Custom scrollbar for filters */
-.form-select::-webkit-scrollbar {
-    width: 6px;
-}
-
-.form-select::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.form-select::-webkit-scrollbar-thumb {
-    background: rgba(102, 126, 234, 0.6);
-    border-radius: 3px;
-}
-
-/* Mobile responsiveness */
-@media (max-width: 768px) {
-    .test-card {
-        margin-bottom: 1rem;
-    }
-    
-    .stat-item {
-        padding: 6px;
-        margin-bottom: 0.5rem;
-    }
-}
-</style>
-
 {% endblock %}

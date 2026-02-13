@@ -22,7 +22,7 @@
     }
     
     .progress-bar {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
         transition: width 0.3s ease;
     }
     
@@ -147,14 +147,14 @@
     }
     
     .nav-pill.current {
-        border-color: #667eea;
-        background: #667eea;
+        border-color: #06b6d4;
+        background: #06b6d4;
         color: white;
         transform: scale(1.2);
     }
     
     .submit-section {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
         border-radius: 15px;
         padding: 20px;
         color: white;
@@ -496,11 +496,21 @@
         // Initialize progress
         updateProgress();
         
-        // Prevent page reload
-        window.addEventListener('beforeunload', function(e) {
+        // Prevent page reload (sahifadan chiqishda ogohlantirish)
+        const beforeUnloadHandler = function(e) {
             e.preventDefault();
             e.returnValue = '';
-        });
+        };
+        window._beforeUnloadHandler = beforeUnloadHandler;
+        window.addEventListener('beforeunload', beforeUnloadHandler);
+    }
+
+    // Test tugagach beforeunload ni o'chirish (menular ishlashi uchun)
+    function removeBeforeUnloadListener() {
+        if (window._beforeUnloadHandler) {
+            window.removeEventListener('beforeunload', window._beforeUnloadHandler);
+            window._beforeUnloadHandler = null;
+        }
     }
 
     function generateNavigationPills() {
@@ -933,9 +943,7 @@
                 
                 // Stop timer
                 clearInterval(timerInterval);
-                
-                // Remove beforeunload listener
-                window.removeEventListener('beforeunload', function() {});
+                removeBeforeUnloadListener();
                 
                 // Hide question container
                 document.getElementById('questionContainer').classList.add('d-none');
@@ -979,8 +987,8 @@
         
         // Vaqt tugaganda avtomatik yakunlash
         try {
-            // Barcha UI elementlarni bloklash
-            document.querySelectorAll('.choice-option, .btn, .nav-pill').forEach(el => {
+            // Faqat test maydonidagi elementlarni bloklash (menular ishlashi uchun)
+            document.querySelectorAll('.test-container .choice-option, .test-container .btn, .test-container .nav-pill, #navigationPills .nav-pill').forEach(el => {
                 el.style.pointerEvents = 'none';
                 el.style.opacity = '0.6';
             });
@@ -1021,8 +1029,7 @@
             if (response.ok) {
                 const result = await response.json();
                 
-                // Remove beforeunload listener
-                window.removeEventListener('beforeunload', function() {});
+                removeBeforeUnloadListener();
                 
                 // Remove auto submit alert
                 if (autoSubmitAlert && autoSubmitAlert.parentNode) {
@@ -1073,6 +1080,17 @@
     }
 
     function showTestResults(results) {
+        // Menular va barcha tugmalar ishlashi uchun: bloklangan elementlarni tiklash
+        document.querySelectorAll('.choice-option, .btn, .nav-pill, .sidebar-nav-icon, .nav-link').forEach(el => {
+            el.style.pointerEvents = '';
+            el.style.opacity = '';
+        });
+        // Bootstrap modal backdrop o'chirish
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+        
         // Debug: natijalarni ko'rsatish
         console.log('Test natijalari:', results);
         console.log('O\'rin:', results.rank, 'Jami o\'quvchilar:', results.total_students);
@@ -1155,12 +1173,12 @@
                             </div>
                             ${(results.rank !== null && results.rank !== undefined && results.total_students) ? `
                             <div class="col-12">
-                                <div class="p-3" style="background: rgba(255,255,255,0.15); border-radius: 10px; border: 2px solid ${results.rank <= 3 ? '#ffd700' : '#667eea'};">
+                                <div class="p-3" style="background: rgba(255,255,255,0.15); border-radius: 10px; border: 2px solid ${results.rank <= 3 ? '#ffd700' : '#06b6d4'};">
                                     <div class="text-white-50 small mb-2">
                                         <i class="fas fa-trophy me-1"></i>
                                         Sinfingizda o'rni
                                     </div>
-                                    <div class="h3 mb-0" style="color: ${results.rank <= 3 ? '#ffd700' : '#667eea'}; font-weight: 700;">
+                                    <div class="h3 mb-0" style="color: ${results.rank <= 3 ? '#ffd700' : '#06b6d4'}; font-weight: 700;">
                                         ${results.rank}-o'rin / ${results.total_students} ta o'quvchi
                                     </div>
                                 </div>
@@ -1186,10 +1204,10 @@
                         ${results.rank === 1 ? '<i class="fas fa-trophy" style="color: #ffd700;"></i>' :
                           results.rank === 2 ? '<i class="fas fa-medal" style="color: #c0c0c0;"></i>' :
                           results.rank === 3 ? '<i class="fas fa-award" style="color: #cd7f32;"></i>' :
-                          '<i class="fas fa-star" style="color: #667eea;"></i>'}
+                          '<i class="fas fa-star" style="color: #06b6d4;"></i>'}
                     </div>
                     <h2 style="
-                        color: ${results.rank <= 3 ? '#ffd700' : '#667eea'};
+                        color: ${results.rank <= 3 ? '#ffd700' : '#06b6d4'};
                         font-weight: 700;
                         margin-bottom: 15px;
                         font-size: 4rem;
@@ -1253,7 +1271,7 @@
                         <i class="fas fa-redo me-2"></i>
                         Qayta Ishlash So'rovi
                     </button>
-                    <a href="{% url 'tests:tests' %}" class="btn btn-outline-light btn-lg">
+                    <a href="{% url 'tests:tests' %}" class="btn btn-outline-light btn-lg" onclick="window.location.href='{% url 'tests:tests' %}'; return false;">
                         <i class="fas fa-list me-2"></i>
                         Testlar Ro'yxati
                     </a>
@@ -1357,75 +1375,126 @@
 
     // Qayta ishlash so'rovi modal oynasini ochish
     function openRetakeRequestModal() {
-        // Modal oynani yaratish yoki ochish
-        const modal = document.getElementById('retakeRequestModal');
+        let modal = document.getElementById('retakeRequestModal');
         if (!modal) {
             createRetakeRequestModal();
+            modal = document.getElementById('retakeRequestModal');
         }
-        document.getElementById('retakeRequestModal').style.display = 'block';
+        if (modal) {
+            modal.style.display = 'flex';
+            modal.classList.add('show');
+        }
     }
 
-    // Qayta ishlash so'rovi modal oynasini yaratish
+    // Qayta ishlash so'rovi modal oynasini yaratish (professional dizayn)
     function createRetakeRequestModal() {
         const modalHTML = `
-            <div id="retakeRequestModal" class="modal fade show" style="display: none; background: rgba(0,0,0,0.5); position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999;" tabindex="-1">
-                <div class="modal-dialog modal-dialog-centered" style="margin: auto; max-width: 600px; padding: 20px;">
-                    <div class="modal-content" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
-                        <div class="modal-header" style="border-bottom: 2px solid rgba(255,255,255,0.2);">
-                            <h5 class="modal-title text-white">
-                                <i class="fas fa-redo me-2"></i>
-                                Qayta Ishlash So'rovi
-                            </h5>
-                            <button type="button" class="btn-close btn-close-white" onclick="closeRetakeRequestModal()" style="filter: brightness(0) invert(1);"></button>
+            <div id="retakeRequestModal" class="retake-modal-overlay" tabindex="-1" role="dialog" aria-label="Qayta ishlash so'rovi">
+                <div class="retake-modal-backdrop" onclick="closeRetakeRequestModal()"></div>
+                <div class="retake-modal-dialog">
+                    <div class="retake-modal-content">
+                        <div class="retake-modal-header">
+                            <div class="retake-modal-icon">
+                                <i class="fas fa-file-signature"></i>
+                            </div>
+                            <h5 class="retake-modal-title">Qayta Ishlash So'rovi</h5>
+                            <p class="retake-modal-subtitle">Admin tasdig'ini olish uchun sababingizni batafsil yozing</p>
+                            <button type="button" class="retake-modal-close" onclick="closeRetakeRequestModal()" aria-label="Yopish">
+                                <i class="fas fa-times"></i>
+                            </button>
                         </div>
-                        <div class="modal-body text-white">
-                            <p class="mb-3">
-                                <i class="fas fa-info-circle me-2"></i>
-                                Agar siz testni qayta ishlamoqchi bo'lsangiz, admin uchun sabab yozing. 
-                                Admin sizning so'rovingizni ko'rib chiqadi va javob beradi.
-                            </p>
-                            <div class="mb-3">
-                                <label for="retakeReason" class="form-label">
-                                    <i class="fas fa-comment-alt me-2"></i>
-                                    Qayta ishlash sababi (kamida 10 ta belgi):
+                        <div class="retake-modal-body">
+                            <div class="retake-info-box">
+                                <i class="fas fa-info-circle"></i>
+                                <span>So'rovingiz admin tomonidan ko'rib chiqiladi. Javob "Qayta ishlash so'rovlari" bo'limida ko'rsatiladi.</span>
+                            </div>
+                            <div class="retake-form-group">
+                                <label for="retakeReason" class="retake-label">
+                                    Sabab <span class="text-danger">*</span> (kamida 10 ta belgi)
                                 </label>
                                 <textarea 
                                     id="retakeReason" 
-                                    class="form-control" 
+                                    class="retake-textarea" 
                                     rows="5" 
-                                    placeholder="Masalan: Internet aloqasi uzilgan edi, savollar aniq bo'lmagan, vaqt yetmadi va h.k."
-                                    style="background: rgba(255,255,255,0.9); border: 2px solid rgba(255,255,255,0.3); border-radius: 10px; min-height: 120px; color: #333;"
+                                    maxlength="500"
+                                    placeholder="Misollar:&#10;• Internet aloqasi uzilgan edi&#10;• Texnik nosozlik yuz berdi&#10;• Vaqt yetarli emas edi&#10;• Savollar aniq bo'lmagan"
                                 ></textarea>
-                                <div id="retakeReasonError" class="text-danger mt-2" style="display: none;"></div>
+                                <div class="retake-char-count"><span id="retakeCharCount">0</span> / 500</div>
+                                <div id="retakeReasonError" class="retake-error" style="display: none;"></div>
                             </div>
-                            <div id="retakeRequestStatus" class="alert" style="display: none;"></div>
+                            <div id="retakeRequestStatus" class="retake-status" style="display: none;"></div>
                         </div>
-                        <div class="modal-footer" style="border-top: 2px solid rgba(255,255,255,0.2);">
-                            <button type="button" class="btn btn-secondary" onclick="closeRetakeRequestModal()">
-                                <i class="fas fa-times me-2"></i>
-                                Bekor qilish
+                        <div class="retake-modal-footer">
+                            <button type="button" class="retake-btn-cancel" onclick="closeRetakeRequestModal()">
+                                <i class="fas fa-times me-2"></i>Bekor qilish
                             </button>
-                            <button type="button" class="btn btn-warning" onclick="submitRetakeRequest()">
-                                <i class="fas fa-paper-plane me-2"></i>
-                                So'rov Yuborish
+                            <button type="button" class="retake-btn-submit" id="retakeSubmitBtn" onclick="submitRetakeRequest()">
+                                <i class="fas fa-paper-plane me-2"></i>So'rov Yuborish
                             </button>
                         </div>
                     </div>
                 </div>
             </div>
+            <style>
+            .retake-modal-overlay { display: none; position: fixed; inset: 0; z-index: 9999; align-items: center; justify-content: center; padding: 20px; }
+            .retake-modal-overlay.show { display: flex !important; animation: retakeFadeIn 0.25s ease; }
+            .retake-modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); }
+            .retake-modal-dialog { position: relative; width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; }
+            .retake-modal-content { background: #fff; border-radius: 16px; box-shadow: 0 25px 50px rgba(0,0,0,0.25); overflow: hidden; }
+            .retake-modal-header { position: relative; background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); padding: 28px 24px 24px; text-align: center; }
+            .retake-modal-icon { width: 56px; height: 56px; margin: 0 auto 12px; background: rgba(255,255,255,0.25); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #fff; }
+            .retake-modal-title { color: #fff; font-size: 1.35rem; font-weight: 600; margin: 0 0 6px; }
+            .retake-modal-subtitle { color: rgba(255,255,255,0.9); font-size: 0.9rem; margin: 0; }
+            .retake-modal-close { position: absolute; top: 16px; right: 16px; width: 36px; height: 36px; border: none; background: rgba(255,255,255,0.2); color: #fff; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+            .retake-modal-close:hover { background: rgba(255,255,255,0.35); }
+            .retake-modal-body { padding: 24px; }
+            .retake-info-box { display: flex; align-items: flex-start; gap: 10px; padding: 12px 16px; background: #f0f4ff; border: 1px solid #e0e7ff; border-radius: 10px; margin-bottom: 20px; font-size: 0.9rem; color: #4f46e5; }
+            .retake-info-box i { margin-top: 2px; flex-shrink: 0; }
+            .retake-form-group { margin-bottom: 16px; }
+            .retake-label { display: block; font-weight: 600; color: #374151; margin-bottom: 8px; font-size: 0.95rem; }
+            .retake-textarea { width: 100%; padding: 14px 16px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 1rem; resize: vertical; min-height: 120px; transition: border-color 0.2s; font-family: inherit; }
+            .retake-textarea:focus { outline: none; border-color: #06b6d4; box-shadow: 0 0 0 3px rgba(102,126,234,0.15); }
+            .retake-textarea::placeholder { color: #9ca3af; }
+            .retake-char-count { text-align: right; font-size: 0.8rem; color: #9ca3af; margin-top: 6px; }
+            .retake-error { color: #dc2626; font-size: 0.875rem; margin-top: 6px; }
+            .retake-status { padding: 14px 16px; border-radius: 10px; margin-top: 16px; font-size: 0.95rem; }
+            .retake-status.alert-success { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
+            .retake-status.alert-danger { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+            .retake-modal-footer { display: flex; gap: 12px; justify-content: flex-end; padding: 20px 24px; background: #f9fafb; border-top: 1px solid #e5e7eb; }
+            .retake-btn-cancel { padding: 10px 20px; border: 2px solid #e5e7eb; background: #fff; color: #6b7280; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+            .retake-btn-cancel:hover { background: #f3f4f6; border-color: #d1d5db; }
+            .retake-btn-submit { padding: 10px 24px; background: linear-gradient(135deg, #06b6d4, #0891b2); color: #fff; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
+            .retake-btn-submit:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(102,126,234,0.4); }
+            .retake-btn-submit:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+            @keyframes retakeFadeIn { from { opacity: 0; } to { opacity: 1; } }
+            </style>
         `;
         document.body.insertAdjacentHTML('beforeend', modalHTML);
+        // Belgilar sonini hisoblash
+        const textarea = document.getElementById('retakeReason');
+        const charCount = document.getElementById('retakeCharCount');
+        if (textarea && charCount) {
+            textarea.addEventListener('input', function() {
+                charCount.textContent = this.value.length;
+            });
+        }
     }
 
     // Modal oynani yopish
     function closeRetakeRequestModal() {
         const modal = document.getElementById('retakeRequestModal');
         if (modal) {
+            modal.classList.remove('show');
             modal.style.display = 'none';
             // Ma'lumotlarni tozalash
-            document.getElementById('retakeReason').value = '';
-            document.getElementById('retakeReasonError').style.display = 'none';
-            document.getElementById('retakeRequestStatus').style.display = 'none';
+            const reasonEl = document.getElementById('retakeReason');
+            const charCountEl = document.getElementById('retakeCharCount');
+            if (reasonEl) reasonEl.value = '';
+            if (charCountEl) charCountEl.textContent = '0';
+            const errEl = document.getElementById('retakeReasonError');
+            const statusEl = document.getElementById('retakeRequestStatus');
+            if (errEl) errEl.style.display = 'none';
+            if (statusEl) statusEl.style.display = 'none';
         }
     }
 

@@ -45,27 +45,37 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- AOS Animation Library -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet">
     
     <style>
         :root {
-            --primary-color: #667eea;
-            --secondary-color: #764ba2;
-            --accent-color: #f093fb;
-            --success-color: #4CAF50;
-            --warning-color: #FF9800;
-            --danger-color: #f44336;
-            --dark-color: #2c3e50;
-            --light-color: #ecf0f1;
-            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            --gradient-accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            --shadow-light: 0 4px 15px rgba(0, 0, 0, 0.1);
-            --shadow-medium: 0 8px 25px rgba(0, 0, 0, 0.15);
-            --shadow-heavy: 0 15px 35px rgba(0, 0, 0, 0.2);
+            --primary-color: #06b6d4;
+            --secondary-color: #0891b2;
+            --accent-color: #22d3ee;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --dark-color: #0f172a;
+            --light-color: #f8fafc;
+            --slate-50: #f8fafc;
+            --slate-100: #f1f5f9;
+            --slate-200: #e2e8f0;
+            --slate-300: #cbd5e1;
+            --slate-400: #94a3b8;
+            --slate-500: #64748b;
+            --slate-600: #475569;
+            --slate-700: #334155;
+            --slate-800: #1e293b;
+            --slate-900: #0f172a;
+            --gradient-primary: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+            --gradient-secondary: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            --gradient-accent: linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%);
+            --shadow-light: 0 4px 15px rgba(0, 0, 0, 0.15);
+            --shadow-medium: 0 8px 25px rgba(0, 0, 0, 0.2);
+            --shadow-heavy: 0 15px 35px rgba(0, 0, 0, 0.3);
             --border-radius: 12px;
             --transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
@@ -77,11 +87,11 @@
         }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Outfit', 'Inter', sans-serif;
+            background: linear-gradient(160deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
             min-height: 100vh;
             line-height: 1.6;
-            color: #333;
+            color: #f8fafc;
             overflow-x: hidden;
         }
 
@@ -92,8 +102,8 @@
             width: 100%;
             height: 100%;
             z-index: -1;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            opacity: 0.9;
+            background: linear-gradient(160deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            opacity: 1;
         }
 
         .animated-bg::before {
@@ -104,9 +114,9 @@
             width: 200%;
             height: 200%;
             background-image: 
-                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
-                radial-gradient(circle at 40% 40%, rgba(120, 200, 255, 0.3) 0%, transparent 50%);
+                radial-gradient(ellipse at 20% 80%, rgba(6, 182, 212, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(34, 211, 238, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(15, 23, 42, 0.5) 0%, transparent 70%);
             animation: float 20s ease-in-out infinite;
         }
 
@@ -116,28 +126,30 @@
         }
 
         .navbar {
-            background: rgba(255, 255, 255, 0.1) !important;
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(15, 23, 42, 0.7) !important;
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(148, 163, 184, 0.15);
             transition: var(--transition);
         }
 
         .navbar-brand {
             font-weight: 700;
             font-size: 1.5rem;
-            color: white !important;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            color: #f8fafc !important;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
         }
 
+        .navbar-brand:hover { color: #22d3ee !important; }
+
         .nav-link {
-            color: rgba(255, 255, 255, 0.9) !important;
+            color: rgba(248, 250, 252, 0.9) !important;
             font-weight: 500;
             position: relative;
             transition: var(--transition);
         }
 
         .nav-link:hover {
-            color: white !important;
+            color: #22d3ee !important;
             transform: translateY(-2px);
         }
 
@@ -148,7 +160,7 @@
             left: 50%;
             width: 0;
             height: 2px;
-            background: white;
+            background: #06b6d4;
             transition: var(--transition);
             transform: translateX(-50%);
         }
@@ -166,29 +178,27 @@
         }
 
         .glass-card {
-            background: rgba(255, 255, 255, 0.1);
+            background: linear-gradient(145deg, rgba(30, 41, 59, 0.85) 0%, rgba(15, 23, 42, 0.95) 100%);
             backdrop-filter: blur(15px);
-            border-radius: var(--border-radius);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: var(--shadow-medium);
+            border-radius: 16px;
+            border: 1px solid rgba(148, 163, 184, 0.15);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
             transition: var(--transition);
             overflow: hidden;
         }
 
         .glass-card:hover {
             transform: translateY(-5px);
-            box-shadow: var(--shadow-heavy);
-            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+            border-color: rgba(6, 182, 212, 0.3);
         }
 
         .btn-primary {
             background: var(--gradient-primary);
             border: none;
-            border-radius: 50px;
-            padding: 12px 30px;
+            border-radius: 12px;
+            padding: 12px 24px;
             font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
             transition: var(--transition);
             position: relative;
             overflow: hidden;
@@ -211,24 +221,27 @@
 
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 8px 25px rgba(6, 182, 212, 0.4);
         }
 
         .form-control {
-            background: rgba(255, 255, 255, 0.9);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: var(--border-radius);
-            padding: 15px 20px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            color: #f8fafc;
+            border-radius: 10px;
+            padding: 12px 16px;
             font-size: 1rem;
             transition: var(--transition);
         }
 
         .form-control:focus {
-            background: white;
+            background: rgba(15, 23, 42, 0.95);
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-            transform: translateY(-2px);
+            box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.2);
+            color: #f8fafc;
         }
+
+        .form-control::placeholder { color: #64748b; }
 
         .alert {
             border: none;
@@ -272,18 +285,18 @@
         }
 
         @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(102, 126, 234, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(102, 126, 234, 0); }
+            0% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.5); }
+            70% { box-shadow: 0 0 0 10px rgba(6, 182, 212, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0); }
         }
 
         .loading {
             display: inline-block;
             width: 20px;
             height: 20px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
+            border: 3px solid rgba(148, 163, 184, 0.3);
             border-radius: 50%;
-            border-top-color: white;
+            border-top-color: #06b6d4;
             animation: spin 1s ease-in-out infinite;
         }
 
@@ -292,11 +305,172 @@
         }
 
         .footer {
-            background: rgba(0, 0, 0, 0.1);
+            background: rgba(15, 23, 42, 0.8);
             backdrop-filter: blur(10px);
-            color: rgba(255, 255, 255, 0.8);
+            border-top: 1px solid rgba(148, 163, 184, 0.15);
+            color: #94a3b8;
             padding: 2rem 0;
             margin-top: auto;
+        }
+
+        /* Global dashboard content wrapper */
+        .dashboard-wrap {
+            margin: -2rem -15px 0;
+            padding: 2.5rem 1.5rem 3rem;
+            background: linear-gradient(160deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.9) 50%, rgba(15, 23, 42, 0.95) 100%);
+            border-radius: 24px;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
+        }
+
+        .navbar-toggler {
+            border-color: rgba(148, 163, 184, 0.3);
+        }
+        .navbar-toggler-icon {
+            filter: invert(1);
+        }
+
+        .form-select {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            color: #f8fafc;
+        }
+        .form-select:focus {
+            border-color: #06b6d4;
+            box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.2);
+        }
+        .text-white { color: #f8fafc !important; }
+        .text-white-50 { color: #94a3b8 !important; }
+        .text-primary { color: #06b6d4 !important; }
+        .text-info { color: #22d3ee !important; }
+        .text-success { color: #10b981 !important; }
+        .text-warning { color: #f59e0b !important; }
+        .text-danger { color: #ef4444 !important; }
+        .bg-primary { background: linear-gradient(135deg, #06b6d4, #0891b2) !important; }
+        .bg-secondary { background: rgba(148, 163, 184, 0.2) !important; }
+        .badge.bg-primary { background: linear-gradient(135deg, #06b6d4, #0891b2) !important; }
+        .btn-outline-light {
+            border-color: rgba(148, 163, 184, 0.5);
+            color: #f8fafc;
+        }
+        .btn-outline-light:hover {
+            background: rgba(6, 182, 212, 0.2);
+            border-color: #06b6d4;
+            color: #22d3ee;
+        }
+
+        /* Theme toggle button */
+        .theme-toggle-btn { padding: 8px 12px !important; }
+        .theme-toggle-btn:hover { background: transparent !important; }
+        [data-theme="dark"] .theme-icon-light { display: none !important; }
+        [data-theme="dark"] .theme-icon-dark { display: inline !important; }
+        [data-theme="light"] .theme-icon-dark { display: none !important; }
+        [data-theme="light"] .theme-icon-light { display: inline !important; }
+
+        /* ═══════════════════════════════════════════
+           KUNDUZKI (Light) TEMA
+           ═══════════════════════════════════════════ */
+        [data-theme="light"] body {
+            background: linear-gradient(160deg, #f0f9ff 0%, #e0f2fe 50%, #f0fdfa 100%);
+            color: #0f172a;
+        }
+        [data-theme="light"] .animated-bg {
+            background: linear-gradient(160deg, #f0f9ff 0%, #e0f2fe 50%, #f0fdfa 100%);
+        }
+        [data-theme="light"] .animated-bg::before {
+            background-image: 
+                radial-gradient(ellipse at 20% 80%, rgba(6, 182, 212, 0.12) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(34, 211, 238, 0.08) 0%, transparent 50%);
+        }
+        [data-theme="light"] .navbar {
+            background: rgba(255, 255, 255, 0.9) !important;
+            border-bottom: 1px solid rgba(14, 165, 233, 0.2);
+            box-shadow: 0 1px 15px rgba(0, 0, 0, 0.05);
+        }
+        [data-theme="light"] .navbar-brand { color: #0f172a !important; }
+        [data-theme="light"] .navbar-brand:hover { color: #0891b2 !important; }
+        [data-theme="light"] .nav-link { color: #475569 !important; }
+        [data-theme="light"] .nav-link:hover { color: #0891b2 !important; }
+        [data-theme="light"] .nav-link::after { background: #06b6d4; }
+        [data-theme="light"] .theme-toggle-btn { color: #64748b !important; }
+        [data-theme="light"] .theme-toggle-btn:hover { color: #0891b2 !important; }
+        [data-theme="light"] .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px solid rgba(14, 165, 233, 0.15);
+            box-shadow: 0 4px 20px rgba(6, 182, 212, 0.08);
+        }
+        [data-theme="light"] .glass-card:hover {
+            border-color: rgba(6, 182, 212, 0.35);
+            box-shadow: 0 8px 30px rgba(6, 182, 212, 0.15);
+        }
+        [data-theme="light"] .form-control {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            color: #0f172a;
+        }
+        [data-theme="light"] .form-control:focus {
+            border-color: #06b6d4;
+            box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.15);
+        }
+        [data-theme="light"] .form-select {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            color: #0f172a;
+        }
+        [data-theme="light"] .footer {
+            background: rgba(255, 255, 255, 0.9);
+            border-top: 1px solid rgba(14, 165, 233, 0.15);
+            color: #64748b;
+        }
+        [data-theme="light"] .text-white { color: #0f172a !important; }
+        [data-theme="light"] .text-white-50 { color: #64748b !important; }
+        [data-theme="light"] .btn-outline-light {
+            border-color: #94a3b8;
+            color: #475569;
+        }
+        [data-theme="light"] .btn-outline-light:hover {
+            background: rgba(6, 182, 212, 0.1);
+            border-color: #06b6d4;
+            color: #0891b2;
+        }
+        [data-theme="light"] .navbar-toggler { border-color: #94a3b8; }
+        [data-theme="light"] .navbar-toggler-icon { filter: none; }
+        [data-theme="light"] .alert-warning {
+            background: rgba(245, 158, 11, 0.15);
+            border-left-color: #f59e0b;
+            color: #92400e;
+        }
+        [data-theme="light"] .alert-success {
+            background: rgba(16, 185, 129, 0.1);
+            color: #065f46;
+        }
+        [data-theme="light"] .alert-danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: #991b1b;
+        }
+        [data-theme="light"] .dashboard-wrap {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(14, 165, 233, 0.12);
+            box-shadow: 0 10px 40px rgba(6, 182, 212, 0.1);
+        }
+
+        /* Kunduzki - Sidebar (include orqali) */
+        [data-theme="light"] .glass-sidebar {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(14, 165, 233, 0.15);
+            box-shadow: 0 4px 20px rgba(6, 182, 212, 0.08);
+        }
+        [data-theme="light"] .sidebar-nav-icon {
+            background: rgba(241, 245, 249, 0.9);
+            color: #64748b;
+        }
+        [data-theme="light"] .sidebar-nav-icon:hover {
+            background: rgba(6, 182, 212, 0.15);
+            color: #0891b2;
+        }
+        [data-theme="light"] .sidebar-nav-icon.active {
+            background: linear-gradient(135deg, #06b6d4, #0891b2);
+            color: #fff;
         }
 
         @media (max-width: 768px) {
@@ -313,6 +487,9 @@
     {% block extra_css %}{% endblock %}
     <meta name="description" content="Buxoro Bilimdonlar Maktabi test platformasi">
 <meta name="keywords" content="test, bilimdon, maktab, buxoro, online test">
+<script>
+    (function(){var t=localStorage.getItem('bbm_theme')||'light';document.documentElement.setAttribute('data-theme',t);})();
+</script>
 </head>
 <body>
     <div class="animated-bg"></div>
@@ -392,11 +569,23 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <button type="button" class="btn theme-toggle-btn nav-link border-0 bg-transparent px-2" onclick="toggleTheme()" title="Temani o'zgartirish (Kunduzgi/Kechki)" aria-label="Temani o'zgartirish">
+                                <i class="fas fa-moon theme-icon-dark"></i>
+                                <i class="fas fa-sun theme-icon-light d-none"></i>
+                            </button>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link" href="{% url 'accounts:logout' %}" onclick="logout()">
                                 <i class="fas fa-sign-out-alt me-1"></i>Chiqish
                             </a>
                         </li>
                     {% else %}
+                        <li class="nav-item">
+                            <button type="button" class="btn theme-toggle-btn nav-link border-0 bg-transparent px-2" onclick="toggleTheme()" title="Temani o'zgartirish" aria-label="Temani o'zgartirish">
+                                <i class="fas fa-moon theme-icon-dark"></i>
+                                <i class="fas fa-sun theme-icon-light d-none"></i>
+                            </button>
+                        </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'accounts:login' %}">
                                 <i class="fas fa-sign-in-alt me-1"></i>Kirish
@@ -552,6 +741,15 @@
                 }, 150);
             }
         });
+
+        // Kunduzki / Kechki tema almashtirish
+        function toggleTheme() {
+            const html = document.documentElement;
+            const current = html.getAttribute('data-theme') || 'dark';
+            const next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('bbm_theme', next);
+        }
     </script>
     
     {% block extra_js %}{% endblock %}
