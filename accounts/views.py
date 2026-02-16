@@ -221,6 +221,11 @@ def dashboard_view(request):
     }
     
     if request.user.role == 'admin':
+        # Admin statistikasi
+        context['students_count'] = User.objects.filter(role='student', is_active=True).count()
+        context['teachers_count'] = User.objects.filter(role='teacher', is_active=True).count()
+        context['tests_count'] = Test.objects.filter(is_active=True).count()
+        
         # Cache bilan count - 5 daqiqa cache
         from django.core.cache import cache
         cache_key = 'verification_requests_count'

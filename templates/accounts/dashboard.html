@@ -369,7 +369,7 @@
                     <div class="stat-icon">
                         <i class="fas fa-user-graduate"></i>
                     </div>
-                    <h4 id="totalStudents">--</h4>
+                    <h4 id="totalStudents">{{ students_count|default:0 }}</h4>
                     <p>Jami O'quvchilar</p>
                 </div>
             </div>
@@ -379,7 +379,7 @@
                     <div class="stat-icon">
                         <i class="fas fa-chalkboard-teacher"></i>
                     </div>
-                    <h4 id="totalTeachers">--</h4>
+                    <h4 id="totalTeachers">{{ teachers_count|default:0 }}</h4>
                     <p>Jami O'qituvchilar</p>
                 </div>
             </div>
@@ -399,7 +399,7 @@
                     <div class="stat-icon">
                         <i class="fas fa-file-alt"></i>
                     </div>
-                    <h4 id="totalTests">--</h4>
+                    <h4 id="totalTests">{{ tests_count|default:0 }}</h4>
                     <p>Jami Testlar</p>
                 </div>
             </div>
