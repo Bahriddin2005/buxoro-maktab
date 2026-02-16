@@ -130,9 +130,9 @@ if existing_attempts.count() < tests.count():
         
         TestResult.objects.create(
             attempt=attempt,
-            correct_answers=attempt.correct_answers,
-            incorrect_answers=attempt.incorrect_answers,
-            unanswered=attempt.unanswered,
+            correct_answers=result.get('correct_answers', 0),
+            incorrect_answers=result.get('incorrect_answers', 0),
+            unanswered=result.get('unanswered', 0),
             grade=get_grade(result['percentage']),
             feedback="Yaxshi ish!"
         )

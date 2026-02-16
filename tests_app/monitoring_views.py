@@ -89,15 +89,15 @@ def terminate_test_attempt_view(request, attempt_id):
         attempt.is_completed = True
         attempt.finished_at = timezone.now()
         attempt.time_taken = timezone.now() - attempt.started_at
-        attempt.calculate_score()
+        results = attempt.calculate_score()
         attempt.save()
         
         result, created = TestResult.objects.get_or_create(
             attempt=attempt,
             defaults={
-                'correct_answers': attempt.correct_answers,
-                'incorrect_answers': attempt.incorrect_answers,
-                'unanswered': attempt.unanswered,
+                'correct_answers': results.get('correct_answers', 0),
+                'incorrect_answers': results.get('incorrect_answers', 0),
+                'unanswered': results.get('unanswered', 0),
                 'grade': ''
             }
         )

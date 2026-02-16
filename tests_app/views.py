@@ -898,15 +898,12 @@ def test_results_view(request, test_id):
                 latest_attempt_id=Max('id')
             ).values_list('latest_attempt_id', flat=True)
             
-            # Faqat oxirgi attempt'larni olish
-            # correct_answers maydoni database'da yo'qligi uchun defer() ishlatamiz
+            # Faqat oxirgi attempt'larni olish (correct_answers/incorrect_answers TestResult da)
             attempts = TestAttempt.objects.filter(
                 id__in=latest_attempts
-            ).select_related('student', 'result').defer(
-                'correct_answers',
-                'incorrect_answers',
-                'unanswered'
-            ).order_by('student__grade', 'student__class_name', 'student__first_name', 'student__last_name')
+            ).select_related('student', 'result').order_by(
+                'student__grade', 'student__class_name', 'student__first_name', 'student__last_name'
+            )
             
             results_data = []
             for attempt in attempts:

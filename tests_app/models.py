@@ -85,10 +85,7 @@ class TestAttempt(models.Model):
     time_taken = models.DurationField(null=True, blank=True)
     attempt_number = models.IntegerField(default=1)  # Qayta ishlash raqami
     is_retake = models.BooleanField(default=False)  # Qayta ishlashmi
-    # Database'da NOT NULL — INSERT uchun kerak (aslida TestResult da saqlanadi)
-    correct_answers = models.IntegerField(default=0)
-    incorrect_answers = models.IntegerField(default=0)
-    unanswered = models.IntegerField(default=0)
+    # correct_answers, incorrect_answers, unanswered faqat TestResult da saqlanadi (DB ustunlari olib tashlangan)
     current_question_index = models.IntegerField(default=0)  # Hozir qaysi savolda
     is_terminated = models.BooleanField(default=False)  # O'qituvchi tomonidan to'xtatilganmi
     terminated_by = models.ForeignKey(
