@@ -91,19 +91,20 @@
             font-family: 'Outfit', 'Inter', sans-serif;
             font-size: 16px;
             line-height: 1.6;
-            color: #f8fafc;
+            color: #171717;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             overflow-x: hidden;
         }
         body {
-            background: linear-gradient(160deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            background: linear-gradient(160deg, #f1f5f9 0%, #e2e8f0 50%, #f8fafc 100%);
             min-height: 100vh;
         }
         h1, h2, h3, h4, h5, h6 {
             font-weight: 600;
             letter-spacing: -0.02em;
             line-height: 1.35;
+            color: #171717;
         }
         h1 { font-size: 1.75rem; }
         h2 { font-size: 1.5rem; }
@@ -131,6 +132,7 @@
             font-weight: 600;
             font-size: 0.9rem;
             letter-spacing: 0.01em;
+            color: #374151;
         }
         /* Button matnlari */
         .btn {
@@ -163,7 +165,7 @@
             width: 100%;
             height: 100%;
             z-index: -1;
-            background: linear-gradient(160deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            background: linear-gradient(160deg, #f1f5f9 0%, #e2e8f0 50%, #f8fafc 100%);
             opacity: 1;
         }
 
@@ -175,9 +177,8 @@
             width: 200%;
             height: 200%;
             background-image: 
-                radial-gradient(ellipse at 20% 80%, rgba(6, 182, 212, 0.15) 0%, transparent 50%),
-                radial-gradient(ellipse at 80% 20%, rgba(34, 211, 238, 0.1) 0%, transparent 50%),
-                radial-gradient(ellipse at 50% 50%, rgba(15, 23, 42, 0.5) 0%, transparent 70%);
+                radial-gradient(ellipse at 20% 80%, rgba(6, 182, 212, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(34, 211, 238, 0.06) 0%, transparent 50%);
             animation: float 20s ease-in-out infinite;
         }
 
@@ -187,30 +188,30 @@
         }
 
         .navbar {
-            background: rgba(15, 23, 42, 0.7) !important;
+            background: rgba(255, 255, 255, 0.95) !important;
             backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+            border-bottom: 1px solid rgba(148, 163, 184, 0.2);
             transition: var(--transition);
         }
 
         .navbar-brand {
             font-weight: 700;
             font-size: 1.5rem;
-            color: #f8fafc !important;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+            color: #171717 !important;
+            text-shadow: none;
         }
 
-        .navbar-brand:hover { color: #22d3ee !important; }
+        .navbar-brand:hover { color: #0891b2 !important; }
 
         .nav-link {
-            color: rgba(248, 250, 252, 0.9) !important;
+            color: #374151 !important;
             font-weight: 500;
             position: relative;
             transition: var(--transition);
         }
 
         .nav-link:hover {
-            color: #22d3ee !important;
+            color: #0891b2 !important;
             transform: translateY(-2px);
         }
 
@@ -239,18 +240,19 @@
         }
 
         .glass-card {
-            background: linear-gradient(145deg, rgba(30, 41, 59, 0.85) 0%, rgba(15, 23, 42, 0.95) 100%);
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(15px);
             border-radius: 16px;
-            border: 1px solid rgba(148, 163, 184, 0.15);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(148, 163, 184, 0.25);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
             transition: var(--transition);
             overflow: hidden;
+            color: #171717;
         }
 
         .glass-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
             border-color: rgba(6, 182, 212, 0.3);
         }
 
@@ -286,9 +288,9 @@
         }
 
         .form-control {
-            background: rgba(15, 23, 42, 0.8);
-            border: 1px solid rgba(148, 163, 184, 0.2);
-            color: #f8fafc;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            color: #171717;
             border-radius: 10px;
             padding: 12px 16px;
             font-size: 1rem;
@@ -296,10 +298,10 @@
         }
 
         .form-control:focus {
-            background: rgba(15, 23, 42, 0.95);
+            background: #ffffff;
             border-color: var(--primary-color);
             box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.2);
-            color: #f8fafc;
+            color: #171717;
         }
 
         .form-control::placeholder { color: #64748b; }
@@ -366,10 +368,10 @@
         }
 
         .footer {
-            background: rgba(15, 23, 42, 0.8);
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
-            border-top: 1px solid rgba(148, 163, 184, 0.15);
-            color: #94a3b8;
+            border-top: 1px solid rgba(148, 163, 184, 0.25);
+            color: #475569;
             padding: 2rem 0;
             margin-top: auto;
         }
@@ -378,10 +380,11 @@
         .dashboard-wrap {
             margin: -2rem -15px 0;
             padding: 2.5rem 1.5rem 3rem;
-            background: linear-gradient(160deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.9) 50%, rgba(15, 23, 42, 0.95) 100%);
+            background: rgba(255, 255, 255, 0.95);
             border-radius: 24px;
-            border: 1px solid rgba(148, 163, 184, 0.1);
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+            color: #171717;
         }
 
         /* Navbar toggler - professional dizayn */
@@ -445,16 +448,17 @@
         }
 
         .form-select {
-            background: rgba(15, 23, 42, 0.8);
-            border: 1px solid rgba(148, 163, 184, 0.2);
-            color: #f8fafc;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            color: #171717;
         }
         .form-select:focus {
             border-color: #06b6d4;
             box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.2);
         }
-        .text-white { color: #f8fafc !important; }
-        .text-white-50 { color: #94a3b8 !important; }
+        .text-white { color: #171717 !important; }
+        .text-white-50 { color: #64748b !important; }
+        .text-muted { color: #64748b !important; }
         .text-primary { color: #06b6d4 !important; }
         .text-info { color: #22d3ee !important; }
         .text-success { color: #10b981 !important; }
@@ -482,7 +486,30 @@
         [data-theme="light"] .theme-icon-light { display: inline !important; }
 
         /* ═══════════════════════════════════════════
-           KUNDUZKI (Light) TEMA
+           TUNGI (Dark) TEMA - foydalanuvchi tanlaganda
+           ═══════════════════════════════════════════ */
+        [data-theme="dark"] body {
+            background: linear-gradient(160deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            color: #f8fafc;
+        }
+        [data-theme="dark"] .animated-bg { background: linear-gradient(160deg, #0f172a 0%, #1e293b 50%, #0f172a 100%); }
+        [data-theme="dark"] .navbar { background: rgba(15, 23, 42, 0.7) !important; border-bottom-color: rgba(148, 163, 184, 0.15); }
+        [data-theme="dark"] .navbar-brand { color: #f8fafc !important; }
+        [data-theme="dark"] .nav-link { color: rgba(248, 250, 252, 0.9) !important; }
+        [data-theme="dark"] .nav-link:hover { color: #22d3ee !important; }
+        [data-theme="dark"] .glass-card { background: linear-gradient(145deg, rgba(30, 41, 59, 0.85), rgba(15, 23, 42, 0.95)); border-color: rgba(148, 163, 184, 0.15); box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3); }
+        [data-theme="dark"] .form-control { background: rgba(15, 23, 42, 0.8); border-color: rgba(148, 163, 184, 0.2); color: #f8fafc; }
+        [data-theme="dark"] .form-select { background: rgba(15, 23, 42, 0.8); border-color: rgba(148, 163, 184, 0.2); color: #f8fafc; }
+        [data-theme="dark"] .footer { background: rgba(15, 23, 42, 0.8); color: #94a3b8; }
+        [data-theme="dark"] .dashboard-wrap { background: linear-gradient(160deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.9)); border-color: rgba(148, 163, 184, 0.1); }
+        [data-theme="dark"] .text-white { color: #f8fafc !important; }
+        [data-theme="dark"] .text-white-50 { color: #94a3b8 !important; }
+        [data-theme="dark"] .text-muted { color: #94a3b8 !important; }
+        [data-theme="dark"] .form-label { color: #94a3b8 !important; }
+        [data-theme="dark"] h1, [data-theme="dark"] h2, [data-theme="dark"] h3, [data-theme="dark"] h4, [data-theme="dark"] h5, [data-theme="dark"] h6 { color: #f8fafc; }
+
+        /* ═══════════════════════════════════════════
+           KUNDUZKI (Light) TEMA - DEFAULT
            ═══════════════════════════════════════════ */
         [data-theme="light"] body {
             background: linear-gradient(160deg, #f0f9ff 0%, #e0f2fe 50%, #f0fdfa 100%);

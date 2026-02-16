@@ -6,7 +6,8 @@ from django.shortcuts import render
 from django.http import HttpResponse, FileResponse
 from django.views.decorators.cache import cache_control
 from accounts.admin_views import export_teachers_credentials_view, export_students_credentials_view
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
 import os
 # from accounts.urls import *
 # from tests_app.urls import *
@@ -17,9 +18,18 @@ def home_view(request):
 def test_debug_view(request):
     return render(request, 'test_debug.html')
 
+@login_required
 def export_credentials_page_view(request):
-    """Login va parollarni yuklab olish uchun sahifa"""
-    return render(request, 'admin/export_credentials.html')
+    """Login va parollarni yuklab olish uchun sahifa - faqat admin"""
+    is_admin = request.user.is_superuser or (hasattr(request.user, 'role') and request.user.role == 'admin')
+    if not is_admin:
+        from django.http import HttpResponseForbidden
+        return HttpResponseForbidden('Bu sahifa faqat admin uchun!')
+    from accounts.models import VerificationRequest
+    context = {
+        'verification_requests_count': VerificationRequest.objects.filter(is_approved=None).count()
+    }
+    return render(request, 'admin/export_credentials.html', context)
 
 @cache_control(max_age=31536000)  # 1 yil cache
 def favicon_view(request):

@@ -38,24 +38,19 @@ def test_list_view(request):
             search_filter = request.GET.get('search', '')
             
             if request.user.role == 'student':
-                # O'quvchi sinfini tekshirish
-                if not request.user.grade:
-                    return JsonResponse({
-                        'error': 'Sizning sinfingiz belgilanmagan. Admin bilan bog\'laning.',
-                        'tests': [],
-                        'user_role': 'student',
-                        'pagination': {
-                            'page': page,
-                            'page_size': page_size,
-                            'total': 0,
-                            'total_pages': 0
-                        }
-                    }, status=400)
-                
-                tests = Test.objects.filter(
-                    is_active=True,
-                    grade=request.user.grade
-                ).select_related('created_by').prefetch_related('questions').order_by('-created_at')
+                # O'quvchi ma'lumotlarini bazadan yangilash (import dan keyin yangilangan bo'lishi mumkin)
+                request.user.refresh_from_db()
+                student_grade = request.user.grade
+                # Sinf belgilanmagan bo'lsa — barcha sinflar uchun testlarni ko'rsatish (vaqtincha)
+                if student_grade is None or student_grade < 1 or student_grade > 11:
+                    tests = Test.objects.filter(
+                        is_active=True
+                    ).select_related('created_by').prefetch_related('questions').order_by('-created_at')
+                else:
+                    tests = Test.objects.filter(
+                        is_active=True,
+                        grade=int(student_grade)
+                    ).select_related('created_by').prefetch_related('questions').order_by('-created_at')
                 
                 # Qo'shimcha filterlar (o'quvchi o'z sinfidagi testlarni filtrlash uchun)
                 if subject_filter:
@@ -384,7 +379,9 @@ def take_test_view(request, test_id):
     
     test = get_object_or_404(Test, id=test_id, is_active=True)
     
-    # Grade tekshiruvi - agar o'quvchining grade None bo'lsa yoki test grade None bo'lsa, ruxsat berish
+    # Grade tekshiruvi - o'quvchi ma'lumotlarini yangilab, sinf mosligini tekshirish
+    if request.user.role == 'student':
+        request.user.refresh_from_db()
     if request.user.grade is not None and test.grade is not None:
         if test.grade != request.user.grade:
             return JsonResponse({'error': 'This test is not for your grade'}, status=403)
@@ -776,7 +773,8 @@ def test_results_view(request, test_id):
     
     if request.headers.get('Accept') == 'application/json':
         if request.user.role == 'student':
-            # Grade tekshiruvi - agar o'quvchining grade None bo'lsa yoki test grade None bo'lsa, ruxsat berish
+            request.user.refresh_from_db()
+            # Grade tekshiruvi - o'quvchi sinfi test sinfiga mos bo'lishi kerak
             if request.user.grade is not None and test.grade is not None:
                 if test.grade != request.user.grade:
                     return JsonResponse({'error': 'Access denied'}, status=403)
@@ -806,7 +804,6 @@ def test_results_view(request, test_id):
                 return JsonResponse({'error': 'Test not completed'}, status=404)
             
             # Get detailed results from TestResult
-            from tests_app.models import TestResult
             test_result = TestResult.objects.filter(attempt_id=attempt_id).first()
             correct_answers = test_result.correct_answers if test_result else 0
             incorrect_answers = test_result.incorrect_answers if test_result else 0
@@ -817,7 +814,6 @@ def test_results_view(request, test_id):
             unanswered_questions = []
             if test_result:
                 # Get all answers for this attempt
-                from tests_app.models import Answer
                 answers = Answer.objects.filter(attempt_id=attempt_id).select_related('question')
                 answered_question_ids = set(answers.values_list('question_id', flat=True))
                 
@@ -890,7 +886,7 @@ def test_results_view(request, test_id):
                 'user_role': 'student'
             })
         
-        elif (request.user.role == 'teacher' and test.created_by == request.user) or request.user.role == 'admin':
+        elif request.user.role in ['teacher', 'admin']:
             # Faqat har bir o'quvchining oxirgi (eng so'nggi) natijasini olish
             from django.db.models import Max
             
@@ -1841,8 +1837,10 @@ def test_info_view(request, test_id):
     test = get_object_or_404(Test, id=test_id)
     
     # Check access permissions
-    if request.user.role == 'student' and test.grade != request.user.grade:
-        return JsonResponse({'error': 'Access denied'}, status=403)
+    if request.user.role == 'student':
+        request.user.refresh_from_db()
+        if request.user.grade is not None and test.grade != request.user.grade:
+            return JsonResponse({'error': 'Access denied'}, status=403)
     elif request.user.role == 'teacher' and test.created_by != request.user:
         return JsonResponse({'error': 'Access denied'}, status=403)
     

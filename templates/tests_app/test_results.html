@@ -939,7 +939,7 @@ async function loadResults() {
         if (data.user_role === 'student') {
             displayStudentResult(data.result);
         } else {
-            displayTeacherResults(data.results, testId);
+            displayTeacherResults(data.results || [], testId);
         }
 
     } catch (error) {
@@ -999,25 +999,25 @@ let allResults = [];
 let currentFilter = 'all';
 
 function displayTeacherResults(results, testId) {
-    allResults = results;
+    allResults = results || [];
     
-    if (results.length === 0) {
+    if (allResults.length === 0) {
         document.getElementById('noResultsSection').style.display = 'block';
         return;
     }
 
     // Show statistics
     document.getElementById('statisticsSection').style.display = 'block';
-    displayStatistics(results);
+    displayStatistics(allResults);
 
-    // Show grade filters (only for admin)
+    // Show grade filters (admin va o'qituvchilar uchun - ko'p sinflar bo'lsa)
     const gradeFiltersEl = document.getElementById('gradeFilters');
-    if (gradeFiltersEl && data.user_role === 'admin') {
+    if (gradeFiltersEl) {
         gradeFiltersEl.style.display = 'flex';
     }
 
     // Show results grid
-    displayResultsGrid(results);
+    displayResultsGrid(allResults);
 
     // Add export button
     const exportBtn = document.createElement('button');
