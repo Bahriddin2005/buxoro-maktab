@@ -207,7 +207,7 @@
     
     <!-- O'quvchilarni Excel'dan Import - FAQAT ADMIN uchun -->
     {% if user.role == 'admin' %}
-    <a href="{% url 'accounts:import_students' %}" 
+    <a href="/accounts/import-students/" 
        class="sidebar-nav-icon {% if 'import-students' in request.path %}active{% endif %}" 
        title="O'quvchilarni Excel'dan Import"
        data-bs-toggle="tooltip" 

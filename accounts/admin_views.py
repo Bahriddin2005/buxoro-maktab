@@ -376,18 +376,18 @@ def import_students_from_excel_view(request):
 
     if not excel_file:
         messages.error(request, "Excel fayl tanlanmadi!")
-        return redirect('accounts:import_students')
+        return redirect('/accounts/import-students/')
 
     if not excel_file.name.endswith('.xlsx'):
         messages.error(request, "Faqat .xlsx formatidagi fayllar qabul qilinadi!")
-        return redirect('accounts:import_students')
+        return redirect('/accounts/import-students/')
 
     try:
         wb = load_workbook(excel_file, read_only=True, data_only=True)
         ws = wb.active
     except Exception as e:
         messages.error(request, f"Excel faylni o'qishda xatolik: {str(e)}")
-        return redirect('accounts:import_students')
+        return redirect('/accounts/import-students/')
 
     # Ustun nomlarini topish (birinchisi Login, Parol, Ism, Familiya, Sinf)
     COL_ALIASES = {
@@ -416,7 +416,7 @@ def import_students_from_excel_view(request):
         rows = list(ws.iter_rows(values_only=True))
         if not rows:
             messages.error(request, "Excel faylda ma'lumot yo'q!")
-            return redirect('accounts:import_students')
+            return redirect('/accounts/import-students/')
 
         # Birinchi qator - sarlavha yoki ma'lumot
         first_row = [str(c).strip().lower() if c is not None else '' for c in rows[0]]
@@ -528,7 +528,7 @@ def import_students_from_excel_view(request):
         wb.close()
     except Exception as e:
         messages.error(request, f"Import jarayonida xatolik: {str(e)}")
-        return redirect('accounts:import_students')
+        return redirect('/accounts/import-students/')
 
     if created_count or updated_count:
         msg = f"✅ Muvaffaqiyat! {created_count} ta yangi o'quvchi qo'shildi."
@@ -542,4 +542,4 @@ def import_students_from_excel_view(request):
         if len(errors) > 5:
             messages.warning(request, f"... va yana {len(errors) - 5} ta xatolik")
 
-    return redirect('accounts:import_students')
+    return redirect('/accounts/import-students/')
