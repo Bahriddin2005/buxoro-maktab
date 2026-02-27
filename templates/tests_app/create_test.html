@@ -465,7 +465,7 @@
                             <i class="fas fa-clock me-2"></i>Vaqt chegarasi (daqiqa)
                         </label>
                         <input type="number" class="form-control" id="timeLimit" name="time_limit" 
-                               min="5" max="180" value="45" required>
+                               min="5" max="180" value="{{ default_time_limit|default:45 }}" required>
                     </div>
                     <div class="col-md-3">
                         <label for="maxAttempts" class="form-label">
@@ -990,7 +990,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         document.getElementById('testGrade').value = data.test_data.grade || '';
                     }
                     if (document.getElementById('timeLimit')) {
-                        document.getElementById('timeLimit').value = data.test_data.time_limit || 45;
+                        document.getElementById('timeLimit').value = data.test_data.time_limit || {{ default_time_limit|default:45 }};
                     }
                     if (document.getElementById('maxAttempts')) {
                         document.getElementById('maxAttempts').value = data.test_data.max_attempts || 1;

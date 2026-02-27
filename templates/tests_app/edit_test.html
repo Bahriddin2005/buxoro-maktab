@@ -5,356 +5,229 @@
 
 {% block extra_css %}
 <style>
-    body {
-        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    /* Edit Test — Oq fond, qora matn */
+    body:has(.edit-test-page) {
+        background: #fafafa !important;
         min-height: 100vh;
         position: relative;
     }
 
+    .edit-test-page .main-container,
     .main-container {
         max-width: 1200px;
         margin: 0 auto;
         padding: 2rem 1rem;
     }
 
-    .glass-card {
-        background: rgba(255, 255, 255, 0.15);
-        backdrop-filter: blur(20px);
-        border-radius: 20px;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    .edit-test-page .glass-card,
+    .edit-test-page .glass-card *,
+    .edit-test-page .form-label,
+    .edit-test-page .form-control,
+    .edit-test-page .form-select,
+    .edit-test-page .page-title,
+    .edit-test-page .page-subtitle,
+    .edit-test-page h2, .edit-test-page h4, .edit-test-page h5,
+    .edit-test-page .question-title,
+    .edit-test-page .questions-section-title,
+    .edit-test-page .modal-title,
+    .edit-test-page .modal-body,
+    .edit-test-page .form-check-label,
+    .edit-test-page p, .edit-test-page span, .edit-test-page small,
+    .edit-test-page .form-text, .edit-test-page code {
+        color: #000000 !important;
+    }
+
+    .edit-test-page .glass-card {
+        background: #ffffff !important;
+        border-radius: 16px;
+        border: 1px solid #e5e5e5;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
         transition: all 0.3s ease;
     }
 
-    .glass-card:hover {
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
-        transform: translateY(-2px);
+    .edit-test-page .glass-card:hover {
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     }
 
-    .glass-input, .form-control, .form-select {
-        background: rgba(255, 255, 255, 0.25) !important;
-        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    .edit-test-page .glass-input,
+    .edit-test-page .form-control,
+    .edit-test-page .form-select {
+        background: #ffffff !important;
+        border: 1px solid #d4d4d4 !important;
         border-radius: 12px !important;
-        color: #fff !important;
+        color: #000000 !important;
         padding: 12px 16px !important;
-        transition: all 0.3s ease;
     }
 
-    .glass-input:focus, .form-control:focus, .form-select:focus {
-        background: rgba(255, 255, 255, 0.35) !important;
-        border-color: rgba(255, 255, 255, 0.5) !important;
-        box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.25) !important;
-        color: #fff !important;
+    .edit-test-page .glass-input:focus,
+    .edit-test-page .form-control:focus,
+    .edit-test-page .form-select:focus {
+        background: #ffffff !important;
+        border-color: #000000 !important;
+        box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1) !important;
+        color: #000000 !important;
     }
 
-    .glass-input::placeholder, .form-control::placeholder, .form-select::placeholder {
-        color: rgba(255, 255, 255, 0.6) !important;
+    .edit-test-page .glass-input::placeholder,
+    .edit-test-page .form-control::placeholder {
+        color: #737373 !important;
     }
 
-    .form-label, .text-white {
-        color: #fff !important;
+    .edit-test-page .form-label {
         font-weight: 600;
         margin-bottom: 8px;
         font-size: 14px;
     }
 
-    .question-item {
-        background: rgba(255, 255, 255, 0.2);
-        backdrop-filter: blur(15px);
+    .edit-test-page .question-item {
+        background: #ffffff !important;
         border-radius: 16px;
-        border: 1px solid rgba(255, 255, 255, 0.25);
+        border: 1px solid #e5e5e5;
         padding: 24px !important;
         margin-bottom: 20px;
-        transition: all 0.3s ease;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         position: relative;
     }
 
-    .question-item::before {
+    .edit-test-page .question-item::before {
         content: '';
         position: absolute;
         left: 0;
         top: 0;
         bottom: 0;
         width: 4px;
-        background: linear-gradient(180deg, #06b6d4 0%, #0891b2 100%);
+        background: #000000;
         border-radius: 16px 0 0 16px;
     }
 
-    .question-item:hover {
-        transform: translateX(5px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    .edit-test-page .question-item:hover {
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     }
 
-    .question-number-badge {
+    .edit-test-page .question-number-badge {
+        background: #000000 !important;
+        color: #ffffff !important;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 32px;
-        height: 32px;
-        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
-        border-radius: 50%;
-        color: #fff;
         font-weight: bold;
         font-size: 14px;
         margin-right: 12px;
     }
 
-    .question-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 20px;
-        padding-bottom: 15px;
-        border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+    .edit-test-page .question-header {
+        border-bottom: 1px solid #e5e5e5;
     }
 
-    .question-title {
-        display: flex;
-        align-items: center;
-        color: #fff;
-        font-weight: 600;
-        font-size: 18px;
-        margin: 0;
-    }
-
-    .btn-delete-question, .remove-question {
-        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
-        border: none;
-        border-radius: 10px;
-        color: #fff;
-        padding: 8px 16px;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(238, 90, 111, 0.3);
-    }
-
-    .btn-delete-question:hover, .remove-question:hover {
-        transform: scale(1.05);
-        box-shadow: 0 6px 20px rgba(238, 90, 111, 0.4);
-        color: #fff;
-    }
-
-    .btn-success, .btn-add-question {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        border: none;
-        border-radius: 12px;
-        color: #fff;
-        padding: 12px 24px;
-        font-weight: 600;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
-    }
-
-    .btn-success:hover, .btn-add-question:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
-        color: #fff;
-    }
-
-    .btn-primary {
-        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
-        border: none;
-        border-radius: 12px;
-        padding: 14px 32px;
-        font-weight: 600;
-        font-size: 16px;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-    }
-
-    .btn-primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
-        color: #fff;
-    }
-
-    .add-choice-modal, .add-choice {
-        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-        border: none;
-        border-radius: 10px;
-        color: #fff;
-        padding: 8px 16px;
-        font-size: 13px;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-    }
-
-    .add-choice-modal:hover, .add-choice:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
-        color: #fff;
-    }
-
-    .remove-choice {
-        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-        border: none;
-        border-radius: 8px;
-        color: #fff;
-        padding: 6px 12px;
-        transition: all 0.3s ease;
-    }
-
-    .remove-choice:hover {
-        transform: scale(1.1);
-        color: #fff;
-    }
-
-    .choice-item {
-        background: rgba(255, 255, 255, 0.15);
+    .edit-test-page .choice-item {
+        background: #fafafa !important;
+        border: 1px solid #e5e5e5;
         border-radius: 10px;
         padding: 12px;
-        margin-bottom: 10px;
-        transition: all 0.3s ease;
-        border: 1px solid rgba(255, 255, 255, 0.2);
     }
 
-    .choice-item:hover {
-        background: rgba(255, 255, 255, 0.2);
-        transform: translateX(5px);
+    .edit-test-page .choice-item input {
+        color: #000000 !important;
     }
 
-    .form-check-input {
-        width: 20px;
-        height: 20px;
-        border: 2px solid rgba(255, 255, 255, 0.4);
-        background-color: transparent;
-        cursor: pointer;
-    }
+    .edit-test-page .form-check-label { color: #000000 !important; }
 
-    .form-check-input:checked {
-        background-color: #06b6d4;
-        border-color: #06b6d4;
-    }
-
-    .form-check-label {
-        color: #fff !important;
-        cursor: pointer;
-        font-size: 14px;
-        margin-left: 8px;
-    }
-
-    .modal-content.glass-card {
-        background: rgba(255, 255, 255, 0.2);
-        backdrop-filter: blur(20px);
-        border-radius: 20px;
-        border: 1px solid rgba(255, 255, 255, 0.25);
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
-    }
-
-    .modal-header {
-        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-        padding: 20px 24px;
-    }
-
-    .modal-title {
-        color: #fff !important;
-        font-weight: 700;
-        font-size: 20px;
-    }
-
-    .modal-body {
-        padding: 24px;
-        color: #fff;
-    }
-
-    .page-header {
-        text-align: center;
-        margin-bottom: 40px;
-        padding: 30px 0;
-    }
-
-    .page-header-icon {
+    .edit-test-page .page-header-icon {
+        background: #000000 !important;
+        color: #ffffff !important;
         width: 80px;
         height: 80px;
-        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         margin: 0 auto 20px;
         font-size: 36px;
-        color: #fff;
-        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
     }
 
-    .questions-section-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 25px;
-        padding: 20px;
-        background: rgba(255, 255, 255, 0.1);
+    .edit-test-page .questions-section-header {
+        background: #fafafa !important;
+        border: 1px solid #e5e5e5;
         border-radius: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.2);
     }
 
-    .questions-section-title {
-        color: #fff;
-        font-size: 24px;
-        font-weight: 700;
-        margin: 0;
-        display: flex;
-        align-items: center;
-        gap: 12px;
+    .edit-test-page .questions-section-title i {
+        color: #000000 !important;
     }
 
-    .questions-section-title i {
-        font-size: 28px;
-        color: #10b981;
-    }
-
-    .checkbox-group {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 15px;
-        padding: 20px;
-        background: rgba(255, 255, 255, 0.1);
+    .edit-test-page .checkbox-group {
+        background: #fafafa !important;
+        border: 1px solid #e5e5e5;
         border-radius: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        margin-bottom: 30px;
     }
 
-    .form-check {
-        background: rgba(255, 255, 255, 0.1);
-        padding: 12px 16px;
-        border-radius: 10px;
-        transition: all 0.3s ease;
-        border: 1px solid rgba(255, 255, 255, 0.15);
+    .edit-test-page .form-check {
+        background: #ffffff !important;
+        border: 1px solid #e5e5e5;
     }
 
-    .form-check:hover {
-        background: rgba(255, 255, 255, 0.15);
-        transform: translateX(5px);
+    .edit-test-page .modal-content.glass-card {
+        background: #ffffff !important;
+        border: 1px solid #e5e5e5;
+        border-radius: 16px;
     }
 
-    .section-divider {
-        height: 2px;
-        background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%);
-        margin: 30px 0;
-        border: none;
+    .edit-test-page .modal-header {
+        border-bottom: 1px solid #e5e5e5;
     }
 
-    .btn-close {
-        filter: brightness(0) invert(1);
-        opacity: 0.8;
+    .edit-test-page .btn-close {
+        filter: none;
+        opacity: 0.6;
     }
 
-    .btn-close:hover {
-        opacity: 1;
+    .edit-test-page .btn-outline-light {
+        border-color: #d4d4d4 !important;
+        color: #000000 !important;
     }
 
-    @media (max-width: 768px) {
-        .main-container {
-            padding: 1rem 0.5rem;
-        }
-        
-        .question-item {
-            padding: 16px !important;
-        }
+    .edit-test-page .btn-outline-light:hover {
+        background: #f5f5f5 !important;
+        color: #000000 !important;
+        border-color: #000000 !important;
     }
+
+    .edit-test-page .btn-outline-info {
+        border-color: #d4d4d4 !important;
+        color: #000000 !important;
+    }
+
+    .edit-test-page .btn-outline-info:hover {
+        background: #f5f5f5 !important;
+        color: #000000 !important;
+    }
+
+    .edit-test-page .btn-outline-primary {
+        border-color: #000000 !important;
+        color: #000000 !important;
+    }
+
+    .edit-test-page .btn-outline-primary:hover {
+        background: #000000 !important;
+        color: #ffffff !important;
+    }
+
+    .edit-test-page .math-toolbar .text-white-50,
+    .edit-test-page .math-toolbar span.small,
+    .edit-test-page .math-toolbar .btn-outline-light {
+        color: #000000 !important;
+        border-color: #d4d4d4 !important;
+    }
+
+    body:has(.edit-test-page) .animated-bg { background: #fafafa !important; opacity: 0 !important; }
 </style>
 {% endblock %}
 
 {% block content %}
+<div class="edit-test-page">
 <div class="main-container">
     <div class="glass-card p-4 p-md-5" data-aos="fade-up">
         <!-- Page Header -->
@@ -362,16 +235,16 @@
             <div class="page-header-icon">
                 <i class="fas fa-edit icon-accent"></i>
             </div>
-            <h2 class="text-white mb-2 page-title" style="font-weight: 700; font-size: 32px;">Testni Tahrirlash</h2>
-            <p class="text-white-50 page-subtitle" style="font-size: 16px;">Test ma'lumotlarini va savollarni tahrirlash</p>
+            <h2 class="text-dark mb-2 page-title" style="font-weight: 700; font-size: 32px;">Testni Tahrirlash</h2>
+            <p class="text-muted page-subtitle" style="font-size: 16px;">Test ma'lumotlarini va savollarni tahrirlash</p>
         </div>
 
         <form id="editTestForm">
             <input type="hidden" name="test_id" value="{{ test.id }}">
             
             <!-- Test asosiy ma'lumotlari -->
-            <div class="glass-card p-4 mb-4" style="background: rgba(255, 255, 255, 0.1);">
-                <h5 class="text-white mb-4" style="font-weight: 600;">
+            <div class="glass-card p-4 mb-4" style="background: #fafafa;">
+                <h5 class="text-dark mb-4" style="font-weight: 600;">
                     <i class="fas fa-info-circle me-2"></i>Test Asosiy Ma'lumotlari
                 </h5>
                 
@@ -438,11 +311,11 @@
             </div>
 
             <!-- Word/TXT dan savol generatsiya qilish -->
-            <div class="glass-card p-4 mb-4" style="background: rgba(255, 255, 255, 0.1); border: 2px dashed rgba(6, 182, 212, 0.4);">
-                <h5 class="text-white mb-3" style="font-weight: 600;">
-                    <i class="fas fa-file-word me-2" style="color: #22d3ee;"></i>Word yoki TXT dan Savollar Qo'shish
+            <div class="glass-card p-4 mb-4" style="background: #fafafa; border: 2px dashed #d4d4d4;">
+                <h5 class="text-dark mb-3" style="font-weight: 600;">
+                    <i class="fas fa-file-word me-2" style="color: #0ea5e9;"></i>Word yoki TXT dan Savollar Qo'shish
                 </h5>
-                <p class="text-white-50 mb-3" style="font-size: 0.95rem;">
+                <p class="text-muted mb-3" style="font-size: 0.95rem;">
                     Word (.docx, .doc) yoki TXT (.txt) faylni yuklang — savollar avtomatik qo'shiladi. Format: <code class="text-info">1. Savol?</code> → <code class="text-info">a) Variant (✓)</code>
                 </p>
                 <form id="addQuestionsFromWordForm" enctype="multipart/form-data" class="d-flex flex-wrap gap-3 align-items-end">
@@ -453,10 +326,10 @@
                     <button type="submit" class="btn btn-success" id="addFromWordBtn">
                         <i class="fas fa-magic me-2"></i>Savollarni Qo'shish
                     </button>
-                    <a href="{% url 'tests:word_import_guide' %}" class="btn btn-outline-light btn-sm" target="_blank" title="Qo'llanma">
+                    <a href="{% url 'tests:word_import_guide' %}" class="btn btn-outline-secondary btn-sm" target="_blank" title="Qo'llanma">
                         <i class="fas fa-book me-1"></i>Qo'llanma
                     </a>
-                    <a href="{% url 'tests:upload_questions' test.id %}" class="btn btn-outline-info btn-sm" title="Excel yoki Word dan to'liq yuklash">
+                    <a href="{% url 'tests:upload_questions' test.id %}" class="btn btn-outline-secondary btn-sm" title="Excel yoki Word dan to'liq yuklash">
                         <i class="fas fa-upload me-1"></i>Batafsil yuklash
                     </a>
                 </form>
@@ -485,7 +358,7 @@
                         <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
                             <span class="visually-hidden">Yuklanmoqda...</span>
                         </div>
-                        <p class="text-white-50">Savollar yuklanmoqda...</p>
+                        <p class="text-muted">Savollar yuklanmoqda...</p>
                     </div>
                 </div>
                 
@@ -520,7 +393,7 @@
               {% include 'includes/math_toolbar.html' %}
               <textarea class="form-control glass-input math-target" name="question_text" rows="3" required placeholder="½, x² kabi matematik belgilar"></textarea>
             </div>
-            <small class="text-white-50">Kasrlar va darajalar — nusxalab saytga qo'yish mumkin</small>
+            <small class="text-muted">Kasrlar va darajalar — nusxalab saytga qo'yish mumkin</small>
           </div>
           <div class="row g-3 mb-3">
             <div class="col-md-6">
@@ -545,7 +418,7 @@
               <i class="fas fa-list-ul me-2"></i>Javob variantlari
             </label>
             {% include 'includes/math_toolbar.html' %}
-            <small class="text-white-50 d-block mb-2">½ x²: variant ustiga bosing, keyin tugmani bosing</small>
+            <small class="text-muted d-block mb-2">½ x²: variant ustiga bosing, keyin tugmani bosing</small>
             <div class="choice-items">
               <div class="choice-item d-flex align-items-center gap-2">
                 <input type="checkbox" class="form-check-input" name="is_correct_0" style="width: 20px; height: 20px;">
@@ -575,7 +448,7 @@
               <i class="fas fa-image me-2"></i>Savol uchun rasm (ixtiyoriy)
             </label>
             <input type="file" class="form-control glass-input" name="question_image" accept="image/*">
-            <div class="form-text text-white-50 mt-2">JPG, PNG, GIF formatlari qo'llab-quvvatlanadi. Maksimal hajm: 1GB</div>
+            <div class="form-text text-muted mt-2">JPG, PNG, GIF formatlari qo'llab-quvvatlanadi. Maksimal hajm: 1GB</div>
           </div>
           <div class="d-grid gap-2">
             <button type="submit" class="btn btn-primary btn-lg">
@@ -584,8 +457,9 @@
           </div>
         </form>
       </div>
-    </div>
-  </div>
+</div>
+</div>
+</div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -801,11 +675,11 @@ document.addEventListener('DOMContentLoaded', function() {
             // No existing questions, creating header
             container.innerHTML = `
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="text-white mb-0">
+                    <h5 class="text-dark mb-0">
                         <i class="fas fa-list me-2"></i>
                         Savollar (0 ta)
                     </h5>
-                    <span class="badge bg-primary">Jami: 0 ta savol</span>
+                    <span class="badge bg-dark">Jami: 0 ta savol</span>
                 </div>
             `;
         }
@@ -1174,7 +1048,7 @@ function loadExistingQuestions() {
             displayQuestions(data.questions);
         } else {
             console.log('No questions found');
-            document.getElementById('questionsContainer').innerHTML = '<p class="text-white-50 text-center">Hozircha savollar yo\'q. Yangi savol qo\'shing.</p>';
+            document.getElementById('questionsContainer').innerHTML = '<p class="text-muted text-center">Hozircha savollar yo\'q. Yangi savol qo\'shing.</p>';
         }
     })
     .catch(error => {
@@ -1192,9 +1066,9 @@ function displayQuestions(questions) {
     if (questions.length === 0) {
         container.innerHTML = `
             <div class="text-center py-4">
-                <i class="fas fa-question-circle fa-3x text-white-50 mb-3"></i>
-                <h5 class="text-white">Hozircha savollar yo'q</h5>
-                <p class="text-white-50">Yangi savol qo'shish uchun yuqoridagi tugmani bosing</p>
+                <i class="fas fa-question-circle fa-3x text-muted mb-3"></i>
+                <h5 class="text-dark">Hozircha savollar yo'q</h5>
+                <p class="text-muted">Yangi savol qo'shish uchun yuqoridagi tugmani bosing</p>
             </div>
         `;
         return;
@@ -1203,11 +1077,11 @@ function displayQuestions(questions) {
     // Add header with question count
     const headerHtml = `
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="text-white mb-0">
+            <h5 class="text-dark mb-0">
                 <i class="fas fa-list me-2"></i>
                 Savollar (${questions.length} ta)
             </h5>
-            <span class="badge bg-primary">Jami: ${questions.length} ta savol</span>
+            <span class="badge bg-dark">Jami: ${questions.length} ta savol</span>
         </div>
     `;
     container.insertAdjacentHTML('beforeend', headerHtml);
@@ -1239,7 +1113,7 @@ function createQuestionHtml(question, index) {
     html += `<button type='button' class='btn btn-delete-question remove-question'><i class='fas fa-trash me-1'></i>O'chirish</button>`;
     html += `</div>`;
     
-    const mathToolbar = `<div class="math-toolbar btn-group btn-group-sm flex-wrap mb-1"><span class="text-white-50 small me-2">Math:</span><button type="button" class="btn btn-outline-light btn-sm math-insert" data-insert="½">½</button><button type="button" class="btn btn-outline-light btn-sm math-insert" data-insert="¼">¼</button><button type="button" class="btn btn-outline-light btn-sm math-insert" data-insert="¾">¾</button><button type="button" class="btn btn-outline-light btn-sm math-insert" data-insert="²⁄₃">²⁄₃</button><button type="button" class="btn btn-outline-light btn-sm math-insert" data-insert="³⁄₄">³⁄₄</button><button type="button" class="btn btn-outline-light btn-sm math-insert" data-insert="²">x²</button><button type="button" class="btn btn-outline-light btn-sm math-insert" data-insert="³">x³</button><button type="button" class="btn btn-outline-light btn-sm math-insert" data-insert="⁴">x⁴</button><button type="button" class="btn btn-outline-light btn-sm math-insert" data-insert="ⁿ">xⁿ</button><button type="button" class="btn btn-outline-light btn-sm math-insert" data-insert="×">×</button><button type="button" class="btn btn-outline-light btn-sm math-insert" data-insert="÷">÷</button><button type="button" class="btn btn-outline-light btn-sm math-insert" data-insert="√">√</button><button type="button" class="btn btn-outline-light btn-sm math-insert" data-insert="π">π</button></div>`;
+    const mathToolbar = `<div class="math-toolbar btn-group btn-group-sm flex-wrap mb-1"><span class="text-muted small me-2">Math:</span><button type="button" class="btn btn-outline-secondary btn-sm math-insert" data-insert="½">½</button><button type="button" class="btn btn-outline-secondary btn-sm math-insert" data-insert="¼">¼</button><button type="button" class="btn btn-outline-secondary btn-sm math-insert" data-insert="¾">¾</button><button type="button" class="btn btn-outline-secondary btn-sm math-insert" data-insert="²⁄₃">²⁄₃</button><button type="button" class="btn btn-outline-secondary btn-sm math-insert" data-insert="³⁄₄">³⁄₄</button><button type="button" class="btn btn-outline-secondary btn-sm math-insert" data-insert="²">x²</button><button type="button" class="btn btn-outline-secondary btn-sm math-insert" data-insert="³">x³</button><button type="button" class="btn btn-outline-secondary btn-sm math-insert" data-insert="⁴">x⁴</button><button type="button" class="btn btn-outline-secondary btn-sm math-insert" data-insert="ⁿ">xⁿ</button><button type="button" class="btn btn-outline-secondary btn-sm math-insert" data-insert="×">×</button><button type="button" class="btn btn-outline-secondary btn-sm math-insert" data-insert="÷">÷</button><button type="button" class="btn btn-outline-secondary btn-sm math-insert" data-insert="√">√</button><button type="button" class="btn btn-outline-secondary btn-sm math-insert" data-insert="π">π</button></div>`;
     html += `<div class='row g-3 mb-3'>`;
     html += `<div class='col-md-8'>`;
     html += `<label class='form-label'>Savol matni</label>`;
@@ -1278,7 +1152,7 @@ function createQuestionHtml(question, index) {
         html += `<div class='choices-container mb-3 math-input-wrapper'>`;
         html += `<label class='form-label mb-3'><i class='fas fa-list-ul me-2'></i>Javob variantlari</label>`;
         html += mathToolbar;
-        html += `<small class="text-white-50 d-block mb-2">½ x²: variant ustiga bosing</small>`;
+        html += `<small class="text-muted d-block mb-2">½ x²: variant ustiga bosing</small>`;
         html += `<div class='choice-items'>`;
         if (question.choices && question.choices.length > 0) {
             question.choices.forEach((choice, idx) => {
@@ -1314,7 +1188,7 @@ function createQuestionHtml(question, index) {
         html += `<div class='mb-2'>`;
         html += `<label class='form-label'>Rasm yuklash (ixtiyoriy)</label>`;
         html += `<input type='file' class='form-control glass-input question-image-upload' accept='image/*' data-question-id='${question.id}'>`;
-        html += `<div class='form-text text-white-50'>JPG, PNG, GIF formatlari. Max: 1GB</div>`;
+        html += `<div class='form-text text-muted'>JPG, PNG, GIF formatlari. Max: 1GB</div>`;
         html += `</div>`;
     }
     

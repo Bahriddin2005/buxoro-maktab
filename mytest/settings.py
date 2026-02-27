@@ -169,6 +169,10 @@ CACHES = {
 CACHE_MIDDLEWARE_SECONDS = 60  # 1 daqiqa
 CACHE_MIDDLEWARE_KEY_PREFIX = 'buxoro_maktab'
 
+# Test vaqt limiti (daqiqada) - Word/TXT orqali yaratilgan testlar uchun
+# Serverni sozlamalaridan olinadi, muhit o'zgaruvchisi orqali o'zgartirish mumkin
+DEFAULT_TEST_TIME_LIMIT = int(os.environ.get('DEFAULT_TEST_TIME_LIMIT', 45))
+
 # Fayl yuklash limitlari (1GB)
 FILE_UPLOAD_MAX_MEMORY_SIZE = 1024 * 1024 * 1024  # 1GB
 DATA_UPLOAD_MAX_MEMORY_SIZE = 1024 * 1024 * 1024  # 1GB

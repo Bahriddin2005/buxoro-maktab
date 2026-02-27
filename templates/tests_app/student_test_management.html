@@ -80,6 +80,11 @@
                                 <span class="badge bg-info">
                                     {{ data.tests|length }} ta test
                                 </span>
+                                {% if data.student_grade %}
+                                <span class="badge bg-secondary ms-1">{{ data.student_grade }}-sinf testlari</span>
+                                {% else %}
+                                <span class="badge bg-warning text-dark ms-1">Sinf tayinlanmagan</span>
+                                {% endif %}
                             </div>
                         </div>
 
@@ -185,7 +190,11 @@
                                     {% empty %}
                                     <tr>
                                         <td colspan="7" class="text-center text-muted">
-                                            Testlar mavjud emas
+                                            {% if data.student_grade %}
+                                            Ushbu sinf uchun testlar mavjud emas
+                                            {% else %}
+                                            O'quvchiga sinf tayinlanmagan — testlar ko'rsatilmaydi
+                                            {% endif %}
                                         </td>
                                     </tr>
                                     {% endfor %}

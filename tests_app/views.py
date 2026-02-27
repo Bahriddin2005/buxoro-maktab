@@ -1582,12 +1582,12 @@ def create_test_from_word(request):
                 doc = Document(uploaded_file)
                 all_paragraphs = [para.text.strip() for para in doc.paragraphs if para.text.strip()]
             
-            # Test ma'lumotlarini olish
+            # Test ma'lumotlarini olish - vaqt SERVER sozlamalaridan olinadi
             test_title = ''
             test_description = ''
             test_subject = ''
             test_grade = ''
-            test_time_limit = 45
+            test_time_limit = getattr(settings, 'DEFAULT_TEST_TIME_LIMIT', 45)
             test_max_attempts = 1
             test_show_results = True
             test_is_active = True
@@ -1618,13 +1618,7 @@ def create_test_from_word(request):
                     parts = para.split(':')
                     if len(parts) > 1:
                         test_grade = parts[1].strip().replace('-sinf', '').replace('sinf', '').strip()
-                elif 'vaqt:' in para.lower() or 'time:' in para.lower():
-                    parts = para.split(':')
-                    if len(parts) > 1:
-                        try:
-                            test_time_limit = int(parts[1].strip().replace('daqiqa', '').replace('min', '').strip())
-                        except:
-                            pass
+                # Vaqt: fayldan EMAT, faqat server sozlamasidan (DEFAULT_TEST_TIME_LIMIT) ishlatiladi
             
             # Agar test nomi topilmasa, default
             if not test_title:
@@ -1742,7 +1736,9 @@ def create_test_view(request):
         return JsonResponse({'error': 'Access denied'}, status=403)
     
     if request.method == 'GET':
-        return render(request, 'tests_app/create_test.html')
+        return render(request, 'tests_app/create_test.html', {
+            'default_time_limit': getattr(settings, 'DEFAULT_TEST_TIME_LIMIT', 45)
+        })
     
     if request.method == 'POST':
         try:
@@ -1753,7 +1749,7 @@ def create_test_view(request):
                     description=request.POST.get('description', ''),
                     subject=request.POST.get('subject'),
                     grade=int(request.POST.get('grade')),
-                    time_limit=int(request.POST.get('time_limit', 45)),
+                    time_limit=int(request.POST.get('time_limit', getattr(settings, 'DEFAULT_TEST_TIME_LIMIT', 45))),
                     max_attempts=int(request.POST.get('max_attempts', 1)),
                     show_results=bool(request.POST.get('show_results')),
                     is_active=bool(request.POST.get('is_active')),
@@ -2189,22 +2185,42 @@ def open_test_for_student(request, test_id, student_id):
         return JsonResponse({'error': str(e)}, status=500)
 
 
+def _get_student_grade(student):
+    """O'quvchi sinfini olish - grade yoki class_name orqali"""
+    if student.grade is not None:
+        return student.grade
+    if student.class_name:
+        m = re.search(r'\d+', str(student.class_name))
+        if m:
+            return int(m.group())
+    return None
+
+
 @login_required
 def student_test_management(request):
-    """Admin uchun o'quvchilarning test holatlarini boshqarish"""
+    """Admin uchun o'quvchilarning test holatlarini boshqarish.
+    Har bir o'quvchiga faqat o'z sinfiga mos testlar ko'rsatiladi (masalan 7-sinf - faqat 7-sinf testlari).
+    """
     if request.user.role != 'admin':
         return redirect('accounts:dashboard')
     
     # Barcha faol testlar
-    tests = Test.objects.filter(is_active=True)
+    all_tests = Test.objects.filter(is_active=True)
     
     # Barcha tasdiqlangan o'quvchilar
     students = User.objects.filter(role='student', is_verified=True)
     
-    # Har bir o'quvchi va test uchun urinishlar ma'lumotlari
+    # Har bir o'quvchi va unga mos testlar uchun urinishlar ma'lumotlari
     student_test_data = []
     
     for student in students:
+        student_grade = _get_student_grade(student)
+        # Faqat o'quvchi sinfiga mos testlar
+        if student_grade is not None:
+            tests = all_tests.filter(grade=student_grade)
+        else:
+            tests = all_tests.none()  # sinf yo'q bo'lsa test ko'rsatilmaydi
+        
         student_tests = []
         for test in tests:
             attempts = TestAttempt.objects.filter(student=student, test=test)
@@ -2227,12 +2243,13 @@ def student_test_management(request):
         
         student_test_data.append({
             'student': student,
-            'tests': student_tests
+            'tests': student_tests,
+            'student_grade': student_grade
         })
     
     context = {
         'student_test_data': student_test_data,
-        'all_tests': tests
+        'all_tests': all_tests
     }
     
     return render(request, 'tests_app/student_test_management.html', context)
