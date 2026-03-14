@@ -3,14 +3,16 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import JsonResponse, HttpResponse, HttpResponseForbidden
 from django.views.decorators.http import require_http_methods
 from django.utils import timezone
+from django.utils.text import slugify
 from django.db import transaction
 from django.core.paginator import Paginator
 from django.db.models import Count, Avg, Max, Min, Q
+from django.contrib import messages
 from django.conf import settings
 import json
 import random
 import re
-from .models import Test, Question, Choice, TestAttempt, Answer, TestResult, TestRetakeRequest
+from .models import Test, Question, Choice, TestAttempt, Answer, TestResult, TestRetakeRequest, Subject, get_subject_choices, SUBJECT_GRADES
 from accounts.models import User
 from .views_overall import student_overall_results_view, student_export_results_view, test_api_view
 from .export_all_students import export_all_students_results
@@ -21,6 +23,112 @@ try:
     OPENPYXL_AVAILABLE = True
 except ImportError:
     OPENPYXL_AVAILABLE = False
+
+
+def _is_admin(user):
+    """Faqat admin yoki staff foydalanuvchilarni tekshirish"""
+    return user.is_superuser or getattr(user, 'role', None) == 'admin' or user.is_staff
+
+
+@login_required
+def subjects_view(request):
+    """Fan bo'limlari — Subject modeldan (admin qo'shadi)"""
+    subjects = Subject.objects.filter(is_active=True).order_by('order', 'name')
+    subjects_with_counts = []
+    for s in subjects:
+        count = Test.objects.filter(
+            subject=s.name,
+            grade__in=SUBJECT_GRADES,
+            is_active=True
+        ).count()
+        subjects_with_counts.append({'code': s.name, 'name': s.name, 'slug': s.slug, 'icon': s.icon, 'count': count})
+    return render(request, 'tests_app/subjects.html', {
+        'subjects_with_counts': subjects_with_counts,
+        'grades': SUBJECT_GRADES,
+        'is_admin': _is_admin(request.user),
+    })
+
+
+@login_required
+def add_subject_view(request):
+    """Fan qo'shish — faqat admin"""
+    if not _is_admin(request.user):
+        return HttpResponseForbidden('Bu sahifa faqat admin uchun.')
+    if request.method == 'POST':
+        name = (request.POST.get('name') or '').strip()
+        icon = (request.POST.get('icon') or 'fa-book').strip()
+        order_str = request.POST.get('order', '0')
+        try:
+            order = int(order_str) if order_str else 0
+        except ValueError:
+            order = 0
+        if not name:
+            messages.error(request, 'Fan nomi kiritilishi shart.')
+            return redirect('tests:add_subject')
+        slug = slugify(name) or name.lower().replace(' ', '-').replace("'", "")
+        if Subject.objects.filter(slug=slug).exists():
+            messages.error(request, f'"{name}" fan allaqachon mavjud.')
+            return redirect('tests:add_subject')
+        if Subject.objects.filter(name=name).exists():
+            messages.error(request, f'"{name}" fan allaqachon mavjud.')
+            return redirect('tests:add_subject')
+        Subject.objects.create(name=name, slug=slug, icon=icon, order=order, is_active=True)
+        messages.success(request, f'"{name}" fan muvaffaqiyatli qo\'shildi.')
+        return redirect('tests:subjects')
+    # GET — form
+    icon_choices = [
+        ('fa-book', 'Kitob'),
+        ('fa-atom', 'Fizika'),
+        ('fa-language', 'Ingliz tili'),
+        ('fa-calculator', 'Matematika'),
+        ('fa-laptop-code', 'Informatika'),
+        ('fa-flask', 'Kimyo'),
+        ('fa-dna', 'Biologiya'),
+        ('fa-globe', 'Geografiya'),
+        ('fa-landmark', 'Tarix'),
+        ('fa-pen-fancy', 'Adabiyot'),
+        ('fa-palette', 'San\'at'),
+        ('fa-music', 'Musiqa'),
+    ]
+    return render(request, 'tests_app/add_subject.html', {'icon_choices': icon_choices})
+
+
+@login_required
+def subject_tests_view(request, subject_slug):
+    """Tanlangan fan bo'yicha testlar (7-8-9 sinflar) — Subject modeldan"""
+    slug_clean = subject_slug.lower().replace('_', '-')
+    subject_obj = Subject.objects.filter(slug=slug_clean, is_active=True).first()
+    if not subject_obj:
+        return redirect('tests:subjects')
+    subject_name = subject_obj.name
+    student_grade = getattr(request.user, 'grade', None) if request.user.role == 'student' else None
+    tests = Test.objects.filter(
+        subject=subject_name,
+        grade__in=SUBJECT_GRADES,
+        is_active=True
+    ).select_related('created_by').prefetch_related('questions').order_by('grade', '-created_at')
+    # O'quvchi uchun faqat o'z sinfidagi testlar (7, 8 yoki 9 bo'lsa)
+    if request.user.role == 'student' and student_grade is not None and student_grade in SUBJECT_GRADES:
+        tests = tests.filter(grade=student_grade)
+    tests = list(tests)
+    # O'quvchi uchun har bir testning attempt ma'lumotlari
+    tests_with_attempts = []
+    if request.user.role == 'student' and tests:
+        test_ids = [t.id for t in tests]
+        attempts = {a['test_id']: a for a in TestAttempt.objects.filter(
+            test_id__in=test_ids, student=request.user
+        ).values('test_id', 'id', 'is_completed', 'percentage')}
+        for test in tests:
+            tests_with_attempts.append((test, attempts.get(test.id)))
+    else:
+        tests_with_attempts = [(t, None) for t in tests]
+    return render(request, 'tests_app/subject_tests.html', {
+        'subject_name': subject_name,
+        'tests_with_attempts': tests_with_attempts,
+        'grades': SUBJECT_GRADES,
+        'student_grade': student_grade,
+    })
+
 
 @login_required
 def test_list_view(request):
@@ -1736,8 +1844,11 @@ def create_test_view(request):
         return JsonResponse({'error': 'Access denied'}, status=403)
     
     if request.method == 'GET':
+        preset_subject = request.GET.get('subject', '')
         return render(request, 'tests_app/create_test.html', {
-            'default_time_limit': getattr(settings, 'DEFAULT_TEST_TIME_LIMIT', 45)
+            'default_time_limit': getattr(settings, 'DEFAULT_TEST_TIME_LIMIT', 45),
+            'subject_choices': get_subject_choices(),
+            'preset_subject': preset_subject,
         })
     
     if request.method == 'POST':

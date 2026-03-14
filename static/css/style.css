@@ -83,6 +83,413 @@ table td {
     color: #171717;
 }
 
+/* ═══════════════════════════════════════════════
+   Chiroyli Tugma Dizayni — Barcha tugmalar uchun
+   ═══════════════════════════════════════════════ */
+.btn {
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    border-radius: 12px;
+    transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    position: relative;
+    overflow: hidden;
+}
+.btn:hover {
+    transform: translateY(-2px);
+}
+.btn:active {
+    transform: translateY(0);
+}
+
+/* Primary — cyan gradient */
+.btn-primary {
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%) !important;
+    border: none !important;
+    box-shadow: 0 4px 20px rgba(6, 182, 212, 0.4);
+}
+.btn-primary:hover {
+    background: linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%) !important;
+    box-shadow: 0 8px 30px rgba(6, 182, 212, 0.5);
+}
+
+/* Success — yashil gradient */
+.btn-success {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    border: none !important;
+    color: #fff !important;
+    box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
+}
+.btn-success:hover {
+    background: linear-gradient(135deg, #34d399 0%, #10b981 100%) !important;
+    color: #fff !important;
+    box-shadow: 0 8px 30px rgba(16, 185, 129, 0.5);
+}
+
+/* Warning — sariq gradient */
+.btn-warning {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+    border: none !important;
+    color: #fff !important;
+    box-shadow: 0 4px 20px rgba(245, 158, 11, 0.4);
+}
+.btn-warning:hover {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%) !important;
+    color: #fff !important;
+    box-shadow: 0 8px 30px rgba(245, 158, 11, 0.5);
+}
+
+/* Danger — qizil gradient */
+.btn-danger {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+    border: none !important;
+    color: #fff !important;
+    box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
+}
+.btn-danger:hover {
+    background: linear-gradient(135deg, #f87171 0%, #ef4444 100%) !important;
+    color: #fff !important;
+    box-shadow: 0 8px 30px rgba(239, 68, 68, 0.5);
+}
+
+/* Info — havorang gradient */
+.btn-info {
+    background: linear-gradient(135deg, #06b6d4 0%, #0ea5e9 100%) !important;
+    border: none !important;
+    color: #fff !important;
+    box-shadow: 0 4px 20px rgba(6, 182, 212, 0.4);
+}
+.btn-info:hover {
+    background: linear-gradient(135deg, #22d3ee 0%, #38bdf8 100%) !important;
+    color: #fff !important;
+    box-shadow: 0 8px 30px rgba(6, 182, 212, 0.5);
+}
+
+/* Secondary — kulrang */
+.btn-secondary {
+    background: linear-gradient(135deg, #64748b 0%, #475569 100%) !important;
+    border: none !important;
+    color: #fff !important;
+    box-shadow: 0 4px 15px rgba(100, 116, 139, 0.3);
+}
+.btn-secondary:hover {
+    background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%) !important;
+    color: #fff !important;
+    box-shadow: 0 6px 25px rgba(100, 116, 139, 0.4);
+}
+
+/* Outline tugmalar — border + hover gradient */
+.btn-outline-primary {
+    border: 2px solid #06b6d4 !important;
+    color: #06b6d4 !important;
+    background: transparent !important;
+}
+.btn-outline-primary:hover {
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%) !important;
+    border-color: transparent !important;
+    color: #fff !important;
+}
+
+.btn-outline-success {
+    border: 2px solid #10b981 !important;
+    color: #10b981 !important;
+    background: transparent !important;
+}
+.btn-outline-success:hover {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    border-color: transparent !important;
+    color: #fff !important;
+}
+
+.btn-outline-warning {
+    border: 2px solid #f59e0b !important;
+    color: #f59e0b !important;
+    background: transparent !important;
+}
+.btn-outline-warning:hover {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+    border-color: transparent !important;
+    color: #fff !important;
+}
+
+.btn-outline-danger {
+    border: 2px solid #ef4444 !important;
+    color: #ef4444 !important;
+    background: transparent !important;
+}
+.btn-outline-danger:hover {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+    border-color: transparent !important;
+    color: #fff !important;
+}
+
+.btn-outline-secondary {
+    border: 2px solid #64748b !important;
+    color: #64748b !important;
+    background: transparent !important;
+}
+.btn-outline-secondary:hover {
+    background: linear-gradient(135deg, #64748b 0%, #475569 100%) !important;
+    border-color: transparent !important;
+    color: #fff !important;
+}
+
+.btn-outline-light {
+    border: 2px solid rgba(255, 255, 255, 0.7) !important;
+    color: #fff !important;
+    background: transparent !important;
+}
+.btn-outline-light:hover {
+    background: rgba(255, 255, 255, 0.2) !important;
+    border-color: #fff !important;
+    color: #fff !important;
+}
+
+/* Light tugma */
+.btn-light {
+    background: rgba(255, 255, 255, 0.9) !important;
+    border: 1px solid rgba(6, 182, 212, 0.3) !important;
+    color: #334155 !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+}
+.btn-light:hover {
+    background: #fff !important;
+    border-color: #06b6d4 !important;
+    color: #0891b2 !important;
+    box-shadow: 0 4px 20px rgba(6, 182, 212, 0.2);
+}
+
+/* Orqaga / Back tugmalari */
+.back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.25rem;
+    border-radius: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.35s ease;
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(8, 145, 178, 0.1) 100%) !important;
+    border: 1px solid rgba(6, 182, 212, 0.4) !important;
+    color: #0891b2 !important;
+}
+.back-btn:hover {
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%) !important;
+    color: #fff !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(6, 182, 212, 0.35);
+}
+
+/* Export tugmalar */
+.export-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.35s ease;
+    border: none;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+.export-btn.teachers {
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    color: #fff;
+}
+.export-btn.teachers:hover {
+    background: linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(6, 182, 212, 0.4);
+}
+.export-btn.students {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: #fff;
+}
+.export-btn.students:hover {
+    background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+}
+
+/* Yangi test tugmasi */
+.btn-new-test {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 1.75rem;
+    border-radius: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: #fff !important;
+    border: none;
+    box-shadow: 0 6px 25px rgba(16, 185, 129, 0.4);
+    transition: all 0.35s ease;
+}
+.btn-new-test:hover {
+    background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+    color: #fff !important;
+    transform: translateY(-3px);
+    box-shadow: 0 10px 35px rgba(16, 185, 129, 0.5);
+}
+
+/* Start test, Continue, View results */
+.start-test-btn, .continue-test-btn, .view-results-btn {
+    border-radius: 12px !important;
+    font-weight: 600 !important;
+    padding: 0.6rem 1.25rem !important;
+    transition: all 0.35s ease !important;
+}
+.start-test-btn:hover, .continue-test-btn:hover, .view-results-btn:hover {
+    transform: translateY(-2px) !important;
+}
+
+/* Monitoring action tugmalari — Vaqt, Batafsil, To'xtatish */
+.btn-action {
+    border: none;
+    font-weight: 600;
+    border-radius: 12px;
+    padding: 12px 20px;
+    transition: all 0.35s ease;
+}
+.btn-action:hover {
+    transform: translateY(-2px);
+}
+.btn-time {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+    color: #fff !important;
+    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+}
+.btn-time:hover {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%) !important;
+    box-shadow: 0 6px 25px rgba(245, 158, 11, 0.5);
+}
+.btn-view {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+    color: #fff !important;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+}
+.btn-view:hover {
+    background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%) !important;
+    box-shadow: 0 6px 25px rgba(59, 130, 246, 0.5);
+}
+.btn-terminate {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+    color: #fff !important;
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+}
+.btn-terminate:hover {
+    background: linear-gradient(135deg, #f87171 0%, #ef4444 100%) !important;
+    box-shadow: 0 6px 25px rgba(239, 68, 68, 0.5);
+}
+
+/* btn-mini — monitoring mini tugmalar */
+.btn-mini {
+    padding: 8px 14px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    border: none;
+    transition: all 0.35s ease;
+}
+.btn-mini:hover {
+    transform: translateY(-2px);
+}
+.btn-mini.time {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: #fff;
+}
+.btn-mini.detail {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: #fff;
+}
+.btn-mini.terminate {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: #fff;
+}
+
+/* Grade filter tugmalar */
+.grade-filter-btn {
+    padding: 0.5rem 1rem;
+    border-radius: 10px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: 2px solid rgba(6, 182, 212, 0.4);
+    background: transparent;
+    color: #64748b;
+}
+.grade-filter-btn:hover, .grade-filter-btn.active {
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    border-color: transparent;
+    color: #fff;
+}
+
+/* Test kartasi tugmalari — Edit, Monitor, Delete */
+.edit-test-btn {
+    border: 2px solid #f59e0b !important;
+    color: #f59e0b !important;
+    background: transparent !important;
+    border-radius: 10px;
+    font-weight: 600;
+}
+.edit-test-btn:hover {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+    border-color: transparent !important;
+    color: #fff !important;
+}
+.monitor-btn {
+    border: 2px solid #10b981 !important;
+    color: #10b981 !important;
+    background: transparent !important;
+    border-radius: 10px;
+    font-weight: 600;
+}
+.monitor-btn:hover {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    border-color: transparent !important;
+    color: #fff !important;
+}
+.delete-test-btn {
+    border: 2px solid #ef4444 !important;
+    color: #ef4444 !important;
+    background: transparent !important;
+    border-radius: 10px;
+    font-weight: 600;
+}
+.delete-test-btn:hover {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+    border-color: transparent !important;
+    color: #fff !important;
+}
+
+/* btn-add-choice, btn-delete va boshqalar */
+.btn-add-choice, .add-choice, .add-choice-modal {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    border: none !important;
+    color: #fff !important;
+    border-radius: 10px;
+    font-weight: 600;
+    transition: all 0.35s ease;
+}
+.btn-add-choice:hover, .add-choice:hover, .add-choice-modal:hover {
+    background: linear-gradient(135deg, #34d399 0%, #10b981 100%) !important;
+    color: #fff !important;
+    transform: translateY(-2px);
+}
+
+.btn-outline-danger.remove-image, .btn-delete-question, .remove-question {
+    background: transparent !important;
+    border: 2px solid #ef4444 !important;
+    color: #ef4444 !important;
+    border-radius: 10px;
+    transition: all 0.35s ease;
+}
+.btn-outline-danger.remove-image:hover, .btn-delete-question:hover, .remove-question:hover {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+    border-color: transparent !important;
+    color: #fff !important;
+}
+
 /* Custom button animations */
 .btn-spring {
     transition: all 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);

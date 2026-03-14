@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ subject_name }} — Testlar - Buxoro Bilimdonlar Maktabi{% endblock %}
+
+{% block extra_css %}
+<style>
+.subject-tests-wrap {
+    margin: -2rem -15px 0;
+    padding: 2rem 1.5rem 3rem;
+}
+/* Ochiladigan card — fan tanlangandan keyin */
+.subject-tests-card {
+    background: linear-gradient(160deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+    border-radius: 24px;
+    border: 1px solid rgba(148, 163, 184, 0.15);
+    box-shadow: 0 25px 60px rgba(0,0,0,0.35);
+    padding: 2.5rem;
+    color: #f8fafc;
+}
+.subject-tests-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+.subject-tests-header h1 { font-size: 1.6rem; font-weight: 700; color: #f8fafc; margin: 0; }
+.subject-tests-header p { color: #94a3b8; margin: 0.25rem 0 0; }
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #94a3b8;
+    text-decoration: none;
+    margin-bottom: 1rem;
+    transition: color 0.3s;
+}
+.back-link:hover { color: #22d3ee; }
+/* Test kartalari — fan card ichida */
+.subject-test-card {
+    background: rgba(30, 41, 59, 0.7);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+.subject-test-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(6, 182, 212, 0.4);
+    box-shadow: 0 12px 35px rgba(6, 182, 212, 0.2);
+}
+.subject-test-card .grade-badge {
+    background: rgba(6, 182, 212, 0.2);
+    color: #22d3ee;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+.subject-test-card .test-title { color: #f8fafc; font-weight: 600; font-size: 1.1rem; margin: 0.5rem 0; }
+.subject-test-card .test-meta { color: #94a3b8; font-size: 0.9rem; }
+.no-tests {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: #94a3b8;
+}
+.btn-create-test {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: #fff !important;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s;
+}
+.btn-create-test:hover { color: #fff !important; transform: translateY(-2px); box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4); }
+.grade-filter-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+.grade-filter-label { color: #94a3b8; font-weight: 600; }
+.grade-filter-btn {
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border: 2px solid rgba(148, 163, 184, 0.3);
+    background: rgba(30, 41, 59, 0.5);
+    color: #94a3b8;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+.grade-filter-btn:hover, .grade-filter-btn.active {
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    border-color: transparent;
+    color: #fff;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="subject-tests-wrap">
+    <a href="{% url 'tests:subjects' %}" class="back-link">
+        <i class="fas fa-arrow-left"></i> Fanlar bo'limiga qaytish
+    </a>
+    <div class="subject-tests-card" data-aos="fade-up">
+    <div class="subject-tests-header" data-aos="fade-up">
+        <div>
+            <h1><i class="fas fa-book me-2" style="color: #06b6d4;"></i>{{ subject_name }}</h1>
+            <p>7, 8, 9-sinflar uchun testlar</p>
+        </div>
+        {% if user.role == 'teacher' or user.role == 'admin' %}
+        <div>
+            <a href="{% url 'tests:create_test' %}?subject={{ subject_name|urlencode }}" class="btn-create-test">
+                <i class="fas fa-plus"></i> Test qo'shish
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Sinf filtri (7, 8, 9) — o'qituvchi/admin uchun -->
+    {% if user.role == 'teacher' or user.role == 'admin' %}
+    <div class="grade-filter-row mb-4" data-aos="fade-up">
+        <span class="grade-filter-label me-2">Sinf:</span>
+        <button type="button" class="grade-filter-btn active" data-grade="">Barchasi</button>
+        <button type="button" class="grade-filter-btn" data-grade="7">7-sinf</button>
+        <button type="button" class="grade-filter-btn" data-grade="8">8-sinf</button>
+        <button type="button" class="grade-filter-btn" data-grade="9">9-sinf</button>
+    </div>
+    {% endif %}
+
+    {% if tests_with_attempts %}
+    <div class="row" id="subjectTestsRow">
+        {% for test, attempt in tests_with_attempts %}
+        <div class="col-12 col-md-6 col-lg-4 mb-3 subject-test-col" data-aos="fade-up" data-grade="{{ test.grade }}">
+            <a href="{% url 'tests:test_info' test.id %}" class="subject-test-card">
+                <span class="grade-badge">{{ test.grade }}-sinf</span>
+                <h3 class="test-title">{{ test.title|default:"(Nomi yo'q)" }}</h3>
+                <div class="test-meta">
+                    <i class="fas fa-question-circle me-1"></i>{{ test.total_questions }} ta savol
+                    <span class="ms-2"><i class="fas fa-clock me-1"></i>{{ test.time_limit }} daqiqa</span>
+                </div>
+                {% if user.role == 'student' and attempt %}
+                <div class="mt-2">
+                    {% if attempt.is_completed %}
+                    <span class="badge bg-success">Yechilgan: {{ attempt.percentage|floatformat:0 }}%</span>
+                    {% else %}
+                    <span class="badge bg-warning text-dark">Davom ettirish</span>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="no-tests" data-aos="fade-up">
+        <i class="fas fa-clipboard-list fa-4x mb-3" style="opacity: 0.4; color: #06b6d4;"></i>
+        <h4>Hozircha test yo'q</h4>
+        <p class="mb-4">{{ subject_name }} fanida 7, 8, 9-sinflar uchun testlar hali qo'shilmagan.</p>
+        {% if user.role == 'teacher' or user.role == 'admin' %}
+        <a href="{% url 'tests:create_test' %}?subject={{ subject_name|urlencode }}" class="btn-create-test">
+            <i class="fas fa-plus"></i> Birinchi testni yaratish
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if user.role == 'teacher' or user.role == 'admin' %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.grade-filter-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.grade-filter-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            const grade = this.getAttribute('data-grade');
+            document.querySelectorAll('.subject-test-col').forEach(col => {
+                col.style.display = (grade === '' || col.getAttribute('data-grade') === grade) ? '' : 'none';
+            });
+        });
+    });
+});
+</script>
+{% endif %}
+{% endblock %}

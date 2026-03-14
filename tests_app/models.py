@@ -3,6 +3,46 @@ from django.conf import settings
 import json
 from django.utils import timezone
 
+# Asosiy fanlar — maktabda o'tiladigan fanlar (eski, Subject model mavjud bo'lsa ishlatilmaydi)
+SUBJECT_CHOICES = [
+    ('Fizika', 'Fizika'),
+    ('Ingliz tili', 'Ingliz tili'),
+    ('Matematika', 'Matematika'),
+    ('Informatika', 'Informatika'),
+    ('Umumiy', 'Umumiy'),  # Boshqa fanlar uchun
+]
+
+# 7-8-9 sinflar uchun fan bo'limlari
+SUBJECT_GRADES = [7, 8, 9]
+
+
+def get_subject_choices():
+    """Barcha fanlarni qaytaradi — Subject model + Umumiy. Test yaratish/tahrirlash uchun."""
+    try:
+        choices = list(Subject.objects.filter(is_active=True).order_by('order', 'name').values_list('name', 'name'))
+    except Exception:
+        choices = []
+    if not any(c[0] == 'Umumiy' for c in choices):
+        choices.append(('Umumiy', 'Umumiy'))
+    return choices if choices else SUBJECT_CHOICES
+
+
+class Subject(models.Model):
+    """Fanlar bo'limi — admin qo'sha oladi. Fanlar sahifasida ko'rsatiladi."""
+    name = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(max_length=100, unique=True, help_text="URL uchun, masalan: fizika, ingliz-tili")
+    icon = models.CharField(max_length=50, default='fa-book', help_text="Font Awesome icon, masalan: fa-atom")
+    order = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['order', 'name']
+
+    def __str__(self):
+        return self.name
+
+
 class Test(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)

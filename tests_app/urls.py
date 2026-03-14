@@ -6,6 +6,9 @@ app_name = 'tests'
 
 urlpatterns = [
     path('', views.test_list_view, name='tests'),
+    path('subjects/', views.subjects_view, name='subjects'),
+    path('subjects/add/', views.add_subject_view, name='add_subject'),
+    path('subjects/<slug:subject_slug>/', views.subject_tests_view, name='subject_tests'),
     path('create/', views.create_test_view, name='create_test'),
     path('create-from-word/', views.create_test_from_word, name='create_test_from_word'),
     path('<int:test_id>/edit/', views.edit_test_view, name='edit_test'),

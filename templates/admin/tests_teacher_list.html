@@ -5,14 +5,15 @@
 
 {% block extra_css %}
 <style>
+/* ═══ O'qituvchilar Testlari — Jadval va havolalar qora ═══ */
 .teacher-tests-wrap {
     margin: -2rem -15px 0;
     padding: 2.5rem 1.5rem 3rem;
-    background: linear-gradient(160deg, #ffffff 0%, #f0fdfa 50%, #ecfeff 100%);
+    background: linear-gradient(160deg, #ffffff 0%, #f8fafc 50%, #f1f5f9 100%);
     border-radius: 24px;
     border: 1px solid rgba(148, 163, 184, 0.2);
     box-shadow: 0 4px 24px rgba(0,0,0,0.08);
-    color: #171717;
+    color: #0f172a;
 }
 .teacher-tests-wrap .page-header {
     display: flex;
@@ -25,11 +26,11 @@
 .teacher-tests-wrap .page-header h1 {
     font-size: 1.6rem;
     font-weight: 700;
-    color: #171717;
+    color: #0f172a;
     margin: 0 0 0.25rem 0;
 }
 .teacher-tests-wrap .page-header p {
-    color: #64748b;
+    color: #475569;
     font-size: 0.95rem;
     margin: 0;
 }
@@ -40,9 +41,10 @@
     border-radius: 12px;
     font-weight: 600;
     font-size: 0.95rem;
+    box-shadow: 0 4px 20px rgba(6, 182, 212, 0.35);
 }
 .teacher-tests-wrap .filter-card {
-    background: rgba(255,255,255,0.9);
+    background: rgba(255, 255, 255, 0.9);
     border: 1px solid rgba(148, 163, 184, 0.2);
     border-radius: 16px;
     padding: 1.25rem;
@@ -52,18 +54,25 @@
 .teacher-tests-wrap .filter-card .form-select {
     background: #fff;
     border: 1px solid #e2e8f0;
-    color: #171717;
+    color: #0f172a;
     border-radius: 10px;
 }
+.teacher-tests-wrap .filter-card .form-control::placeholder {
+    color: #64748b;
+}
+.teacher-tests-wrap .filter-card label,
+.teacher-tests-wrap .filter-card .form-label {
+    color: #374151 !important;
+}
 .teacher-tests-wrap .admin-table {
-    background: #fff;
+    background: #ffffff;
     border-radius: 16px;
     overflow: hidden;
     border: 1px solid rgba(148, 163, 184, 0.2);
 }
 .teacher-tests-wrap .admin-table thead th {
     background: #f8fafc;
-    color: #475569;
+    color: #0f172a;
     font-weight: 600;
     font-size: 0.85rem;
     padding: 14px 16px;
@@ -72,20 +81,60 @@
 .teacher-tests-wrap .admin-table tbody td {
     padding: 14px 16px;
     vertical-align: middle;
-    color: #334155;
+    color: #0f172a;
     border-bottom: 1px solid rgba(148, 163, 184, 0.12);
 }
 .teacher-tests-wrap .admin-table tbody tr:hover {
-    background: rgba(6, 182, 212, 0.08);
+    background: rgba(6, 182, 212, 0.06);
 }
-.teacher-tests-wrap .badge-subject { background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(34, 211, 238, 0.15)); color: #0e7490; border-radius: 8px; padding: 5px 12px; }
-.teacher-tests-wrap .badge-grade { background: rgba(148, 163, 184, 0.2); color: #475569; border-radius: 8px; padding: 5px 12px; }
-.teacher-tests-wrap .badge-count { background: rgba(6, 182, 212, 0.2); color: #0e7490; border-radius: 8px; padding: 5px 12px; }
-.teacher-tests-wrap .badge-success { background: rgba(16, 185, 129, 0.15); color: #047857; border-radius: 8px; padding: 5px 12px; }
-.teacher-tests-wrap .badge-inactive { background: rgba(245, 158, 11, 0.15); color: #b45309; border-radius: 8px; padding: 5px 12px; }
-.teacher-tests-wrap .badge-attempts { background: rgba(245, 158, 11, 0.15); color: #b45309; border-radius: 8px; padding: 5px 12px; }
+.teacher-tests-wrap .admin-table a.fw-bold {
+    color: #0f172a !important;
+}
+.teacher-tests-wrap .admin-table a.fw-bold:hover {
+    color: #06b6d4 !important;
+}
+.teacher-tests-wrap .admin-table .small {
+    color: #475569 !important;
+}
+.teacher-tests-wrap .badge-subject {
+    background: rgba(6, 182, 212, 0.15);
+    color: #0e7490;
+    border-radius: 8px;
+    padding: 5px 12px;
+}
+.teacher-tests-wrap .badge-grade {
+    background: rgba(148, 163, 184, 0.2);
+    color: #334155;
+    border-radius: 8px;
+    padding: 5px 12px;
+}
+.teacher-tests-wrap .badge-count {
+    background: rgba(6, 182, 212, 0.15);
+    color: #0e7490;
+    border-radius: 8px;
+    padding: 5px 12px;
+}
+.teacher-tests-wrap .badge-success {
+    background: rgba(16, 185, 129, 0.15);
+    color: #047857;
+    border-radius: 8px;
+    padding: 5px 12px;
+}
+.teacher-tests-wrap .badge-inactive {
+    background: rgba(245, 158, 11, 0.15);
+    color: #b45309;
+    border-radius: 8px;
+    padding: 5px 12px;
+}
+.teacher-tests-wrap .badge-attempts {
+    background: rgba(245, 158, 11, 0.15);
+    color: #b45309;
+    border-radius: 8px;
+    padding: 5px 12px;
+}
 .teacher-tests-wrap .action-btn-sm {
-    width: 36px; height: 36px;
+    width: 36px;
+    height: 36px;
     border-radius: 10px;
     display: inline-flex;
     align-items: center;
@@ -93,34 +142,25 @@
     margin: 0 3px;
     transition: all 0.2s;
 }
-.teacher-tests-wrap .action-btn-sm:hover { transform: translateY(-2px); }
-[data-theme="dark"] .teacher-tests-wrap {
-    background: linear-gradient(160deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
-    border-color: rgba(148, 163, 184, 0.1);
-    box-shadow: 0 25px 60px rgba(0,0,0,0.4);
-    color: #f8fafc;
+.teacher-tests-wrap .action-btn-sm:hover {
+    transform: translateY(-2px);
 }
-[data-theme="dark"] .teacher-tests-wrap .page-header h1 { color: #f8fafc; }
-[data-theme="dark"] .teacher-tests-wrap .page-header p { color: #94a3b8; }
-[data-theme="dark"] .teacher-tests-wrap .filter-card { background: rgba(30, 41, 59, 0.6); border-color: rgba(148, 163, 184, 0.15); }
-[data-theme="dark"] .teacher-tests-wrap .filter-card .form-control,
-[data-theme="dark"] .teacher-tests-wrap .filter-card .form-select { background: rgba(15, 23, 42, 0.8); border-color: rgba(148, 163, 184, 0.2); color: #f8fafc; }
-[data-theme="dark"] .teacher-tests-wrap .admin-table { background: rgba(30, 41, 59, 0.5); border-color: rgba(148, 163, 184, 0.12); }
-[data-theme="dark"] .teacher-tests-wrap .admin-table thead th { background: rgba(15, 23, 42, 0.8); color: #94a3b8; }
-[data-theme="dark"] .teacher-tests-wrap .admin-table tbody td { color: #e2e8f0; }
-[data-theme="dark"] .teacher-tests-wrap .admin-table a.fw-bold { color: #f8fafc !important; }
-[data-theme="dark"] .teacher-tests-wrap .filter-card label { color: #94a3b8 !important; }
-[data-theme="dark"] .teacher-tests-wrap .badge-subject { color: #22d3ee; }
-[data-theme="dark"] .teacher-tests-wrap .badge-grade { color: #94a3b8; }
-[data-theme="dark"] .teacher-tests-wrap .badge-count { color: #22d3ee; }
-[data-theme="dark"] .teacher-tests-wrap .badge-success { color: #34d399; }
-[data-theme="dark"] .teacher-tests-wrap .badge-inactive { color: #fbbf24; }
-[data-theme="dark"] .teacher-tests-wrap .badge-attempts { color: #f59e0b; }
-[data-theme="dark"] .teacher-tests-wrap .filter-card label,
-[data-theme="dark"] .teacher-tests-wrap .filter-card .form-label { color: #94a3b8 !important; }
-[data-theme="dark"] .teacher-tests-wrap .btn[onclick="clearFilters()"] { border-color: rgba(148,163,184,0.4) !important; color: #94a3b8 !important; }
-[data-theme="dark"] .teacher-tests-wrap .text-center.py-5 p { color: #94a3b8 !important; }
-[data-theme="dark"] .teacher-tests-wrap .admin-table .small { color: #94a3b8 !important; }
+.teacher-tests-wrap .btn[onclick="clearFilters()"] {
+    border: 1px solid #cbd5e1 !important;
+    color: #334155 !important;
+    background: #fff !important;
+}
+.teacher-tests-wrap .btn[onclick="clearFilters()"]:hover {
+    background: #f1f5f9 !important;
+    color: #0f172a !important;
+}
+.teacher-tests-wrap .text-center.py-5 p {
+    color: #475569 !important;
+}
+.teacher-tests-wrap .text-center.py-5 i {
+    color: #06b6d4 !important;
+    opacity: 0.6;
+}
 </style>
 {% endblock %}
 
@@ -184,7 +224,7 @@
           </select>
         </div>
         <div class="col-md-2">
-          <button class="btn w-100" onclick="clearFilters()" style="border: 1px solid #cbd5e1; color: #475569; border-radius: 10px;">
+          <button class="btn w-100" onclick="clearFilters()" style="border-radius: 10px;">
             <i class="fas fa-times me-2"></i>Tozalash
           </button>
         </div>
@@ -213,15 +253,15 @@
                 data-teacher-id="{{ t.created_by.id }}"
                 data-status="{% if t.is_active %}active{% else %}inactive{% endif %}"
                 data-grade="{{ t.grade }}">
-              <td style="color: #64748b; font-weight: 500;">{{ forloop.counter }}</td>
+              <td style="color: #475569; font-weight: 500;">{{ forloop.counter }}</td>
               <td>
                 <div>
-                  <a href="{% url 'tests:test_info' t.id %}" class="text-decoration-none fw-bold" style="color: #171717;">
+                  <a href="{% url 'tests:test_info' t.id %}" class="text-decoration-none fw-bold" style="color: #0f172a;">
                     <i class="fas fa-file-alt me-1" style="color: #06b6d4; font-size: 0.9em;"></i>
                     {{ t.title|default:"(Nomi yo'q)" }}
                   </a>
                   {% if t.description %}
-                  <div class="small mt-1" style="color: #64748b;">{{ t.description|truncatechars:55 }}</div>
+                  <div class="small mt-1" style="color: #475569;">{{ t.description|truncatechars:55 }}</div>
                   {% endif %}
                 </div>
               </td>
@@ -273,7 +313,7 @@
     {% else %}
     <div class="text-center py-5">
       <i class="fas fa-clipboard-list fa-3x mb-3" style="color: #06b6d4; opacity: 0.5;"></i>
-      <p class="mb-0" style="color: #64748b;">Hozircha hech qanday test topilmadi.</p>
+      <p class="mb-0" style="color: #475569;">Hozircha hech qanday test topilmadi.</p>
     </div>
     {% endif %}
   </div>

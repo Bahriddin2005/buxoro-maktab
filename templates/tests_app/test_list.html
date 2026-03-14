@@ -355,7 +355,7 @@
                 </h1>
                 <p class="page-subtitle">
                     {% if user.role == 'student' %}
-                        {{ user.grade }}-sinf uchun mavjud testlarni tanlang va yeching
+                        {{ user.grade }}-sinf uchun mavjud testlarni tanlang va yeching. <a href="{% url 'tests:subjects' %}" class="text-decoration-none" style="color: #22d3ee;">Fanlar bo'limi</a> orqali ham qidirishingiz mumkin.
                     {% elif user.role == 'teacher' %}
                         Yaratgan testlaringizni boshqaring va natijalarni ko'ring
                     {% else %}

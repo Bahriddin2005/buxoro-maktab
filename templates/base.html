@@ -97,7 +97,7 @@
             overflow-x: hidden;
         }
         body {
-            background: linear-gradient(160deg, #f1f5f9 0%, #e2e8f0 50%, #f8fafc 100%);
+            background: linear-gradient(160deg, #f0fdfa 0%, #ecfeff 35%, #f5f3ff 70%, #faf5ff 100%);
             min-height: 100vh;
         }
         h1, h2, h3, h4, h5, h6 {
@@ -165,7 +165,7 @@
             width: 100%;
             height: 100%;
             z-index: -1;
-            background: linear-gradient(160deg, #f1f5f9 0%, #e2e8f0 50%, #f8fafc 100%);
+            background: linear-gradient(160deg, #f0fdfa 0%, #ecfeff 35%, #f5f3ff 70%, #faf5ff 100%);
             opacity: 1;
         }
 
@@ -177,9 +177,22 @@
             width: 200%;
             height: 200%;
             background-image: 
-                radial-gradient(ellipse at 20% 80%, rgba(6, 182, 212, 0.08) 0%, transparent 50%),
-                radial-gradient(ellipse at 80% 20%, rgba(34, 211, 238, 0.06) 0%, transparent 50%);
-            animation: float 20s ease-in-out infinite;
+                radial-gradient(ellipse at 20% 80%, rgba(6, 182, 212, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(34, 211, 238, 0.08) 0%, transparent 60%);
+            animation: float 25s ease-in-out infinite;
+        }
+
+        .navbar-brand .logo-icon {
+            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .navbar-brand:hover .logo-icon {
+            background: linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
         }
 
         @keyframes float {
@@ -643,7 +656,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
             <a class="navbar-brand" href="{% url 'home' %}" data-aos="fade-right">
-                <i class="fas fa-graduation-cap me-2"></i>
+                <i class="fas fa-graduation-cap logo-icon me-2"></i>
                 Buxoro Bilimdonlar Maktabi
             </a>
             

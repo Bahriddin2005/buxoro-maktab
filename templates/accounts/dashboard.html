@@ -609,11 +609,19 @@
                     {% if user.role == 'student' %}
                     <div class="row g-3">
                         <div class="col-md-4 col-6">
-                            <a href="{% url 'tests:tests' %}" class="action-btn action-btn-primary text-white">
+                            <a href="{% url 'tests:subjects' %}" class="action-btn action-btn-primary text-white">
+                                <div class="action-btn-icon">
+                                    <i class="fas fa-book-open"></i>
+                                </div>
+                                <div class="action-btn-text">Fanlar (Fizika, Matematika, ...)</div>
+                            </a>
+                        </div>
+                        <div class="col-md-4 col-6">
+                            <a href="{% url 'tests:tests' %}" class="action-btn action-btn-outline text-white">
                                 <div class="action-btn-icon">
                                     <i class="fas fa-clipboard-list"></i>
                                 </div>
-                                <div class="action-btn-text">Testlarni Ko'rish</div>
+                                <div class="action-btn-text">Barcha Testlar</div>
                             </a>
                         </div>
                         <div class="col-md-4 col-6">
@@ -637,6 +645,14 @@
                         {% elif user.role == 'teacher' %}
                     <div class="row g-3">
                         <div class="col-md-4 col-6">
+                            <a href="{% url 'tests:subjects' %}" class="action-btn action-btn-primary text-white">
+                                <div class="action-btn-icon">
+                                    <i class="fas fa-book-open"></i>
+                                </div>
+                                <div class="action-btn-text">Fanlar (Test qo'shish)</div>
+                            </a>
+                        </div>
+                        <div class="col-md-4 col-6">
                             <a href="{% url 'tests:create_test' %}" class="action-btn action-btn-green text-white">
                                 <div class="action-btn-icon">
                                     <i class="fas fa-plus-circle"></i>
@@ -649,7 +665,7 @@
                                 <div class="action-btn-icon">
                                     <i class="fas fa-file-alt"></i>
                                 </div>
-                                <div class="action-btn-text">Testlar</div>
+                                <div class="action-btn-text">Barcha Testlar</div>
                             </a>
                         </div>
                         <div class="col-md-4 col-6">

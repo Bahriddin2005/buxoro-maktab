@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}➕ Fan Qo'shish - Buxoro Bilimdonlar Maktabi{% endblock %}
+
+{% block extra_css %}
+<style>
+.add-subject-wrap {
+    margin: -2rem -15px 0;
+    padding: 2rem 1.5rem 3rem;
+}
+.add-subject-card {
+    background: linear-gradient(160deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+    border-radius: 24px;
+    border: 1px solid rgba(148, 163, 184, 0.15);
+    box-shadow: 0 25px 60px rgba(0,0,0,0.35);
+    padding: 2.5rem;
+    color: #f8fafc;
+    max-width: 500px;
+    margin: 0 auto;
+}
+.add-subject-card h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #f8fafc;
+    margin-bottom: 1.5rem;
+}
+.add-subject-card .form-label {
+    color: #e2e8f0;
+    font-weight: 600;
+}
+.add-subject-card .form-control,
+.add-subject-card .form-select {
+    background: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    color: #f8fafc;
+    border-radius: 12px;
+}
+.add-subject-card .form-control:focus,
+.add-subject-card .form-select:focus {
+    background: rgba(30, 41, 59, 0.9);
+    border-color: #06b6d4;
+    color: #f8fafc;
+}
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #94a3b8;
+    text-decoration: none;
+    margin-bottom: 1.5rem;
+    transition: color 0.3s;
+}
+.back-link:hover { color: #22d3ee; }
+.btn-add-subject {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: #fff !important;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-weight: 600;
+}
+.btn-add-subject:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    color: #fff !important;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="add-subject-wrap">
+    <a href="{% url 'tests:subjects' %}" class="back-link">
+        <i class="fas fa-arrow-left"></i> Fanlar bo'limiga qaytish
+    </a>
+    <div class="add-subject-card" data-aos="fade-up">
+        <h1><i class="fas fa-plus-circle me-2" style="color: #06b6d4;"></i>Yangi Fan Qo'shish</h1>
+        {% if messages %}
+        <div class="mb-3">
+            {% for msg in messages %}
+            <div class="alert alert-{% if msg.tags == 'error' %}danger{% else %}{{ msg.tags }}{% endif %}">{{ msg }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        <form method="post" action="{% url 'tests:add_subject' %}">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="name" class="form-label">Fan nomi *</label>
+                <input type="text" class="form-control" id="name" name="name" 
+                       placeholder="Masalan: Kimyo, Tarix" required maxlength="100">
+            </div>
+            <div class="mb-3">
+                <label for="icon" class="form-label">Icon (Font Awesome)</label>
+                <select class="form-select" id="icon" name="icon">
+                    {% for value, label in icon_choices %}
+                    <option value="{{ value }}">{{ label }} ({{ value }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-4">
+                <label for="order" class="form-label">Tartib raqami</label>
+                <input type="number" class="form-control" id="order" name="order" value="0" min="0">
+                <small class="text-muted">Kichik raqam — yuqorida ko'rinadi</small>
+            </div>
+            <button type="submit" class="btn btn-add-subject">
+                <i class="fas fa-save me-2"></i>Fan Qo'shish
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

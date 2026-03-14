@@ -158,13 +158,27 @@
                 <span class="notification-badge"></span>
             {% endif %}
         </a>
+        <a href="{% url 'tests:subjects' %}" 
+           class="sidebar-nav-icon {% if 'subjects' in request.path %}active{% endif %}" 
+           title="Fanlar Bo'limi"
+           data-bs-toggle="tooltip" 
+           data-bs-placement="right">
+            <i class="fas fa-book-open"></i>
+        </a>
     {% else %}
         <a href="{% url 'tests:tests' %}" 
-           class="sidebar-nav-icon {% if 'tests' in request.path and 'analytics' not in request.path %}active{% endif %}" 
+           class="sidebar-nav-icon {% if 'tests' in request.path and 'subjects' not in request.path and 'analytics' not in request.path %}active{% endif %}" 
            title="Testlar"
            data-bs-toggle="tooltip" 
            data-bs-placement="right">
             <i class="fas fa-clipboard-list"></i>
+        </a>
+        <a href="{% url 'tests:subjects' %}" 
+           class="sidebar-nav-icon {% if 'subjects' in request.path %}active{% endif %}" 
+           title="Fanlar (Fizika, Matematika, Informatika, Ingliz tili)"
+           data-bs-toggle="tooltip" 
+           data-bs-placement="right">
+            <i class="fas fa-book-open"></i>
         </a>
     {% endif %}
     

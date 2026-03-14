@@ -1,6 +1,21 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Test, Question, Choice, TestAttempt, Answer, TestResult, TestRetakeRequest
+from django.utils.text import slugify
+from .models import Test, Question, Choice, TestAttempt, Answer, TestResult, TestRetakeRequest, Subject
+
+
+@admin.register(Subject)
+class SubjectAdmin(admin.ModelAdmin):
+    list_display = ['name', 'slug', 'icon', 'order', 'is_active', 'created_at']
+    list_editable = ['order', 'is_active']
+    search_fields = ['name', 'slug']
+    prepopulated_fields = {'slug': ('name',)}
+    ordering = ['order', 'name']
+
+    def save_model(self, request, obj, form, change):
+        if not obj.slug and obj.name:
+            obj.slug = slugify(obj.name)
+        super().save_model(request, obj, form, change)
 
 class ChoiceInline(admin.TabularInline):
     model = Choice

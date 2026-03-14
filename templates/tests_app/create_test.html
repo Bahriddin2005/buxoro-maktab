@@ -5,64 +5,94 @@
 
 {% block extra_css %}
 <style>
-    body {
-        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
-        min-height: 100vh;
-        position: relative;
-    }
-
+    /* Test yaratish — oq fon, qora matn */
     .main-container {
         max-width: 1200px;
         margin: 0 auto;
         padding: 2rem 1rem;
     }
 
+    /* Sahifa fonini oq qilish */
+    body:has(.main-container) {
+        background: #f8fafc !important;
+    }
+
+    .main-container h1, .main-container h2, .main-container h3, .main-container h4, .main-container h5,
+    .main-container p, .main-container span, .main-container label, .main-container small {
+        color: #0f172a !important;
+    }
+
+    .main-container a:not(.btn) {
+        color: #0f172a !important;
+    }
+
+    .main-container a:not(.btn):hover {
+        color: #06b6d4 !important;
+    }
+
+    .main-container table,
+    .main-container table th,
+    .main-container table td {
+        color: #0f172a !important;
+    }
+
+    .main-container .btn-outline-light,
+    .main-container .btn-outline-info {
+        color: #0f172a !important;
+        border-color: #e2e8f0;
+    }
+
+    .main-container .text-muted {
+        color: #475569 !important;
+    }
+
     .glass-card {
-        background: rgba(255, 255, 255, 0.15);
-        backdrop-filter: blur(20px);
+        background: #ffffff;
         border-radius: 20px;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
         transition: all 0.3s ease;
     }
 
     .glass-card:hover {
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
-        transform: translateY(-2px);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
     }
 
     .form-control, .form-select {
-        background: rgba(255, 255, 255, 0.25) !important;
-        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
         border-radius: 12px !important;
-        color: #fff !important;
+        color: #0f172a !important;
         padding: 12px 16px !important;
         transition: all 0.3s ease;
     }
 
     .form-control:focus, .form-select:focus {
-        background: rgba(255, 255, 255, 0.35) !important;
-        border-color: rgba(255, 255, 255, 0.5) !important;
-        box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.25) !important;
-        color: #fff !important;
+        background: #ffffff !important;
+        border-color: #06b6d4 !important;
+        box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.2) !important;
+        color: #0f172a !important;
     }
 
     .form-control::placeholder, .form-select::placeholder {
-        color: rgba(255, 255, 255, 0.6) !important;
+        color: #64748b !important;
     }
 
     .form-label {
-        color: #fff !important;
+        color: #0f172a !important;
         font-weight: 600;
         margin-bottom: 8px;
         font-size: 14px;
     }
 
+    .form-text {
+        color: #475569 !important;
+    }
+
     .question-item {
-        background: rgba(255, 255, 255, 0.2);
-        backdrop-filter: blur(15px);
+        background: #f8fafc;
         border-radius: 16px;
-        border: 1px solid rgba(255, 255, 255, 0.25);
+        border: 1px solid #e2e8f0;
         padding: 24px !important;
         margin-bottom: 20px;
         transition: all 0.3s ease;
@@ -81,8 +111,7 @@
     }
 
     .question-item:hover {
-        transform: translateX(5px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
     }
 
     .question-number-badge {
@@ -105,13 +134,13 @@
         justify-content: space-between;
         margin-bottom: 20px;
         padding-bottom: 15px;
-        border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+        border-bottom: 2px solid #e2e8f0;
     }
 
     .question-title {
         display: flex;
         align-items: center;
-        color: #fff;
+        color: #0f172a !important;
         font-weight: 600;
         font-size: 18px;
         margin: 0;
@@ -186,23 +215,22 @@
     }
 
     .choice-item {
-        background: rgba(255, 255, 255, 0.15);
+        background: #f8fafc;
         border-radius: 10px;
         padding: 12px;
         margin-bottom: 10px;
         transition: all 0.3s ease;
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        border: 1px solid #e2e8f0;
     }
 
     .choice-item:hover {
-        background: rgba(255, 255, 255, 0.2);
-        transform: translateX(5px);
+        background: #f1f5f9;
     }
 
     .choice-item input[type="text"] {
         background: transparent !important;
         border: none !important;
-        color: #fff !important;
+        color: #0f172a !important;
         flex: 1;
     }
 
@@ -214,8 +242,8 @@
     .form-check-input {
         width: 20px;
         height: 20px;
-        border: 2px solid rgba(255, 255, 255, 0.4);
-        background-color: transparent;
+        border: 2px solid #94a3b8;
+        background-color: #fff;
         cursor: pointer;
     }
 
@@ -225,7 +253,7 @@
     }
 
     .form-check-label {
-        color: #fff !important;
+        color: #0f172a !important;
         cursor: pointer;
         font-size: 14px;
         margin-left: 8px;
@@ -249,24 +277,24 @@
     }
 
     .btn-secondary {
-        background: rgba(255, 255, 255, 0.2);
-        border: 1px solid rgba(255, 255, 255, 0.3);
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
         border-radius: 12px;
         padding: 14px 32px;
         font-weight: 600;
-        color: #fff;
+        color: #0f172a !important;
         transition: all 0.3s ease;
     }
 
     .btn-secondary:hover {
-        background: rgba(255, 255, 255, 0.3);
-        color: #fff;
+        background: #e2e8f0;
+        color: #0f172a !important;
         transform: translateY(-2px);
     }
 
     .section-divider {
         height: 2px;
-        background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%);
+        background: #e2e8f0;
         margin: 30px 0;
         border: none;
     }
@@ -288,7 +316,7 @@
         margin: 0 auto 20px;
         font-size: 36px;
         color: #fff;
-        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        box-shadow: 0 8px 25px rgba(6, 182, 212, 0.4);
     }
 
     .questions-section-header {
@@ -297,13 +325,13 @@
         justify-content: space-between;
         margin-bottom: 25px;
         padding: 20px;
-        background: rgba(255, 255, 255, 0.1);
+        background: #f8fafc;
         border-radius: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        border: 1px solid #e2e8f0;
     }
 
     .questions-section-title {
-        color: #fff;
+        color: #0f172a !important;
         font-size: 24px;
         font-weight: 700;
         margin: 0;
@@ -322,22 +350,21 @@
         grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
         gap: 15px;
         padding: 20px;
-        background: rgba(255, 255, 255, 0.1);
+        background: #f8fafc;
         border-radius: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        border: 1px solid #e2e8f0;
     }
 
     .form-check {
-        background: rgba(255, 255, 255, 0.1);
+        background: #ffffff;
         padding: 12px 16px;
         border-radius: 10px;
         transition: all 0.3s ease;
-        border: 1px solid rgba(255, 255, 255, 0.15);
+        border: 1px solid #e2e8f0;
     }
 
     .form-check:hover {
-        background: rgba(255, 255, 255, 0.15);
-        transform: translateX(5px);
+        background: #f8fafc;
     }
 
     @media (max-width: 768px) {
@@ -365,30 +392,41 @@
             <div class="page-header-icon">
                 <i class="fas fa-plus-circle icon-accent"></i>
             </div>
-            <h2 class="text-white mb-2 page-title" style="font-weight: 700; font-size: 32px;">Yangi Test Yaratish</h2>
-            <p class="text-white-50 page-subtitle" style="font-size: 16px;">O'quvchilar uchun test tuzish</p>
+            <h2 class="mb-2 page-title" style="font-weight: 700; font-size: 32px; color: #0f172a;">Yangi Test Yaratish</h2>
+            <p class="page-subtitle" style="font-size: 16px; color: #475569;">O'quvchilar uchun test tuzish</p>
         </div>
 
         <form id="createTestForm" method="post" enctype="multipart/form-data">
             {% csrf_token %}
             
-            <!-- Word fayldan test yaratish -->
-            <div class="glass-card p-4 mb-4" style="background: rgba(255, 255, 255, 0.1); border: 2px dashed rgba(102, 126, 234, 0.5);">
-                <h5 class="text-white mb-3" style="font-weight: 600;">
-                    <i class="fas fa-file-word me-2 text-primary"></i>Word Fayldan Avtomatik Test Yaratish
-                </h5>
-                <p class="text-white-50 mb-3" style="font-size: 14px;">
-                    Word faylda test ma'lumotlari va savollarni yozib, avtomatik test yarating.
-                </p>
+            <!-- Word fayldan test yaratish — word_import_guide bilan integratsiya -->
+            <div class="glass-card p-4 mb-4" style="background: #f1f5f9; border: 2px dashed #94a3b8;">
+                <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+                    <div>
+                        <h5 class="mb-1" style="font-weight: 600; color: #0f172a;">
+                            <i class="fas fa-file-word me-2 text-primary"></i>Word yoki TXT Fayldan Avtomatik Test Yaratish
+                        </h5>
+                        <p class="mb-0" style="font-size: 14px; color: #475569;">
+                            Word yoki TXT faylda test ma'lumotlari va savollarni yozib, avtomatik test yarating.
+                        </p>
+                    </div>
+                    <a href="{% url 'tests:word_import_guide' %}" class="btn btn-primary" style="white-space: nowrap;">
+                        <i class="fas fa-book-open me-2"></i>To'liq Qo'llanma
+                    </a>
+                </div>
+                <div class="alert mb-3 py-2 px-3" style="background: rgba(6, 182, 212, 0.1); border: 1px solid rgba(6, 182, 212, 0.3); border-radius: 12px; color: #0f172a;">
+                    <i class="fas fa-info-circle me-2" style="color: #0891b2;"></i>
+                    <a href="{% url 'tests:word_import_guide' %}" style="color: #0891b2; font-weight: 600; text-decoration: none;">Word/TXT Qo'llanma</a> sahifasida: format qoidalari, qadam-baqadam ko'rsatma, namuna fayl va mavjud testga savol qo'shish imkoniyati.
+                </div>
                 
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label for="wordFile" class="form-label">
-                            <i class="fas fa-upload me-2"></i>Word Fayl Tanlang (.docx, .doc)
+                            <i class="fas fa-upload me-2"></i>Word yoki TXT Fayl Tanlang (.docx, .doc, .txt)
                         </label>
-                        <input type="file" class="form-control" id="wordFile" name="word_file" accept=".docx,.doc">
-                        <div class="form-text text-white-50" style="font-size: 12px;">
-                            Word faylda test nomi, fan va savollar bo'lishi kerak
+                        <input type="file" class="form-control" id="wordFile" name="word_file" accept=".docx,.doc,.txt,text/plain">
+                        <div class="form-text" style="font-size: 12px; color: #64748b;">
+                            Word yoki TXT faylda test nomi, fan va savollar bo'lishi kerak. Format: <code>1. Savol?</code> <code>a) Variant (✓)</code>. TXT fayl UTF-8 da saqlangan bo'lsin. — <a href="{% url 'tests:word_import_guide' %}">batafsil</a>
                         </div>
                     </div>
                     <div class="col-md-3">
@@ -403,7 +441,7 @@
                             <option value="10">10-sinf</option>
                             <option value="11">11-sinf</option>
                         </select>
-                        <div class="form-text text-white-50" style="font-size: 12px;">
+                        <div class="form-text" style="font-size: 12px; color: #64748b;">
                             Agar Word faylda sinf bo'lmasa, bu yerdan tanlang
                         </div>
                     </div>
@@ -416,19 +454,22 @@
                 
                 <div id="wordUploadResult" class="mt-3" style="display: none;"></div>
                 
-                <div class="mt-3">
-                    <a href="{% url 'tests:download_word_template' %}" class="btn btn-outline-light btn-sm me-2">
+                <div class="mt-3 d-flex flex-wrap gap-2 align-items-center">
+                    <a href="{% url 'tests:download_word_template' %}" class="btn btn-outline-light btn-sm">
                         <i class="fas fa-download me-2"></i>Namuna Fayl Yuklab Olish
                     </a>
                     <a href="{% url 'tests:word_import_guide' %}" class="btn btn-outline-info btn-sm">
-                        <i class="fas fa-book me-2"></i>Qo'llanma
+                        <i class="fas fa-book me-2"></i>Batafsil Qo'llanma va TXT qo'llab-quvvatlash
                     </a>
+                    <button type="button" class="btn btn-outline-success btn-sm" id="exportQuestionsTxtBtn" title="Formadagi savollarni TXT formatida yuklab olish">
+                        <i class="fas fa-file-export me-2"></i>Savollarni TXT qilib Export
+                    </button>
                 </div>
             </div>
 
             <!-- Test asosiy ma'lumotlari -->
-            <div class="glass-card p-4 mb-4" style="background: rgba(255, 255, 255, 0.1);">
-                <h5 class="text-white mb-4" style="font-weight: 600;">
+            <div class="glass-card p-4 mb-4" style="background: #f1f5f9;">
+                <h5 class="mb-4" style="font-weight: 600; color: #0f172a;">
                     <i class="fas fa-info-circle me-2"></i>Test Asosiy Ma'lumotlari
                 </h5>
                 
@@ -446,19 +487,29 @@
                         </label>
                         <select class="form-select" id="testGrade" name="grade" required>
                             <option value="">Sinf tanlang</option>
+                            {% if preset_subject %}
+                            <option value="7">7-sinf</option>
+                            <option value="8">8-sinf</option>
+                            <option value="9">9-sinf</option>
+                            {% else %}
                             {% for i in "123456789" %}
                             <option value="{{ i }}">{{ i }}-sinf</option>
                             {% endfor %}
                             <option value="10">10-sinf</option>
                             <option value="11">11-sinf</option>
+                            {% endif %}
                         </select>
                     </div>
                     <div class="col-md-6">
                         <label for="testSubject" class="form-label">
                             <i class="fas fa-book me-2"></i>Fan
                         </label>
-                        <input type="text" class="form-control" id="testSubject" name="subject" 
-                               placeholder="Masalan: Matematika" required>
+                        <select class="form-select" id="testSubject" name="subject" required>
+                            <option value="">Fan tanlang</option>
+                            {% for value, label in subject_choices %}
+                            <option value="{{ value }}" {% if preset_subject == value %}selected{% endif %}>{{ label }}{% if value == 'Umumiy' %} (boshqa){% endif %}</option>
+                            {% endfor %}
+                        </select>
                     </div>
                     <div class="col-md-3">
                         <label for="timeLimit" class="form-label">
@@ -563,7 +614,7 @@
                     {% include 'includes/math_toolbar.html' %}
                     <textarea class="form-control math-target" name="question_text[]" rows="3" required placeholder="½, ¼, x², x³ kabi matematik belgilar qo'shish uchun yuqoridagi tugmalardan foydalaning"></textarea>
                 </div>
-                <small class="text-white-50">Kasrlar va darajalar — nusxalab saytga qo'yish mumkin</small>
+                <small style="color: #64748b;">Kasrlar va darajalar — nusxalab saytga qo'yish mumkin</small>
             </div>
             <div class="col-md-2">
                 <label class="form-label">Tur</label>
@@ -585,7 +636,7 @@
                     <i class="fas fa-list-ul me-2"></i>Javob variantlari
                 </label>
                 {% include 'includes/math_toolbar.html' %}
-                <small class="text-white-50 d-block mb-2">Variantga ½ x² yozish: birinchi variant ustiga bosing, keyin yuqoridagi tugmani bosing</small>
+                <small class="d-block mb-2" style="color: #64748b;">Variantga ½ x² yozish: birinchi variant ustiga bosing, keyin yuqoridagi tugmani bosing</small>
                 <div class="choice-items">
                     <div class="choice-item d-flex align-items-center gap-2">
                         <input type="radio" class="form-check-input" name="correct_choice_1" value="0" style="width: 20px; height: 20px;">
@@ -621,7 +672,7 @@
                 JPG, PNG, GIF formatlari qo'llab-quvvatlanadi. Maksimal hajm: 1GB
             </div>
             <div class="image-preview mt-2" style="display: none;">
-                <img src="" alt="Preview" style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 2px solid rgba(255,255,255,0.2);">
+                <img src="" alt="Preview" style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 2px solid #e2e8f0;">
             </div>
         </div>
     </div>
@@ -927,7 +978,13 @@ document.addEventListener('DOMContentLoaded', function() {
         const resultDiv = document.getElementById('wordUploadResult');
         
         if (!wordFileInput.files[0]) {
-            showWordResult(resultDiv, 'error', 'Iltimos, Word fayl tanlang!');
+            showWordResult(resultDiv, 'error', 'Iltimos, Word yoki TXT fayl tanlang!');
+            return;
+        }
+        const f = wordFileInput.files[0];
+        const ext = (f.name || '').toLowerCase();
+        if (!ext.endsWith('.txt') && !ext.endsWith('.docx') && !ext.endsWith('.doc')) {
+            showWordResult(resultDiv, 'error', 'Faqat .docx, .doc yoki .txt formatidagi fayllar qabul qilinadi.');
             return;
         }
         
@@ -941,7 +998,7 @@ document.addEventListener('DOMContentLoaded', function() {
             formData.append('grade', wordTestGrade);
         }
         
-        showWordResult(resultDiv, 'info', 'Word fayl yuklanmoqda va tahlil qilinmoqda...');
+        showWordResult(resultDiv, 'info', 'Fayl yuklanmoqda va tahlil qilinmoqda...');
         this.disabled = true;
         this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Yuklanmoqda...';
         
@@ -973,7 +1030,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.error) {
                 showWordResult(resultDiv, 'error', data.error + (data.details ? '<br><small>' + data.details + '</small>' : ''));
             } else if (data.success) {
-                showWordResult(resultDiv, 'success', data.message + (data.test_id ? '<br><a href="/tests/" class="text-white">Testlar ro\'yxatiga o\'tish</a>' : ''));
+                showWordResult(resultDiv, 'success', data.message + (data.test_id ? '<br><a href="/tests/" style="color:#0f172a;font-weight:600;">Testlar ro\'yxatiga o\'tish</a>' : ''));
                 
                 // Form ma'lumotlarini to'ldirish
                 if (data.test_data) {
@@ -1009,7 +1066,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Agar test yaratilgan bo'lsa, testlar ro'yxatiga yo'naltirish
                 if (data.test_id && data.auto_created) {
-                    showWordResult(resultDiv, 'success', data.message + '<br><strong>Test muvaffaqiyatli yaratildi va faollashtirildi!</strong><br><a href="/tests/" class="text-white">Testlar ro\'yxatiga o\'tish</a>');
+                    showWordResult(resultDiv, 'success', data.message + '<br><strong>Test muvaffaqiyatli yaratildi va faollashtirildi!</strong><br><a href="/tests/" style="color:#0f172a;font-weight:600;">Testlar ro\'yxatiga o\'tish</a>');
                     setTimeout(() => {
                         window.location.href = '/tests/';
                     }, 3000);
@@ -1037,6 +1094,56 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
         resultDiv.style.display = 'block';
     }
+    
+    // Savollarni TXT qilib export qilish
+    document.getElementById('exportQuestionsTxtBtn').addEventListener('click', function() {
+        const questions = document.querySelectorAll('#questionsContainer .question-item');
+        if (!questions.length) {
+            alert('Savollar yo\'q. Avval savol qo\'shing.');
+            return;
+        }
+        const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+        let txt = '';
+        const testTitle = document.getElementById('testTitle')?.value?.trim() || 'Test';
+        const testSubject = document.getElementById('testSubject')?.value?.trim() || '';
+        const testGrade = document.getElementById('testGrade')?.value?.trim() || '';
+        if (testTitle) txt += 'Test nomi:\n' + testTitle + '\n';
+        if (testSubject) txt += 'Fan: ' + testSubject + '\n';
+        if (testGrade) txt += 'Sinf: ' + testGrade + '\n';
+        if (txt) txt += '\n';
+        questions.forEach((item, idx) => {
+            const qTextarea = item.querySelector('textarea[name="question_text[]"]');
+            const qType = item.querySelector('.question-type')?.value || 'single_choice';
+            const qText = (qTextarea?.value || '').trim();
+            if (!qText) return;
+            txt += (idx + 1) + '. ' + qText + '\n\n';
+            const choicesContainer = item.querySelector('.choices-container');
+            const hasChoices = qType !== 'text_answer' && choicesContainer && choicesContainer.style.display !== 'none';
+            if (hasChoices) {
+                const choiceItems = choicesContainer.querySelectorAll('.choice-item');
+                choiceItems.forEach((ci, i) => {
+                    const textInput = ci.querySelector('input[type="text"]');
+                    const choiceText = (textInput?.value || '').trim();
+                    if (!choiceText) return;
+                    const isCorrect = ci.querySelector('input[type="radio"]:checked') || ci.querySelector('input[type="checkbox"]:checked');
+                    const letter = letters[i] || String.fromCharCode(97 + i);
+                    txt += letter + ') ' + choiceText + (isCorrect ? ' (✓)' : '') + '\n';
+                });
+                txt += '\n';
+            }
+        });
+        if (!txt.trim()) {
+            alert('Eksport qilish uchun savol matni kiriting.');
+            return;
+        }
+        const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = (testTitle.replace(/[^a-zA-Z0-9\u0400-\u04FF]/g, '_') || 'savollar') + '_' + new Date().toISOString().slice(0,10) + '.txt';
+        a.click();
+        URL.revokeObjectURL(url);
+    });
     
     // Add animation keyframes
     const style = document.createElement('style');
